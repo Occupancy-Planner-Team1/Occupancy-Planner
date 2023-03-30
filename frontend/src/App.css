@@ -1,0 +1,45 @@
+body{
+  font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+.App {
+  background-color: #F9F9F9;
+  min-height: 100vh;
+}
+.h-fill{
+  height: calc(100vh - 114px);
+}
+.logo-sm{
+  position: absolute;
+  bottom: 23px;
+  right: 23px;
+}
+.login-backgound{
+  background-image: url('https://images.unsplash.com/photo-1507133750040-4a8f57021571?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1887&q=80');
+  background-size: cover;
+  background-position: center;
+  backdrop-filter: blur(10px);
+}
+.reservation_header{
+  background-color: white;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+.reservation_header img{
+  padding: 12px;
+}
+.reservation-form{
+  background-color: #fff;
+  padding-left: 100px;
+  padding-right: 100px;
+  padding-top: 24px;
+  max-width: 1000px;
+}
+.reservation-form h2{
+  color: #646568;
+  font-size: 25pt;
+}
+.reservation-form p{
+  color: #003A70;
+  font-size: 16pt;
+}

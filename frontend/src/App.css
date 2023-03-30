@@ -8,6 +8,15 @@ body{
 .h-fill{
   height: calc(100vh - 114px);
 }
+.image_link{
+  color: dimgray;
+  position: absolute;
+  left: 40px;
+  bottom: 0;
+}
+.image_link a{
+  color: dimgray;
+}
 .logo-sm{
   position: absolute;
   bottom: 23px;

@@ -38,8 +38,24 @@ body{
 .reservation-form h2{
   color: #646568;
   font-size: 25pt;
+  margin-bottom: 20px;
 }
 .reservation-form p{
   color: #003A70;
   font-size: 16pt;
+  margin-bottom: 12px;
+}
+.reservation-form button{
+  width: 200px;
+  text-align: left;
+  position: relative;
+}
+.reservation-form button::after{
+  right: 15px;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.reservation-plan{
+  max-height: 50%;
 }

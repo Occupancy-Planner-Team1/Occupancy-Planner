@@ -1,19 +1,22 @@
-import React, { useState } from 'react';
-import { useNavigate } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
+import React, { useRef, useEffect } from 'react';
 import logo from '../Logo-IT-Designers.svg';
 
 const ReservationPage = () => {
-  let [reservation_time, setReservationTime] = useState(15);
-  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const timeslotref = useRef(null);
+  useEffect(() => {
+    let query = searchParams.get("restime");
+    if (query!="") {
+      document.getElementById(query+"min").checked = true;
+    }
+  }, [timeslotref]);
   const changeTime = (e) => {
-    setReservationTime(e.target.value);
-    console.log(reservation_time);
-  };
-  const changeTimeSlot = (e) => {
     console.log(e.target.value);
   };
-  const redirect_to_all = (e) => {
-    navigate("./all?restime="+reservation_time);
+  
+  const changeTimeSlot = (e) => {
+    console.log(e.target.value);
   };
   return (
     <div className="App">
@@ -26,8 +29,8 @@ const ReservationPage = () => {
           <h3>Reservierungszeiten in Minuten</h3>
           <h4 title='Thomas Müller'>TM</h4>
         </div>
-        <div className='mb-3'>
-          <input type="radio" className="btn-check" name="reservation_time" id="15min" value="15" onChange={changeTime} checked/>
+        <div className='mb-3' ref={timeslotref}>
+          <input type="radio" className="btn-check" name="reservation_time" id="15min" value="15" onChange={changeTime}/>
           <label className="btn border px-4 recommended_time_slot me-3" htmlFor="15min">15</label>
           <input type="radio" className="btn-check" name="reservation_time" id="30min" value="30" onChange={changeTime}/>
           <label className="btn border px-4 recommended_time_slot me-3" htmlFor="30min">30</label>
@@ -47,12 +50,53 @@ const ReservationPage = () => {
           </div>
         </div>
         <div className="row">
-          <div className="col-3 mb-2">
-            <input type="radio" className="btn-check" name="time_slot" id="2" value="2" onChange={changeTimeSlot} checked/>
-            <label className="btn border px-5 recommended_time_slot reservation_status1 border px-5" htmlFor="2">11:15-11:30</label>
+          <div className="col-6 col-md-3 mb-2">
+            <input type="radio" className="btn-check" name="time_slot" id="1" value="1" onChange={changeTimeSlot}/>
+            <label className="btn recommended_time_slot reservation_status1 border px-5" htmlFor="1">11:00-11:15</label>
           </div>
-          <div className='d-flex justify-content-center'>
-            <a className='btn text-center' onClick={redirect_to_all} href=''>Alle Anzeigen</a>
+          <div className="col-6 col-md-3 mb-2">
+            <input type="radio" className="btn-check" name="time_slot" id="2" value="2" onChange={changeTimeSlot}/>
+            <label className="btn recommended_time_slot reservation_status1 border px-5" htmlFor="2">11:15-11:30</label>
+          </div>
+          <div className="col-6 col-md-3 mb-2">
+            <input type="radio" className="btn-check" name="time_slot" id="3" value="3" onChange={changeTimeSlot}/>
+            <label className="btn recommended_time_slot reservation_status3 border px-5" htmlFor="3">11:30-11:45</label>
+          </div>
+          <div className="col-6 col-md-3 mb-2">
+            <input type="radio" className="btn-check" name="time_slot" id="4" value="4" onChange={changeTimeSlot}/>
+            <label className="btn recommended_time_slot reservation_status1 border px-5" htmlFor="4">11:45-12:00</label>
+          </div>
+          <div className="col-6 col-md-3 mb-2">
+            <input type="radio" className="btn-check" name="time_slot" id="5" value="5" onChange={changeTimeSlot}/>
+            <label className="btn recommended_time_slot reservation_status5 border px-5" htmlFor="5">12:00-12:15</label>
+          </div>
+          <div className="col-6 col-md-3 mb-2">
+            <input type="radio" className="btn-check" name="time_slot" id="6" value="6" onChange={changeTimeSlot}/>
+            <label className="btn recommended_time_slot reservation_status1 border recently px-5" htmlFor="6">12:15-12:30</label>
+          </div>
+          <div className="col-6 col-md-3 mb-2">
+            <input type="radio" className="btn-check" name="time_slot" id="7" value="7" onChange={changeTimeSlot}/>
+            <label className="btn recommended_time_slot reservation_status6 border recently px-5" htmlFor="7">12:30-12:45</label>
+          </div>
+          <div className="col-6 col-md-3 mb-2">
+            <input type="radio" className="btn-check" name="time_slot" id="8" value="8" onChange={changeTimeSlot}/>
+            <label className="btn recommended_time_slot reservation_status1 border recently px-5" htmlFor="8">12:45-13:00</label>
+          </div>
+          <div className="col-6 col-md-3 mb-3">
+            <input type="radio" className="btn-check" name="time_slot" id="9" value="9" onChange={changeTimeSlot}/>
+            <label className="btn recommended_time_slot reservation_status2 border px-5" htmlFor="9">13:00-13:15</label>
+          </div>
+          <div className="col-6 col-md-3 mb-3">
+            <input type="radio" className="btn-check" name="time_slot" id="10" value="10" onChange={changeTimeSlot}/>
+            <label className="btn recommended_time_slot reservation_status7 border px-5" htmlFor="10">13:15-13:30</label>
+          </div>
+          <div className="col-6 col-md-3 mb-3">
+            <input type="radio" className="btn-check" name="time_slot" id="11" value="11" onChange={changeTimeSlot}/>
+            <label className="btn recommended_time_slot reservation_status1 border px-5" htmlFor="11">13:30-13:45</label>
+          </div>
+          <div className="col-6 col-md-3 mb-3">
+            <input type="radio" className="btn-check" name="time_slot" id="12" value="12" onChange={changeTimeSlot}/>
+            <label className="btn recommended_time_slot reservation_status1 border px-5" htmlFor="12">13:45-14:00</label>
           </div>
         </div>
         <h3>Anzahl Personen</h3>
@@ -61,6 +105,11 @@ const ReservationPage = () => {
           <button className="btn border number-icons me-4">+</button>
           <button className="btn border number-icons">-</button>
         </div>
+        {
+          /*<div className="d-inline-block">
+          <button className="btn btn-dark-outline dropdown-toggle px-4 mb-3" type="button" data-bs-toggle="dropdown" aria-expanded="false">Projekt auswählen</button>
+          </div>*/
+        }
         <div className="w-100 d-flex mt-4 justify-content-center reservation-plan">
           <svg xmlns="http://www.w3.org/2000/svg" id="sitzplan" viewBox="0 0 1116.26 867.67">
             <g id="section">
@@ -175,7 +224,7 @@ const ReservationPage = () => {
               <path d="M1006.72,846H910.34c-13-75-14.54-152.89,0-234h96.38C1020.59,689.66,1020.4,767.71,1006.72,846Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
             </g>
             <g id="big_section-2" data-name="big_section">
-              <g id="chair-25" data-name="chair" className='reserved_me'>
+              <g id="chair-25" data-name="chair" className="reserved_me">
                 <path d="M1356.75,567.42v17h-60v-17c0-15.46,13.43-28,30-28S1356.75,552,1356.75,567.42Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M1355.81,555.42a1,1,0,0,1-.88-.61c-4.19-10.73-15.23-18.39-28.18-18.39s-24,7.66-28.18,18.39a1,1,0,0,1-.88.61h0a1,1,0,0,1-.94-.95v-6.05c0-15.46,13.43-28,30-28s30,12.54,30,28v6.05a1,1,0,0,1-.94.95Z" transform="translate(-360.22 -59.5)" fill="#7d9bc1"/>
               </g>
@@ -199,11 +248,11 @@ const ReservationPage = () => {
                 <path d="M1428.47,837.25h-17v-60h17c15.46,0,28,13.43,28,30S1443.93,837.25,1428.47,837.25Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M1440.47,836.31a.94.94,0,0,1,.61-.88c10.73-4.19,18.39-15.23,18.39-28.18s-7.66-24-18.39-28.18a.94.94,0,0,1-.61-.88h0a1,1,0,0,1,1-.94h6c15.46,0,28,13.43,28,30s-12.54,30-28,30h-6a1,1,0,0,1-1-.94Z" transform="translate(-360.22 -59.5)" fill="#7d9bc1"/>
               </g>
-              <g id="chair-31" data-name="chair">
+              <g id="chair-31" data-name="chair" className="reserved_guests">
                 <path d="M1428.47,754.75h-17v-60h17c15.46,0,28,13.43,28,30S1443.93,754.75,1428.47,754.75Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M1440.47,753.81a.94.94,0,0,1,.61-.88c10.73-4.19,18.39-15.23,18.39-28.18s-7.66-24-18.39-28.18a.94.94,0,0,1-.61-.88h0a1,1,0,0,1,1-.94h6c15.46,0,28,13.43,28,30s-12.54,30-28,30h-6a1,1,0,0,1-1-.94Z" transform="translate(-360.22 -59.5)" fill="#7d9bc1"/>
               </g>
-              <g id="chair-32" data-name="chair">
+              <g id="chair-32" data-name="chair" className="reserved_guests">
                 <path d="M1429.47,672.25h-17v-60h17c15.46,0,28,13.43,28,30S1444.93,672.25,1429.47,672.25Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M1441.47,671.31a.94.94,0,0,1,.61-.88c10.73-4.19,18.39-15.23,18.39-28.18s-7.66-24-18.39-28.18a.94.94,0,0,1-.61-.88h0a1,1,0,0,1,1-.94h6c15.46,0,28,13.43,28,30s-12.54,30-28,30h-6a1,1,0,0,1-1-.94Z" transform="translate(-360.22 -59.5)" fill="#7d9bc1"/>
               </g>

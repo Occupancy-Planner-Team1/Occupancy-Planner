@@ -27,7 +27,7 @@ const ReservationPage = () => {
           <h4 title='Thomas Müller'>TM</h4>
         </div>
         <div className='mb-3'>
-          <input type="radio" className="btn-check" name="reservation_time" id="15min" value="15" onChange={changeTime} checked/>
+          <input type="radio" className="btn-check" name="reservation_time" id="15min" value="15" onChange={changeTime}/>
           <label className="btn border px-4 recommended_time_slot me-3" htmlFor="15min">15</label>
           <input type="radio" className="btn-check" name="reservation_time" id="30min" value="30" onChange={changeTime}/>
           <label className="btn border px-4 recommended_time_slot me-3" htmlFor="30min">30</label>
@@ -199,11 +199,11 @@ const ReservationPage = () => {
                 <path d="M1428.47,837.25h-17v-60h17c15.46,0,28,13.43,28,30S1443.93,837.25,1428.47,837.25Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M1440.47,836.31a.94.94,0,0,1,.61-.88c10.73-4.19,18.39-15.23,18.39-28.18s-7.66-24-18.39-28.18a.94.94,0,0,1-.61-.88h0a1,1,0,0,1,1-.94h6c15.46,0,28,13.43,28,30s-12.54,30-28,30h-6a1,1,0,0,1-1-.94Z" transform="translate(-360.22 -59.5)" fill="#7d9bc1"/>
               </g>
-              <g id="chair-31" data-name="chair">
+              <g id="chair-31" data-name="chair" className="reserved_guests">
                 <path d="M1428.47,754.75h-17v-60h17c15.46,0,28,13.43,28,30S1443.93,754.75,1428.47,754.75Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M1440.47,753.81a.94.94,0,0,1,.61-.88c10.73-4.19,18.39-15.23,18.39-28.18s-7.66-24-18.39-28.18a.94.94,0,0,1-.61-.88h0a1,1,0,0,1,1-.94h6c15.46,0,28,13.43,28,30s-12.54,30-28,30h-6a1,1,0,0,1-1-.94Z" transform="translate(-360.22 -59.5)" fill="#7d9bc1"/>
               </g>
-              <g id="chair-32" data-name="chair">
+              <g id="chair-32" data-name="chair" className="reserved_guests">
                 <path d="M1429.47,672.25h-17v-60h17c15.46,0,28,13.43,28,30S1444.93,672.25,1429.47,672.25Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M1441.47,671.31a.94.94,0,0,1,.61-.88c10.73-4.19,18.39-15.23,18.39-28.18s-7.66-24-18.39-28.18a.94.94,0,0,1-.61-.88h0a1,1,0,0,1,1-.94h6c15.46,0,28,13.43,28,30s-12.54,30-28,30h-6a1,1,0,0,1-1-.94Z" transform="translate(-360.22 -59.5)" fill="#7d9bc1"/>
               </g>

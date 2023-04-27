@@ -89,7 +89,7 @@ body{
   height: 20%;
   background: linear-gradient(90deg,rgba(255, 0, 0, 0.0),rgba(255, 0, 0, 0.7));
 }
-.reservation_status1{background-color: rgba(255, 0, 0, 0.0);}
+.reservation_status0, .reservation_status1{background-color: rgba(255, 0, 0, 0.0);}
 .reservation_status2{background-color: rgba(255, 0, 0, 0.025);}
 .reservation_status3{background-color: rgba(255, 0, 0, 0.05);}
 .reservation_status4{background-color: rgba(255, 0, 0, 0.1);}

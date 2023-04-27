@@ -4,6 +4,7 @@ import LoginPage from './components/LoginPage';
 import ReservationPage from './components/FreeReservationPage';
 import ReservationPage1 from './components/ReservationPage';
 import { BrowserRouter, Routes, Route } from "react-router-dom"
+import React from 'react';
 
 function App() {
   return (

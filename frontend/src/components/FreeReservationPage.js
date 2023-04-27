@@ -3,6 +3,7 @@ import React, { useRef, useEffect } from 'react';
 import logo from '../Logo-IT-Designers.svg';
 
 const ReservationPage = () => {
+  // variables & functions
   const [searchParams, setSearchParams] = useSearchParams();
   const timeslotref = useRef(null);
   useEffect(() => {
@@ -14,10 +15,96 @@ const ReservationPage = () => {
   const changeTime = (e) => {
     console.log(e.target.value);
   };
-  
   const changeTimeSlot = (e) => {
-    console.log(e.target.value);
+    // fetch reserved chairs
+    seats.forEach((value)=>{
+      let element = document.getElementById("chair-"+value.chairId.toString());
+      switch (value.status) {
+        case 1:
+          element.setAttribute('class', 'reserved_reserved');
+          break;
+        case 2:
+          element.setAttribute('class', 'reserved_me');
+          break;
+        case 3:
+          element.setAttribute('class', 'reserved_guests');
+          break;
+        case 4:
+          element.setAttribute('class', 'reserved_employees');
+          break;
+        default:
+          break;
+      }
+    });
+    // eventlistener on free chairs
+    document.getElementById("sitzplan")?.querySelectorAll(`g[data-name="chair"]`).forEach((element)=>{
+      if (!element.classList.contains("reserved_reserved")) {
+        element.addEventListener("click", (e)=>{
+          // Get Id of clicked chair
+          console.log(e.target.parentElement.id);
+        })
+      }
+    });
   };
+  // temp json responses
+  const slots = [
+    {
+      "slot": "11:00-11:15",
+      "capacity": 0.1
+    },
+    {
+      "slot": "11:15-11:30",
+      "capacity": 0.2
+    },
+    {
+      "slot": "11:30-11:45",
+      "capacity": 0.3
+    },
+    {
+      "slot": "11:45-12:00",
+      "capacity": 0.4
+    },
+    {
+      "slot": "12:00-12:15",
+      "capacity": 0.5
+    },
+    {
+      "slot": "12:15-12:30",
+      "capacity": 0.6
+    },
+    {
+      "slot": "12:30-12:45",
+      "capacity": 0.7
+    },
+    {
+      "slot": "12:45-13:00",
+      "capacity": 0.8
+    },
+    {
+      "slot": "13:00-13:15",
+      "capacity": 0.9
+    },
+    {
+      "slot": "13:15-13:30",
+      "capacity": 1.0
+    },
+    {
+      "slot": "13:30-13:45",
+      "capacity": 0.0
+    },
+    {
+      "slot": "13:45-14:00",
+      "capacity": 0.1
+    },
+  ];
+  const seats = [
+    { "chairId": 1, status: 1},
+    { "chairId": 2, status: 2},
+    { "chairId": 32, status: 1},
+    { "chairId": 30, status: 1}
+  ];
+
+  // html
   return (
     <div className="App">
       <header className="container reservation-form d-flex justify-content-between">
@@ -50,58 +137,18 @@ const ReservationPage = () => {
           </div>
         </div>
         <div className="row">
-          <div className="col-6 col-md-3 mb-2">
-            <input type="radio" className="btn-check" name="time_slot" id="1" value="1" onChange={changeTimeSlot}/>
-            <label className="btn recommended_time_slot reservation_status1 border px-5" htmlFor="1">11:00-11:15</label>
-          </div>
-          <div className="col-6 col-md-3 mb-2">
-            <input type="radio" className="btn-check" name="time_slot" id="2" value="2" onChange={changeTimeSlot}/>
-            <label className="btn recommended_time_slot reservation_status1 border px-5" htmlFor="2">11:15-11:30</label>
-          </div>
-          <div className="col-6 col-md-3 mb-2">
-            <input type="radio" className="btn-check" name="time_slot" id="3" value="3" onChange={changeTimeSlot}/>
-            <label className="btn recommended_time_slot reservation_status3 border px-5" htmlFor="3">11:30-11:45</label>
-          </div>
-          <div className="col-6 col-md-3 mb-2">
-            <input type="radio" className="btn-check" name="time_slot" id="4" value="4" onChange={changeTimeSlot}/>
-            <label className="btn recommended_time_slot reservation_status1 border px-5" htmlFor="4">11:45-12:00</label>
-          </div>
-          <div className="col-6 col-md-3 mb-2">
-            <input type="radio" className="btn-check" name="time_slot" id="5" value="5" onChange={changeTimeSlot}/>
-            <label className="btn recommended_time_slot reservation_status5 border px-5" htmlFor="5">12:00-12:15</label>
-          </div>
-          <div className="col-6 col-md-3 mb-2">
-            <input type="radio" className="btn-check" name="time_slot" id="6" value="6" onChange={changeTimeSlot}/>
-            <label className="btn recommended_time_slot reservation_status1 border recently px-5" htmlFor="6">12:15-12:30</label>
-          </div>
-          <div className="col-6 col-md-3 mb-2">
-            <input type="radio" className="btn-check" name="time_slot" id="7" value="7" onChange={changeTimeSlot}/>
-            <label className="btn recommended_time_slot reservation_status6 border recently px-5" htmlFor="7">12:30-12:45</label>
-          </div>
-          <div className="col-6 col-md-3 mb-2">
-            <input type="radio" className="btn-check" name="time_slot" id="8" value="8" onChange={changeTimeSlot}/>
-            <label className="btn recommended_time_slot reservation_status1 border recently px-5" htmlFor="8">12:45-13:00</label>
-          </div>
-          <div className="col-6 col-md-3 mb-3">
-            <input type="radio" className="btn-check" name="time_slot" id="9" value="9" onChange={changeTimeSlot}/>
-            <label className="btn recommended_time_slot reservation_status2 border px-5" htmlFor="9">13:00-13:15</label>
-          </div>
-          <div className="col-6 col-md-3 mb-3">
-            <input type="radio" className="btn-check" name="time_slot" id="10" value="10" onChange={changeTimeSlot}/>
-            <label className="btn recommended_time_slot reservation_status7 border px-5" htmlFor="10">13:15-13:30</label>
-          </div>
-          <div className="col-6 col-md-3 mb-3">
-            <input type="radio" className="btn-check" name="time_slot" id="11" value="11" onChange={changeTimeSlot}/>
-            <label className="btn recommended_time_slot reservation_status1 border px-5" htmlFor="11">13:30-13:45</label>
-          </div>
-          <div className="col-6 col-md-3 mb-3">
-            <input type="radio" className="btn-check" name="time_slot" id="12" value="12" onChange={changeTimeSlot}/>
-            <label className="btn recommended_time_slot reservation_status1 border px-5" htmlFor="12">13:45-14:00</label>
-          </div>
+          {
+            slots.map((value, key) => (
+              <div className="col-12 col-sm-6 col-md-3 mb-2" key={key}>
+                <input type="radio" className="btn-check" name="time_slot" id={key} value={key+1} onChange={changeTimeSlot}/>
+                <label className={`btn recommended_time_slot reservation_status${value.capacity===1.0 ? "10" : value.capacity*10 } border px-5`} htmlFor={key}>{value.slot}</label>
+              </div>
+            ))
+          }
         </div>
         <h3>Anzahl Personen</h3>
         <div>
-          <h3 className="text-muted d-inline-block me-5">Gäste</h3>
+          <h3 className="text-muted d-inline-block me-5">{`Gäste`}</h3>
           <button className="btn border number-icons me-4">+</button>
           <button className="btn border number-icons">-</button>
         </div>
@@ -114,7 +161,7 @@ const ReservationPage = () => {
           <svg xmlns="http://www.w3.org/2000/svg" id="sitzplan" viewBox="0 0 1116.26 867.67">
             <g id="section">
               <circle cx="899.07" cy="146.5" r="64" fill="#003a70"/>
-              <g id="chair">
+              <g id="chair-1" data-name="chair">
                 <path d="M1208.88,113.24l12,12-42.42,42.43-12-12c-10.93-10.93-10.3-29.29,1.42-41S1198,102.31,1208.88,113.24Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M1199.73,105.42a.93.93,0,0,1-1,.19c-10.55-4.62-23.78-2.23-32.93,6.92s-11.55,22.38-6.92,32.94a1,1,0,0,1-.19,1h0a1,1,0,0,1-1.34,0l-4.28-4.28c-10.93-10.93-10.3-29.3,1.41-41s30.08-12.35,41-1.42l4.28,4.29a.94.94,0,0,1,0,1.33Z" transform="translate(-360.22 -59.5)" fill="#7d9bc1"/>
               </g>
@@ -131,7 +178,7 @@ const ReservationPage = () => {
                 <path d="M1359.86,146a1,1,0,0,1-.19-1c4.63-10.56,2.24-23.78-6.92-32.94s-22.38-11.54-32.93-6.92a.93.93,0,0,1-1-.19h0a1,1,0,0,1,0-1.34l4.28-4.28c10.94-10.93,29.3-10.3,41,1.42s12.34,30.08,1.41,41L1361.2,146a1,1,0,0,1-1.34,0Z" transform="translate(-360.22 -59.5)" fill="#7d9bc1"/>
               </g>
             </g>
-            <g id="section-2" data-name="section" className="reserved_reserved">
+            <g id="section-2" data-name="section">
               <circle cx="654.07" cy="257.5" r="64" fill="#003a70"/>
               <g id="chair-5" data-name="chair">
                 <path d="M963.88,224.24l12,12-42.42,42.43-12-12c-10.93-10.93-10.3-29.29,1.42-41S953,213.31,963.88,224.24Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
@@ -171,7 +218,7 @@ const ReservationPage = () => {
             </g>
             <g id="section-4" data-name="section">
               <circle cx="114.07" cy="257.5" r="64" fill=" #003a70"/>
-              <g id="chair-13" data-name="chair" className="reserved_reserved">
+              <g id="chair-13" data-name="chair">
                 <path d="M423.88,224.24l12,12-42.42,42.43-12-12c-10.93-10.93-10.3-29.29,1.42-41S413,213.31,423.88,224.24Z" transform="translate(-360.22 -59.5)" fill=" #003a70"/>
                 <path d="M414.73,216.42a.93.93,0,0,1-1.05.19c-10.55-4.62-23.78-2.23-32.93,6.92s-11.55,22.38-6.92,32.94a1,1,0,0,1-.19,1h0a1,1,0,0,1-1.34,0L368,253.23c-10.93-10.93-10.3-29.3,1.41-41s30.08-12.35,41-1.42l4.28,4.29a.94.94,0,0,1,0,1.33Z" transform="translate(-360.22 -59.5)" fill=" #7d9bc1"/>
               </g>
@@ -179,7 +226,7 @@ const ReservationPage = () => {
                 <path d="M381.52,367.84l12-12L436,398.24l-12,12c-10.93,10.93-29.3,10.3-41-1.41S370.59,378.77,381.52,367.84Z" transform="translate(-360.22 -59.5)" fill=" #003a70"/>
                 <path d="M373.7,377a.92.92,0,0,1,.19,1c-4.62,10.56-2.23,23.78,6.92,32.94s22.38,11.54,32.94,6.92a.91.91,0,0,1,1,.19h0a1,1,0,0,1,0,1.34l-4.28,4.28c-10.93,10.93-29.29,10.3-41-1.42s-12.35-30.08-1.41-41l4.28-4.28a.94.94,0,0,1,1.33,0Z" transform="translate(-360.22 -59.5)" fill=" #7d9bc1"/>
               </g>
-              <g id="chair-15" data-name="chair" className="reserved_reserved">
+              <g id="chair-15" data-name="chair">
                 <path d="M525.12,409.76l-12-12,42.42-42.43,12,12c10.93,10.93,10.3,29.29-1.42,41S536.05,420.69,525.12,409.76Z" transform="translate(-360.22 -59.5)" fill=" #003a70"/>
                 <path d="M534.27,417.58a.93.93,0,0,1,1.05-.19c10.55,4.62,23.78,2.23,32.93-6.92s11.55-22.38,6.92-32.94a1,1,0,0,1,.19-1h0a1,1,0,0,1,1.34,0l4.28,4.28c10.93,10.93,10.3,29.3-1.41,41s-30.08,12.35-41,1.42l-4.28-4.29a.94.94,0,0,1,0-1.33Z" transform="translate(-360.22 -59.5)" fill=" #7d9bc1"/>
               </g>
@@ -188,7 +235,7 @@ const ReservationPage = () => {
                 <path d="M574.86,257a1,1,0,0,1-.19-1c4.63-10.56,2.24-23.78-6.92-32.94s-22.38-11.54-32.93-6.92a.93.93,0,0,1-1.05-.19h0a1,1,0,0,1,0-1.34l4.28-4.28c10.94-10.93,29.3-10.3,41,1.42s12.34,30.08,1.41,41L576.2,257a1,1,0,0,1-1.34,0Z" transform="translate(-360.22 -59.5)" fill=" #7d9bc1"/>
               </g>
             </g>
-            <g id="big_section" className="reserved_reserved">
+            <g id="big_section">
               <g id="chair-17" data-name="chair">
                 <path d="M986.89,567.67v17h-60v-17c0-15.46,13.43-28,30-28S986.89,552.21,986.89,567.67Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M985.94,555.67a1,1,0,0,1-.87-.61c-4.19-10.73-15.23-18.39-28.18-18.39s-24,7.66-28.18,18.39a1,1,0,0,1-.88.61h0a1,1,0,0,1-.94-.95v-6.05c0-15.46,13.43-28,30-28s30,12.54,30,28v6.05a1,1,0,0,1-.95.95Z" transform="translate(-360.22 -59.5)" fill=" #7d9bc1"/>
@@ -224,7 +271,7 @@ const ReservationPage = () => {
               <path d="M1006.72,846H910.34c-13-75-14.54-152.89,0-234h96.38C1020.59,689.66,1020.4,767.71,1006.72,846Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
             </g>
             <g id="big_section-2" data-name="big_section">
-              <g id="chair-25" data-name="chair" className="reserved_me">
+              <g id="chair-25" data-name="chair">
                 <path d="M1356.75,567.42v17h-60v-17c0-15.46,13.43-28,30-28S1356.75,552,1356.75,567.42Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M1355.81,555.42a1,1,0,0,1-.88-.61c-4.19-10.73-15.23-18.39-28.18-18.39s-24,7.66-28.18,18.39a1,1,0,0,1-.88.61h0a1,1,0,0,1-.94-.95v-6.05c0-15.46,13.43-28,30-28s30,12.54,30,28v6.05a1,1,0,0,1-.94.95Z" transform="translate(-360.22 -59.5)" fill="#7d9bc1"/>
               </g>
@@ -248,11 +295,11 @@ const ReservationPage = () => {
                 <path d="M1428.47,837.25h-17v-60h17c15.46,0,28,13.43,28,30S1443.93,837.25,1428.47,837.25Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M1440.47,836.31a.94.94,0,0,1,.61-.88c10.73-4.19,18.39-15.23,18.39-28.18s-7.66-24-18.39-28.18a.94.94,0,0,1-.61-.88h0a1,1,0,0,1,1-.94h6c15.46,0,28,13.43,28,30s-12.54,30-28,30h-6a1,1,0,0,1-1-.94Z" transform="translate(-360.22 -59.5)" fill="#7d9bc1"/>
               </g>
-              <g id="chair-31" data-name="chair" className="reserved_guests">
+              <g id="chair-31" data-name="chair">
                 <path d="M1428.47,754.75h-17v-60h17c15.46,0,28,13.43,28,30S1443.93,754.75,1428.47,754.75Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M1440.47,753.81a.94.94,0,0,1,.61-.88c10.73-4.19,18.39-15.23,18.39-28.18s-7.66-24-18.39-28.18a.94.94,0,0,1-.61-.88h0a1,1,0,0,1,1-.94h6c15.46,0,28,13.43,28,30s-12.54,30-28,30h-6a1,1,0,0,1-1-.94Z" transform="translate(-360.22 -59.5)" fill="#7d9bc1"/>
               </g>
-              <g id="chair-32" data-name="chair" className="reserved_guests">
+              <g id="chair-32" data-name="chair">
                 <path d="M1429.47,672.25h-17v-60h17c15.46,0,28,13.43,28,30S1444.93,672.25,1429.47,672.25Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M1441.47,671.31a.94.94,0,0,1,.61-.88c10.73-4.19,18.39-15.23,18.39-28.18s-7.66-24-18.39-28.18a.94.94,0,0,1-.61-.88h0a1,1,0,0,1,1-.94h6c15.46,0,28,13.43,28,30s-12.54,30-28,30h-6a1,1,0,0,1-1-.94Z" transform="translate(-360.22 -59.5)" fill="#7d9bc1"/>
               </g>

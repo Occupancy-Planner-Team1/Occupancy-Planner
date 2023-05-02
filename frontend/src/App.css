@@ -1,167 +1,181 @@
-<<<<<<< HEAD
-.App {
-  text-align: center;
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-=======
-body{
-  font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-:root{
+:root {
   --bs-dark: #f0ff0f;
-  --blue:#003A70;
-  --grey:#646568;
+  --blue: #003A70;
+  --grey: #646568;
 }
+
 .App {
   background-color: #F9F9F9;
   min-height: 100vh;
 }
-.h-fill{
+
+.h-fill {
   height: 100vh;
 }
-.image_link{
+
+.image_link {
   color: var(--grey);
   position: absolute;
   left: 40px;
   bottom: 0;
 }
-.image_link a{
+
+.image_link a {
   color: var(--grey);
 }
-.logo-sm{
+
+.logo-sm {
   position: absolute;
   bottom: 23px;
   right: 23px;
 }
-.login-backgound{
+
+.login-backgound {
   background-image: url('https://images.unsplash.com/photo-1507133750040-4a8f57021571?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1887&q=80');
   background-size: cover;
   background-position: center;
   backdrop-filter: blur(10px);
 }
-.reservation-form img{
+
+.reservation-form img {
   padding: 12px;
   height: 80px;
 }
-.reservation-form{
+
+.reservation-form {
   background-color: #fff;
   padding-left: 100px;
   padding-right: 100px;
   padding-top: 24px;
   max-width: 1000px;
 }
-.reservation-form h2{
+
+.reservation-form h2 {
   color: var(--grey);
   font-size: 25pt;
   margin-bottom: 20px;
 }
-.reservation-form h3{
+
+.reservation-form h3 {
   font-weight: 400;
   color: var(--blue);
   font-size: 16pt;
   margin-bottom: 12px;
 }
-.reservation-form button{
+
+.reservation-form button {
   width: 200px;
   text-align: left;
   position: relative;
 }
-.reserved{
 
-}
-.reservation-form button::after{
+.reserved {}
+
+.reservation-form button::after {
   right: 15px;
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
 }
-.reservation-plan{
+
+.reservation-plan {
   max-height: 50%;
 }
-.btn-check:checked+.recommended_time_slot{
-  outline: #7a9ac1 solid 5px!important;
+
+.btn-check:checked+.recommended_time_slot {
+  outline: #7a9ac1 solid 5px !important;
   border: none;
 }
-.number-icons{
-  width: 36px!important;
+
+.number-icons {
+  width: 36px !important;
   text-align: center;
 }
-.bg-status::after{
+
+.bg-status::after {
   content: "";
   position: absolute;
   right: 5%;
   bottom: 10px;
   width: 90%;
   height: 20%;
-  background: linear-gradient(90deg,rgba(255, 0, 0, 0.0),rgba(255, 0, 0, 0.7));
+  background: linear-gradient(90deg, rgba(255, 0, 0, 0.0), rgba(255, 0, 0, 0.7));
 }
-.reservation_status0, .reservation_status1{background-color: rgba(255, 0, 0, 0.0);}
-.reservation_status2{background-color: rgba(255, 0, 0, 0.025);}
-.reservation_status3{background-color: rgba(255, 0, 0, 0.05);}
-.reservation_status4{background-color: rgba(255, 0, 0, 0.1);}
-.reservation_status5{background-color: rgba(255, 0, 0, 0.2);}
-.reservation_status6{background-color: rgba(255, 0, 0, 0.3);}
-.reservation_status7{background-color: rgba(255, 0, 0, 0.4);}
-.reservation_status8{background-color: rgba(255, 0, 0, 0.5);}
-.reservation_status9{background-color: rgba(255, 0, 0, 0.6);}
-.reservation_status10{background-color: rgba(255, 0, 0, 0.7);}
 
-.reserved_me>path:nth-child(1){
+.reservation_status0,
+.reservation_status1 {
+  background-color: rgba(255, 0, 0, 0.0);
+}
+
+.reservation_status2 {
+  background-color: rgba(255, 0, 0, 0.025);
+}
+
+.reservation_status3 {
+  background-color: rgba(255, 0, 0, 0.05);
+}
+
+.reservation_status4 {
+  background-color: rgba(255, 0, 0, 0.1);
+}
+
+.reservation_status5 {
+  background-color: rgba(255, 0, 0, 0.2);
+}
+
+.reservation_status6 {
+  background-color: rgba(255, 0, 0, 0.3);
+}
+
+.reservation_status7 {
+  background-color: rgba(255, 0, 0, 0.4);
+}
+
+.reservation_status8 {
+  background-color: rgba(255, 0, 0, 0.5);
+}
+
+.reservation_status9 {
+  background-color: rgba(255, 0, 0, 0.6);
+}
+
+.reservation_status10 {
+  background-color: rgba(255, 0, 0, 0.7);
+}
+
+.reserved_me>path:nth-child(1) {
   fill: rgb(0, 255, 10);
 }
-.reserved_me>path:nth-child(2){
+
+.reserved_me>path:nth-child(2) {
   fill: rgba(0, 255, 10, 0.7);
 }
-.reserved_guests>path:nth-child(1){
+
+.reserved_guests>path:nth-child(1) {
   fill: dimgray;
 }
-.reserved_guests path:nth-child(2){
+
+.reserved_guests path:nth-child(2) {
   fill: rgba(105, 105, 105, 0.7);
 }
-.reserved_employees>path:nth-child(1){
+
+.reserved_employees>path:nth-child(1) {
   fill: rgb(186, 169, 61);
 }
-.reserved_employees path:nth-child(2){
+
+.reserved_employees path:nth-child(2) {
   fill: rgba(186, 169, 61, 0.7);
 }
-.reserved_reserved path, .reserved_reserved circle{
+
+.reserved_reserved path,
+.reserved_reserved circle {
   fill: rgba(255, 0, 0, 0.7);
 }
-.reserved_reserved path:nth-child(2){
+
+.reserved_reserved path:nth-child(2) {
   fill: rgba(255, 0, 0, 0.5);
 }
->>>>>>> test

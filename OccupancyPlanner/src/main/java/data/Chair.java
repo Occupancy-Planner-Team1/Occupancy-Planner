@@ -22,11 +22,8 @@ import jakarta.persistence.Table;
 public class Chair {
 	
 	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
 	@Column(name="id")
 	private int id;
-	
-	
 	
 	@Column(name="tisch")
 	private String tisch;

@@ -5,6 +5,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -20,25 +22,36 @@ public class ReservationServiceImpl implements ReservationService {
 	ReservationRepository resRepo;
 	@Autowired
 	StuhlRepository stuhlRepo;
+	
+	private JSONArray timeslots=new JSONArray();
+	private JSONArray timeslotHolder=new JSONArray();
+	private JSONObject chairs;
 
 	@Override
-	public Integer saveReservation(LocalDate date, String timeslot, String userid, int stuhlid, int bookingno) {
+	public Integer saveReservation(LocalDate date,int dauer, int timeslot,String leaderid, String userid, int stuhlid, int bookingno) {
 		
 		//LocalDate dateNow=LocalDate.now();
 		//Duration timePassed=Duration.between(dateNow, date);
 		
+		if((timeslot+dauer)>11)return null;
 		if(!resRepo.findTaken(date, timeslot).contains(stuhlid)) {
 			
+			for(int i=0;i<=dauer;i++) {
+				
 			Reservation reservation=new Reservation();
 			Chair chair=stuhlRepo.findById(stuhlid);
 			
 			reservation.setChair(chair);
 			reservation.setDate(date);
 			reservation.setSlot(timeslot);
+			timeslot=timeslot+1;
 			reservation.setUser(userid);
+			reservation.setLeaderId(leaderid);
 			reservation.setBooking(bookingno);
 			
 			resRepo.save(reservation);
+			
+			}
 			return stuhlid;
 		}
 		
@@ -46,7 +59,7 @@ public class ReservationServiceImpl implements ReservationService {
 	}
 
 	@Override
-	public Integer deleteReservation(int bookingno, String timeslot) {
+	public Integer deleteReservation(int bookingno, int timeslot) {
 		if(!resRepo.findByBookingAndTime(bookingno, timeslot).isEmpty()) {
 			resRepo.deleteAllByIdInBatch(resRepo.findByBookingAndTime(bookingno, timeslot));
 			return bookingno;
@@ -57,25 +70,62 @@ public class ReservationServiceImpl implements ReservationService {
 	}
 
 	@Override
-	public List<Integer> findFree(LocalDate date, String timeslot) {
-
-		List<Integer> freeChairs=new ArrayList<Integer>();
-
-		for(int i=1;i<33;i++) {
-			if(!resRepo.findTaken(date, timeslot).contains(i)) {
-				freeChairs.add(i);			
-			}
+	public JSONArray getMultipleTimeSlots(LocalDate date, int dauer, int timeslot) {
+		
+		timeslotHolder.clear();
+		timeslots.clear();
+		
+		for(int j=0;j<dauer;j++) {
+		for(int i=0;i<resRepo.findTaken(date, timeslot).size();i++) {
+			
+			chairs=new JSONObject();
+			chairs.put(resRepo.findLeaderId(resRepo.findTaken(date, timeslot).get(i), timeslot), resRepo.findTaken(date, timeslot).get(i));
+			
+			timeslotHolder.put(i, chairs);
+			
+		}
+		timeslots.put(j, timeslotHolder);
+		timeslotHolder=new JSONArray();
+		
 		}
 		
-		return freeChairs;
+		return timeslots;
 
 	}
+	
 
 	@Override
-	public double timeslotLoad(LocalDate date, String timeslot) {
+	public JSONArray timeslotLoad(LocalDate date) {
 		
-		double load=resRepo.findTaken(date, timeslot).size()/32.0;
+		JSONArray load=new JSONArray();
+		
+		for(int i=0;i<12;i++) {
+			load.put(i,resRepo.findTaken(date, i).size()/32.0);
+		}
 		
 		return load;
 	}
+
+	@Override
+	public int recommendBooking(LocalDate date, int dauer, int timeslot, int guests) {
+		
+		Boolean flag=false;
+		int tmpSlot;
+		
+		for(int i=1;i<=32;i++) {
+			tmpSlot=timeslot;
+			for(int j=0;j<=dauer;j++) {
+				
+				if(!resRepo.findTaken(date, tmpSlot).contains(i))flag=true;
+				if(resRepo.findTaken(date, tmpSlot).contains(i))flag=false;
+				
+				if(flag==false)break;
+				tmpSlot=tmpSlot+1;
+			}
+			if(flag==true)return i;		
+			
+		}
+		
+		return 0;
+		}
 }

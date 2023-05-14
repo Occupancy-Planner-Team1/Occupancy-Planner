@@ -25,22 +25,28 @@ public class Controller {
 	@Autowired
 	ReservationService resService;
 	
-	@GetMapping("/seats/{date}/{timeslot}")
-	public ResponseEntity getFreeChairsTimeSlot(@PathVariable("date") String stringDate, @PathVariable("timeslot") String timeslot) {
+	@GetMapping("seats/{date}/{dauer}/{timeslot}")
+	public ResponseEntity getMultipleTimeSlots(@PathVariable("date") String stringDate, @PathVariable("dauer") int dauer, @PathVariable("timeslot") int timeslot) {
 		LocalDate date=LocalDate.parse(stringDate);
-		return ResponseEntity.ok(this.resService.findFree(date, timeslot));
+		return ResponseEntity.ok(this.resService.getMultipleTimeSlots(date, dauer, timeslot).toString());
+	}
+	
+	@GetMapping("recommend/{date}/{dauer}/{timeslot}")
+	public ResponseEntity recommendBooking(@PathVariable("date") String stringDate, @PathVariable("dauer") int dauer, @PathVariable("timeslot") int timeslot) {
+		LocalDate date=LocalDate.parse(stringDate);
+		return ResponseEntity.ok(this.resService.recommendBooking(date, dauer, timeslot, 0));
 	}
 	
 	
-	@PutMapping("book/{date}/{timeslot}/{userid}/{stuhlId}/{bookingNo}")
-	public ResponseEntity setReservation(@PathVariable("date")String stringDate, @PathVariable("timeslot") String timeslot, @PathVariable("userid") String userid, @PathVariable("stuhlId") int chairId, @PathVariable("bookingNo") int booking) {
+	@PutMapping("book/{date}/{dauer}/{timeslot}/{leaderid}/{userid}/{stuhlId}/{bookingNo}")
+	public ResponseEntity setReservation(@PathVariable("date")String stringDate,@PathVariable("dauer")int dauer, @PathVariable("timeslot") int timeslot,@PathVariable("leaderid") String leaderid, @PathVariable("userid") String userid, @PathVariable("stuhlId") int chairId, @PathVariable("bookingNo") int booking) {
 		
 		LocalDate date=LocalDate.parse(stringDate);
 		
 		if(chairId<0 || chairId>32) {
 			return ResponseEntity.status(HttpStatus.SC_NOT_FOUND).body("Invalid chair index");
 		}
-		if(resService.saveReservation(date, timeslot, userid, chairId, booking)!=null){
+		if(resService.saveReservation(date, dauer, timeslot, leaderid, userid, chairId, booking)!=null){
 			return ResponseEntity.status(HttpStatus.SC_OK).body("Reservation accepted");
 		}
 		return ResponseEntity.status(HttpStatus.SC_FORBIDDEN).body("Chair already reserved");
@@ -48,7 +54,7 @@ public class Controller {
 	}
 	
 	@DeleteMapping("book/{bookingNo}/{timeslot}")
-	public ResponseEntity deleteReservation(@PathVariable("bookingNo") int bookingNo,@PathVariable("timeslot") String timeslot) {
+	public ResponseEntity deleteReservation(@PathVariable("bookingNo") int bookingNo,@PathVariable("timeslot") int timeslot) {
 		if(resService.deleteReservation(bookingNo, timeslot)!=null) {
 			return ResponseEntity.status(HttpStatus.SC_OK).body("Reservation deleted");
 		}
@@ -56,10 +62,10 @@ public class Controller {
 		
 	}
 	 
-	@GetMapping("timeslots/{date}/{timeslot}")
-	public ResponseEntity timeslotLoad(@PathVariable("date") String stringDate, @PathVariable("timeslot") String timeslot) {
+	@GetMapping("timeslots/{date}")
+	public ResponseEntity timeslotLoad(@PathVariable("date") String stringDate) {
 		LocalDate date=LocalDate.parse(stringDate);
-		return ResponseEntity.ok(this.resService.timeslotLoad(date, timeslot));
+		return ResponseEntity.ok(this.resService.timeslotLoad(date).toString());
 	}
 	
 	

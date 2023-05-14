@@ -17,9 +17,11 @@ public interface ReservationRepository extends JpaRepository<Reservation, Intege
 	Reservation findById(@Param("id")int id);
 	
 	@Query(value="SELECT id FROM reservation WHERE bookingid=:bookingid AND timeslot=:timeslot", nativeQuery=true)
-	List<Integer> findByBookingAndTime(@Param("bookingid") int bookingid, @Param("timeslot") String timeslot);
+	List<Integer> findByBookingAndTime(@Param("bookingid") int bookingid, @Param("timeslot") int timeslot);
 	
-	@Query(value="SELECT chair_id FROM reservation WHERE date=:date AND timeslot=:timeslot", nativeQuery=true)
-	List <Integer> findTaken(@Param("date")LocalDate date, @Param("timeslot")String timeslot);
+	@Query(value="SELECT chairid FROM reservation WHERE date=:date AND timeslot=:timeslot", nativeQuery=true)
+	List <Integer> findTaken(@Param("date")LocalDate date, @Param("timeslot")int timeslot);
 	
+	@Query(value="SELECT leaderid FROM reservation WHERE chairid=:chairid AND timeslot=:timeslot", nativeQuery=true)
+	String findLeaderId(@Param("chairid")int chairid, @Param ("timeslot")int timeslot);
 }

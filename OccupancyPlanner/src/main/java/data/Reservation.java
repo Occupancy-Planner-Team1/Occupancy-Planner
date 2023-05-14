@@ -31,7 +31,7 @@ public class Reservation {
 	private LocalDate date;
 	
 	@Column(name="timeslot")
-	private String timeslot;
+	private int timeslot;
 	
 	@Column(name="memberid")
 	private String memberid;
@@ -39,8 +39,11 @@ public class Reservation {
 	@Column(name="bookingid")
 	private int bookingid;
 	
+	@Column(name="leaderid")
+	private String leaderid;
+	
 	@ManyToOne(cascade=CascadeType.ALL)
-	@JoinColumn(name="chairId")
+	@JoinColumn(name="chairid")
 	private Chair chair;
 	
 	
@@ -56,7 +59,7 @@ public class Reservation {
 		return this.date;
 	}
 	
-	public String getSlot() {
+	public int getSlot() {
 		return this.timeslot;
 	}
 	
@@ -68,6 +71,10 @@ public class Reservation {
 		return this.bookingid;
 	}
 	
+	public String getLeaderId() {
+		return this.leaderid;
+	}
+	
 	public Chair getChair() {
 		return this.chair;
 	}
@@ -76,7 +83,7 @@ public class Reservation {
 		this.date=date;
 	}
 	
-	public void setSlot(String slot) {
+	public void setSlot(int slot) {
 		this.timeslot=slot;
 	}
 	
@@ -86,6 +93,10 @@ public class Reservation {
 	
 	public void setBooking(int booking) {
 		this.bookingid=booking;
+	}
+	
+	public void setLeaderId(String leaderid) {
+		this.leaderid=leaderid;
 	}
 	
 	public void setChair(Chair chair) {

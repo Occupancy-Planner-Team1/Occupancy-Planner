@@ -28,6 +28,15 @@ public class OccuControl {
         this.mitarbeiterRepository = mitarbeiterRepository;
     }
 
+//--------------------------- TO DO -----------------------
+//   @GetMapping("/res/{date}/{ts-start}/{ts-duration}") gibt json mit belegung zurück
+
+//   @GetMapping("/resconfirm") gibt die doppelbuchungen zurück
+//   @GetMapping("/res/del/{date}/{ts}/{leaderid}") löscht reservierung anhand datum timeslot leaderid
+//   @GetMapping("/res/del-booking/{bookingid}") löscht reservierung(en) anhand bookingid
+//   @GetMapping("/res/del-yesterday/") löscht reservierung(en) die vorbei sind
+//   @GetMapping("/res/day/{date}") gibt json mit allen plätzen an einem tag zurück
+
 
 
 
@@ -39,20 +48,13 @@ public class OccuControl {
         return ResponseEntity.ok("Hello Anonymous");
     }
 
-    @GetMapping("/anonymous/{bla}")
+    @GetMapping("/anonymous/{bla}") // TESTING only
     public ResponseEntity<String> getAnonymous1(@PathVariable("bla") int bla) {
         return ResponseEntity.ok(String.format("Hello Anonymous %s",bla));
     }
 
-    @GetMapping("/admin")
-    public ResponseEntity<String> getAdmin(Principal principal) {
-        JwtAuthenticationToken token = (JwtAuthenticationToken) principal;
-        String userName = (String) token.getTokenAttributes().get("name");
-        String userEmail = (String) token.getTokenAttributes().get("email");
-        return ResponseEntity.ok("Hello Admin \nUser Name : " + userName + "\nUser Email : " + userEmail);
-    }
 
-    @GetMapping("/verify")
+    @GetMapping("/verify") // trägt die keycloak id in eine extra datenbank ein obsolet wenn keycloak api mit serviceuser funktioniert
     public ResponseEntity<String >firstLoginInsert(Principal principal){
         JwtAuthenticationToken token = (JwtAuthenticationToken) principal;
         String prename = (String) token.getTokenAttributes().get("given_name");
@@ -93,7 +95,7 @@ public class OccuControl {
 //        return ResponseEntity.ok(r);
 //    }
 
-    @GetMapping("/user")
+    @GetMapping("/res-all") //spuckt ALLE reservierungen aus
     public ResponseEntity<List<Reservation>> getAllRes() {
 
         return ResponseEntity.ok(this.reservationRepository.findAll());

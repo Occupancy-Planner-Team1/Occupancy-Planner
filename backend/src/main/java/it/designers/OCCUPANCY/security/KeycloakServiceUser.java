@@ -35,7 +35,23 @@ public class KeycloakServiceUser {
 
     // needed:
     // public String getName(UUID id) -> funktion ( id ) gibt username zurück
+    // Get User Info
+    public String get_user_info(String token, String userID) throws UnirestException, JsonProcessingException {
+        Unirest.setTimeouts(0, 0);
+        HttpResponse<com.mashape.unirest.http.JsonNode> response = Unirest.get("http://localhost:8069/admin/realms/OCCUPANCY/users/"+userID)
+                .header("Authorization", "Bearer "+token)
+                .asJson();
+        return response.getBody().toString();
+    }
     // public List<UUID> getGruppenMitglieder -> funktion (gruppenid) gibt liste an mitglieder-userids zurück
+    // Get User Groups
+    public String get_user_groups(String token, String userID) throws UnirestException, JsonProcessingException {
+        Unirest.setTimeouts(0, 0);
+        HttpResponse<com.mashape.unirest.http.JsonNode> response = Unirest.get("http://localhost:8069/admin/realms/OCCUPANCY/users/"+userID+"/groups")
+                .header("Authorization", "Bearer "+token)
+                .asJson();
+        return response.getBody().toString();
+    }
     // funktion: wenn rolle teamleiter oder projektleiter gibt gruppenid der eigenen gruppe zurück
     // etc ;)
 }

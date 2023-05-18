@@ -1,64 +1,46 @@
 package it.designers.OCCUPANCY.controller;
 
-import com.mashape.unirest.http.JsonNode;
-import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.exceptions.UnirestException;
-import it.designers.OCCUPANCY.dbtables.Mitarbeiter;
+import it.designers.OCCUPANCY.BookingService;
+import it.designers.OCCUPANCY.dbtables.Booking;
 import it.designers.OCCUPANCY.dbtables.Reservation;
-import it.designers.OCCUPANCY.repository.MitarbeiterRepository;
-import it.designers.OCCUPANCY.repository.ReservationRepository;
-import service.ReservationServiceImpl;
 
-import org.apache.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
+import it.designers.OCCUPANCY.ReservationService;
 
-import java.net.http.HttpResponse;
 import java.security.Principal;
-import java.time.LocalDate;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
+// Der Controller interagiert mit Services und die Services haben die @Transactional Annotation und agieren mit den Repositories
 @RestController
 @RequestMapping("/auth")
 public class OccuControl {
 
-    private final ReservationRepository reservationRepository;
-    private final MitarbeiterRepository mitarbeiterRepository;
-    private final ReservationServiceImpl resService;
+     private final ReservationService resService;
+     private final BookingService bookingService;
 
-    public OccuControl(ReservationRepository reservationRepository, MitarbeiterRepository mitarbeiterRepository, ReservationServiceImpl resService) {
-        this.reservationRepository = reservationRepository;
-        this.mitarbeiterRepository = mitarbeiterRepository;
+    public OccuControl(ReservationService resService, BookingService bookingService) { // Dependencyinjection von Spring/ JPA bei Bedarf -> Also ich Konsumiere meine Services
         this.resService=resService;
+        this.bookingService = bookingService;
     }
     
-    @GetMapping("res/{date}/{timeslot}/{dauer}")
-	public ResponseEntity getMultipleTimeSlots(@PathVariable("date") String stringDate, @PathVariable("dauer") int dauer, @PathVariable("timeslot") int timeslot) {
-		LocalDate date=LocalDate.parse(stringDate);
-		return ResponseEntity.ok(this.resService.getMultipleTimeSlots(date, dauer, timeslot).toString());
-	}
-    
-    @DeleteMapping("res/del-booking/{bookingNo}")
-	public ResponseEntity deleteReservationByBooking(@PathVariable("bookingNo") int bookingNo) {
-		if(resService.deleteReservation(bookingNo)!=null) {
-			return ResponseEntity.status(HttpStatus.SC_OK).body("Reservation deleted");
-		}
-		return ResponseEntity.status(HttpStatus.SC_NOT_FOUND).body("Reservation doesnt exist");
-		
-	}
-    @DeleteMapping("res/del-booking/{date}/{timeslot}/{leader}")
-    public ResponseEntity deleteReservationByLeaderId(@PathVariable("date")String stringDate, @PathVariable("timeslot") int timeslot, @PathVariable("leader")String leaderid) {
-    	if(leaderid==null || stringDate==null || timeslot<0 || timeslot>11) {
-    		return ResponseEntity.status(HttpStatus.SC_BAD_REQUEST).body("Invalid parameters");
-    	}
-    	LocalDate date=LocalDate.parse(stringDate);
-    	return ResponseEntity.ok(this.resService.deleteReservationLeader(date, timeslot, leaderid));
-    	
-    	
-    }
+//    @GetMapping("res/{date}/{timeslot}/{dauer}")
+//	public ResponseEntity getMultipleTimeSlots(@PathVariable("date") String stringDate, @PathVariable("dauer") int dauer, @PathVariable("timeslot") int timeslot) {
+//		LocalDate date=LocalDate.parse(stringDate);
+//		return ResponseEntity.ok(this.resService.getMultipleTimeSlots(date, dauer, timeslot).toString());
+//	}
+//
+//    @DeleteMapping("res/del-booking/{bookingNo}")
+//	public ResponseEntity deleteReservationByBooking(@PathVariable("bookingNo") int bookingNo) {
+//		if(resService.deleteReservation(bookingNo)!=null) {
+//			return ResponseEntity.status(HttpStatus.SC_OK).body("Reservation deleted");
+//		}
+//		return ResponseEntity.status(HttpStatus.SC_NOT_FOUND).body("Reservation doesnt exist");
+//
+//	}
+
     /*@PutMapping("book/{date}/{dauer}/{timeslot}/{leaderid}/{userid}/{stuhlId}/{bookingNo}")
 	public ResponseEntity setReservation(@PathVariable("date")String stringDate,@PathVariable("dauer")int dauer, @PathVariable("timeslot") int timeslot,@PathVariable("leaderid") String leaderid, @PathVariable("userid") String userid, @PathVariable("stuhlId") int chairId, @PathVariable("bookingNo") int booking) {
 		
@@ -74,11 +56,7 @@ public class OccuControl {
 		
 	}*/
     
-    @GetMapping("res-load/{date}")
-	public ResponseEntity timeslotLoad(@PathVariable("date") String stringDate) {
-		LocalDate date=LocalDate.parse(stringDate);
-		return ResponseEntity.ok(this.resService.timeslotLoad(date).toString());
-	}
+
 
 //--------------------------- TO DO -----------------------
 //   @GetMapping("/res/{date}/{ts-start}/{ts-duration}") gibt json mit belegung zurück
@@ -111,16 +89,18 @@ public class OccuControl {
         JwtAuthenticationToken token = (JwtAuthenticationToken) principal;
         String prename = (String) token.getTokenAttributes().get("given_name");
         String lastname = (String) token.getTokenAttributes().get("family_name");
-        String kcid = (String) token.getTokenAttributes().get("sub");
+        UUID kcid = UUID.fromString((String) token.getTokenAttributes().get("sub"));
+        //UUID.fromString();
+
 
 //        Collection<Reservation> custom2 = this.reservationRepository.findBycustom2(ts, datum);
-        Collection<Mitarbeiter> m1 = this.mitarbeiterRepository.tryFindUser(kcid);
-
-            Mitarbeiter neuerDulli = new Mitarbeiter(null, prename, lastname, kcid);
-
-            try {
-                mitarbeiterRepository.save(neuerDulli);
-            } catch (Exception e){}
+//          Optional<Mitarbeiter> m1 = this.mitarbeiterRepository.tryFindUser(kcid);
+//
+//            Mitarbeiter neuerDulli = new Mitarbeiter(null, prename, lastname, kcid);
+//
+//            try {
+//                mitarbeiterRepository.save(neuerDulli);
+//            } catch (Exception e){}
 
 
 //        HttpResponse<JsonNode> response;
@@ -140,17 +120,16 @@ public class OccuControl {
         return ResponseEntity.ok("prename: " + prename + "\nlastname: " + lastname + "\nid: " + kcid);
     }
 
-
-//    @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-//    public ResponseEntity<Reservation>neueReservierung(@RequestBody Reservation r){
-//        this.reservationRepository.save(r);
-//        return ResponseEntity.ok(r);
-//    }
+    @PutMapping(value = "/res/",consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Booking>neueBuchung(@RequestBody Booking b){
+        this.bookingService.save(b);
+        return ResponseEntity.ok(b);
+    }
 
     @GetMapping("/res-all") //spuckt ALLE reservierungen aus
-    public ResponseEntity<List<Reservation>> getAllRes() {
+    public ResponseEntity<List<Booking>> getAllRes() {
 
-        return ResponseEntity.ok(this.reservationRepository.findAll());
+        return ResponseEntity.ok(this.bookingService.getAll());
     }
 //    @GetMapping("/user")
 //    public ResponseEntity<String> getUser(Principal principal) {

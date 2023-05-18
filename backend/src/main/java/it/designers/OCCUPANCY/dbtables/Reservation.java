@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.UUID;
+
 @Entity
 @Data                       //Markiert Klasse als Datenklasse
 @AllArgsConstructor
@@ -14,6 +17,7 @@ public class Reservation {
     @Id // select WHERE timeslot = ...
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     @Column(name = "id", updatable = false, nullable = false)
+    private Long id;
 
 //      @Entity annotation indicates that the class is a persistent Java class.
 //      @Table annotation provides the table that maps this entity.
@@ -21,12 +25,14 @@ public class Reservation {
 //      @GeneratedValue annotation is used to define generation strategy for the primary key. GenerationType.AUTO means Auto Increment field.
 //      @Column annotation is used to define the column in database that maps annotated field.
 
-    private Long id;
+    @Column
+    private UUID stuhlsitzer;
 
-    private String datum;
-    private String timeslot; //modulo12 -> 1: 11.00-11.15 2: 11.15-11.30 ...
-    private String leaderid;
-    private String memberid;
-    private String bookingid;
-    private int chairid;
+    @JoinColumn(referencedColumnName = "id")
+    @OneToOne(cascade = CascadeType.ALL)
+    private Chair chair;
+
+//    @JoinColumn(referencedColumnName = "id")
+//    @OneToOne(cascade = CascadeType.ALL)
+//    private Booking booking;
 }

@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 public class Chair {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Integer id;
+    private Long id;
     private String tisch;
     private String posx;
     private String posy;

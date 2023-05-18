@@ -6,11 +6,13 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
+import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public interface MitarbeiterRepository extends JpaRepository<Mitarbeiter, Long> {
-    @Query("SELECT m FROM Mitarbeiter m WHERE m.kcid = :_kcid")
-    Collection<Mitarbeiter> tryFindUser(String _kcid);
+//    @Query("SELECT m FROM Mitarbeiter m WHERE m.kcid = :_kcid")
+//    Optional<Mitarbeiter> tryFindUser(UUID _kcid);
 
 
 }

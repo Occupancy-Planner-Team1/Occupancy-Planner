@@ -12,30 +12,30 @@ import java.util.Collection;
 import java.util.List;
 
 @Repository
-public interface ReservationRepository extends JpaRepository<Reservation, Long> {
+public interface ReservationRepository extends JpaRepository<Reservation, Long> { // Dieses Interface Implementiert JPA bei Bedarf automatisch, JÄY
 
-    @Query("SELECT r.id FROM Reservation r ORDER by r.id DESC LIMIT 1")
-    Integer lastChange();
-
-    @Query("SELECT r FROM Reservation r WHERE r.timeslot = :ts")
-    Collection<Reservation> findBycustom1(String ts);
-
-    @Query("SELECT r FROM Reservation r WHERE (r.timeslot =:ts and r.datum =:datum)")
-    Collection<Reservation> findBycustom2(String ts, String datum);
-    
-    @Query(value="SELECT chairid FROM Reservation WHERE date=:date AND timeslot=:timeslot", nativeQuery=true)
-	List <Long> findTaken(@Param("date")LocalDate date, @Param("timeslot")int timeslot);
-    
-    @Query(value="SELECT leaderid FROM Reservation WHERE chairid=:chairid AND timeslot=:timeslot", nativeQuery=true)
-	String findLeaderId(@Param("chairid")Long chairid, @Param ("timeslot")int timeslot);
-    
-    @Query(value="SELECT id FROM Reservation WHERE bookingid=:bookingid", nativeQuery=true)
-	List<Long> findByBooking(@Param("bookingid") int bookingid);
-    
-    @Query(value="SELECT id FROM Reservation WHERE leaderid=:leaderid", nativeQuery=true)
-    Long findByLeader(@Param("leaderid")String leaderid);
-
-
+//    @Query("SELECT r.id FROM Reservation r ORDER by r.id DESC LIMIT 1")
+//    Integer lastChange();
+//
+//    @Query("SELECT r FROM Reservation r WHERE r.timeslot = :ts")
+//    Collection<Reservation> findBycustom1(String ts);
+//
+//    @Query("SELECT r FROM Reservation r WHERE (r.timeslot =:ts and r.datum =:datum)")
+//    Collection<Reservation> findBycustom2(String ts, String datum);
+//
+//    @Query(value="SELECT chairid FROM Reservation WHERE date=:date AND timeslot=:timeslot", nativeQuery=true)
+//	List <Long> findTaken(@Param("date")LocalDate date, @Param("timeslot")int timeslot);
+//
+//    @Query(value="SELECT leaderid FROM Reservation WHERE chairid=:chairid AND timeslot=:timeslot", nativeQuery=true)
+//	String findLeaderId(@Param("chairid")Long chairid, @Param ("timeslot")int timeslot);
+//
+//    @Query(value="SELECT id FROM Reservation WHERE bookingid=:bookingid", nativeQuery=true)
+//	List<Long> findByBooking(@Param("bookingid") int bookingid);
+//
+//    @Query(value="SELECT id FROM Reservation WHERE leaderid=:leaderid", nativeQuery=true)
+//    Long findByLeader(@Param("leaderid")String leaderid);
+//
+//
     // Now we can use JpaRepository’s methods: save(), findOne(), findById(), findAll(), count(), delete(), deleteById()… without implementing these methods.
     // AAABER: findByCustom muss nooch im ReservationController definiert werden
 }

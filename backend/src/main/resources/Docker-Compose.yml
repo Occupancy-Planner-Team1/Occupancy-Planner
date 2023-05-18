@@ -30,8 +30,8 @@ services:
     depends_on:
       - postgres
     volumes:
-      - keycloak_data:/opt/jboss/keycloak/standalone/data/
+      - ./Keycloak_Config:/opt/keycloak/Keycloak_Config
 
 volumes:
-  keycloak_data:
+  Keycloak_Config:
   postgres_data:

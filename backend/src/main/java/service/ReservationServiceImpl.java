@@ -73,13 +73,16 @@ public class ReservationServiceImpl implements ReservationService {
 		return null;
 	}
 	
-
+	//start at timeslot=timeslot, go through timeslots as long as [dauer] colleting all chairs and leaderids through reservation table
+	//Returns max 4 timeslots(60min) because the user can only choose to reserve 4 timeslots at a time
+	//JSONArray[timeslot]=JSONArray[]=JSONObject={leaderid:key, chair:int}
 	@Override
 	public JSONArray getMultipleTimeSlots(String date, int dauer, String timeslot) {
 		
 		JSONArray timeslotHolder=new JSONArray();
 		JSONArray timeslots=new JSONArray();
 		JSONObject chairs;
+		int slot=Integer.parseInt(timeslot);
 
 		
 		for(int j=0;j<dauer;j++) {
@@ -93,6 +96,8 @@ public class ReservationServiceImpl implements ReservationService {
 		}
 		timeslots.put(j, timeslotHolder);
 		timeslotHolder=new JSONArray();
+		slot=slot+1;
+		timeslot=Integer.toString(slot);
 		
 		}
 		

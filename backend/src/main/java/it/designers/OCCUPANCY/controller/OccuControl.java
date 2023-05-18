@@ -7,13 +7,18 @@ import it.designers.OCCUPANCY.dbtables.Mitarbeiter;
 import it.designers.OCCUPANCY.dbtables.Reservation;
 import it.designers.OCCUPANCY.repository.MitarbeiterRepository;
 import it.designers.OCCUPANCY.repository.ReservationRepository;
+import service.ReservationServiceImpl;
+
+import org.apache.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.http.HttpResponse;
 import java.security.Principal;
+import java.time.LocalDate;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -22,11 +27,58 @@ public class OccuControl {
 
     private final ReservationRepository reservationRepository;
     private final MitarbeiterRepository mitarbeiterRepository;
+    private final ReservationServiceImpl resService;
 
-    public OccuControl(ReservationRepository reservationRepository, MitarbeiterRepository mitarbeiterRepository) {
+    public OccuControl(ReservationRepository reservationRepository, MitarbeiterRepository mitarbeiterRepository, ReservationServiceImpl resService) {
         this.reservationRepository = reservationRepository;
         this.mitarbeiterRepository = mitarbeiterRepository;
+        this.resService=resService;
     }
+    
+    @GetMapping("res/{date}/{timeslot}/{dauer}")
+	public ResponseEntity getMultipleTimeSlots(@PathVariable("date") String stringDate, @PathVariable("dauer") int dauer, @PathVariable("timeslot") int timeslot) {
+		LocalDate date=LocalDate.parse(stringDate);
+		return ResponseEntity.ok(this.resService.getMultipleTimeSlots(date, dauer, timeslot).toString());
+	}
+    
+    @DeleteMapping("res/del-booking/{bookingNo}")
+	public ResponseEntity deleteReservationByBooking(@PathVariable("bookingNo") int bookingNo) {
+		if(resService.deleteReservation(bookingNo)!=null) {
+			return ResponseEntity.status(HttpStatus.SC_OK).body("Reservation deleted");
+		}
+		return ResponseEntity.status(HttpStatus.SC_NOT_FOUND).body("Reservation doesnt exist");
+		
+	}
+    @DeleteMapping("res/del-booking/{date}/{timeslot}/{leader}")
+    public ResponseEntity deleteReservationByLeaderId(@PathVariable("date")String stringDate, @PathVariable("timeslot") int timeslot, @PathVariable("leader")String leaderid) {
+    	if(leaderid==null || stringDate==null || timeslot<0 || timeslot>11) {
+    		return ResponseEntity.status(HttpStatus.SC_BAD_REQUEST).body("Invalid parameters");
+    	}
+    	LocalDate date=LocalDate.parse(stringDate);
+    	return ResponseEntity.ok(this.resService.deleteReservationLeader(date, timeslot, leaderid));
+    	
+    	
+    }
+    /*@PutMapping("book/{date}/{dauer}/{timeslot}/{leaderid}/{userid}/{stuhlId}/{bookingNo}")
+	public ResponseEntity setReservation(@PathVariable("date")String stringDate,@PathVariable("dauer")int dauer, @PathVariable("timeslot") int timeslot,@PathVariable("leaderid") String leaderid, @PathVariable("userid") String userid, @PathVariable("stuhlId") int chairId, @PathVariable("bookingNo") int booking) {
+		
+		LocalDate date=LocalDate.parse(stringDate);
+		
+		if(chairId<0 || chairId>32) {
+			return ResponseEntity.status(HttpStatus.SC_NOT_FOUND).body("Invalid chair index");
+		}
+		if(resService.saveReservation(date, dauer, timeslot, leaderid, userid, chairId, booking)!=null){
+			return ResponseEntity.status(HttpStatus.SC_OK).body("Reservation accepted");
+		}
+		return ResponseEntity.status(HttpStatus.SC_FORBIDDEN).body("Chair already reserved");
+		
+	}*/
+    
+    @GetMapping("res-load/{date}")
+	public ResponseEntity timeslotLoad(@PathVariable("date") String stringDate) {
+		LocalDate date=LocalDate.parse(stringDate);
+		return ResponseEntity.ok(this.resService.timeslotLoad(date).toString());
+	}
 
 
 

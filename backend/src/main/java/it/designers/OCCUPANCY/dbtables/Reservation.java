@@ -17,7 +17,7 @@ public class Reservation {
     @Id // select WHERE timeslot = ...
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     @Column(name = "id", updatable = false, nullable = false)
-    private Long id = 1L;
+    private Long id;
 
 //      @Entity annotation indicates that the class is a persistent Java class.
 //      @Table annotation provides the table that maps this entity.

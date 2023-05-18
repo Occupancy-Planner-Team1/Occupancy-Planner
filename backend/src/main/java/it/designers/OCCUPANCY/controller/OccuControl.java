@@ -36,13 +36,12 @@ public class OccuControl {
     }
     
     @GetMapping("res/{date}/{timeslot}/{dauer}")
-	public ResponseEntity getMultipleTimeSlots(@PathVariable("date") String stringDate, @PathVariable("dauer") int dauer, @PathVariable("timeslot") int timeslot) {
-		LocalDate date=LocalDate.parse(stringDate);
-		return ResponseEntity.ok(this.resService.getMultipleTimeSlots(date, dauer, timeslot).toString());
+	public ResponseEntity getMultipleTimeSlots(@PathVariable("date") String stringDate, @PathVariable("dauer") int dauer, @PathVariable("timeslot") String timeslot) {
+		return ResponseEntity.ok(this.resService.getMultipleTimeSlots(stringDate, dauer, timeslot).toString());
 	}
     
     @DeleteMapping("res/del-booking/{bookingNo}")
-	public ResponseEntity deleteReservationByBooking(@PathVariable("bookingNo") int bookingNo) {
+	public ResponseEntity deleteReservationByBooking(@PathVariable("bookingNo") String bookingNo) {
 		if(resService.deleteReservation(bookingNo)!=null) {
 			return ResponseEntity.status(HttpStatus.SC_OK).body("Reservation deleted");
 		}
@@ -50,12 +49,11 @@ public class OccuControl {
 		
 	}
     @DeleteMapping("res/del-booking/{date}/{timeslot}/{leader}")
-    public ResponseEntity deleteReservationByLeaderId(@PathVariable("date")String stringDate, @PathVariable("timeslot") int timeslot, @PathVariable("leader")String leaderid) {
-    	if(leaderid==null || stringDate==null || timeslot<0 || timeslot>11) {
+    public ResponseEntity deleteReservationByLeaderId(@PathVariable("date")String stringDate, @PathVariable("timeslot") String timeslot, @PathVariable("leader")String leaderid) {
+    	if(leaderid==null || stringDate==null) {
     		return ResponseEntity.status(HttpStatus.SC_BAD_REQUEST).body("Invalid parameters");
     	}
-    	LocalDate date=LocalDate.parse(stringDate);
-    	return ResponseEntity.ok(this.resService.deleteReservationLeader(date, timeslot, leaderid));
+    	return ResponseEntity.ok(this.resService.deleteReservationLeader(stringDate, timeslot, leaderid));
     	
     	
     }
@@ -74,11 +72,12 @@ public class OccuControl {
 		
 	}*/
     
+    /*
     @GetMapping("res-load/{date}")
 	public ResponseEntity timeslotLoad(@PathVariable("date") String stringDate) {
 		LocalDate date=LocalDate.parse(stringDate);
 		return ResponseEntity.ok(this.resService.timeslotLoad(date).toString());
-	}
+	}*/
 
 //--------------------------- TO DO -----------------------
 //   @GetMapping("/res/{date}/{ts-start}/{ts-duration}") gibt json mit belegung zurück

@@ -1,9 +1,7 @@
 package service;
 
-import java.time.Duration;
+
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -21,11 +19,9 @@ public class ReservationServiceImpl implements ReservationService {
 	@Autowired
 	ChairRepository stuhlRepo;
 	
-	private JSONArray timeslots=new JSONArray();
-	private JSONArray timeslotHolder=new JSONArray();
-	private JSONObject chairs;
 
-	@Override
+	//Neue saveReservation muss mit Token ergänzt werden
+	/*@Override   
 	public Integer saveReservation(LocalDate date,int dauer, int timeslot,String leaderid, String userid, int stuhlid, int bookingno) {
 		
 		//LocalDate dateNow=LocalDate.now();
@@ -54,10 +50,10 @@ public class ReservationServiceImpl implements ReservationService {
 		}
 		
 		return null;
-	}
+	}*/
 
 	@Override
-	public Integer deleteReservation(int bookingno) {
+	public String deleteReservation(String bookingno) {
 		if(!resRepo.findByBooking(bookingno).isEmpty()) {
 			resRepo.deleteAllByIdInBatch(resRepo.findByBooking(bookingno));
 			return bookingno;
@@ -65,7 +61,7 @@ public class ReservationServiceImpl implements ReservationService {
 		return null;	
 	}
 	
-	public String deleteReservationLeader(LocalDate date, int timeslot, String leaderid) {
+	public String deleteReservationLeader(String date, String timeslot, String leaderid) {
 		if(!resRepo.findTaken(date,timeslot).isEmpty()) {
 			for(int i=0;i<resRepo.findTaken(date, timeslot).size();i++) {
 				if(leaderid==resRepo.findLeaderId(resRepo.findTaken(date, timeslot).get(i), timeslot)) {
@@ -79,10 +75,12 @@ public class ReservationServiceImpl implements ReservationService {
 	
 
 	@Override
-	public JSONArray getMultipleTimeSlots(LocalDate date, int dauer, int timeslot) {
+	public JSONArray getMultipleTimeSlots(String date, int dauer, String timeslot) {
 		
-		timeslotHolder.clear();
-		timeslots.clear();
+		JSONArray timeslotHolder=new JSONArray();
+		JSONArray timeslots=new JSONArray();
+		JSONObject chairs;
+
 		
 		for(int j=0;j<dauer;j++) {
 		for(int i=0;i<resRepo.findTaken(date, timeslot).size();i++) {
@@ -101,10 +99,10 @@ public class ReservationServiceImpl implements ReservationService {
 		return timeslots;
 
 	}
-	
+	//timeslotLoad & recommendBooking gehen wegen timeslot(string) nicht mehr,
 
-	@Override
-	public JSONArray timeslotLoad(LocalDate date) {
+	/*@Override
+	public JSONArray timeslotLoad(String date) {
 		
 		JSONArray load=new JSONArray();
 		
@@ -113,13 +111,13 @@ public class ReservationServiceImpl implements ReservationService {
 		}
 		
 		return load;
-	}
+	}*/
 
-	@Override
-	public int recommendBooking(LocalDate date, int dauer, int timeslot, int guests) {
+	/*@Override
+	public int recommendBooking(LocalDate date, int dauer, String timeslot, int guests) {
 		
 		Boolean flag=false;
-		int tmpSlot;
+		String tmpSlot;
 		
 		for(int i=1;i<=32;i++) {
 			tmpSlot=timeslot;
@@ -136,5 +134,5 @@ public class ReservationServiceImpl implements ReservationService {
 		}
 		
 		return 0;
-		}
+		}*/
 }

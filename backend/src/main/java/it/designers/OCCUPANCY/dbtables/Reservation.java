@@ -28,5 +28,59 @@ public class Reservation {
     private String leaderid;
     private String memberid;
     private String bookingid;
-    private int chairid;
+    
+    
+    @ManyToOne(cascade=CascadeType.ALL)
+	@JoinColumn(name="chairid")
+	private Chair chair;
+    
+    public Long getId() {
+		return this.id;
+	}
+
+	public String getSlot() {
+		return this.timeslot;
+	}
+
+	public String getUser() {
+		return this.memberid;
+	}
+
+	public String getBooking() {
+		return this.bookingid;
+	}
+
+	public String getLeaderId() {
+		return this.leaderid;
+	}
+
+	public Chair getChair() {
+		return this.chair;
+	}
+	public String getDate() {
+		return this.datum;
+	}
+
+	public void setSlot(String slot) {
+		this.timeslot=slot;
+	}
+
+	public void memberId(String user) {
+		this.memberid=user;
+	}
+
+	public void setBooking(String booking) {
+		this.bookingid=booking;
+	}
+
+	public void setLeaderId(String leaderid) {
+		this.leaderid=leaderid;
+	}
+	public void setDate(String date) {
+		this.datum=date;
+	}
+	public void setChair(Chair chair) {
+		this.chair=chair;
+	}
+
 }

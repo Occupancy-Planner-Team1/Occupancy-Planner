@@ -107,32 +107,6 @@ public class OccuControl {
 
         return ResponseEntity.ok(group_members);
 
-
-
-
-
-//        Collection<Reservation> custom2 = this.reservationRepository.findBycustom2(ts, datum);
-//          Optional<Mitarbeiter> m1 = this.mitarbeiterRepository.tryFindUser(kcid);
-//
-//            Mitarbeiter neuerDulli = new Mitarbeiter(null, prename, lastname, kcid);
-//
-//            try {
-//                mitarbeiterRepository.save(neuerDulli);
-//            } catch (Exception e){}
-//        HttpResponse<JsonNode> response;
-//        Unirest.setTimeouts(0, 0);
-//        try {
-//            response = (HttpResponse<JsonNode>) Unirest.post("http://localhost:8069/realms/OCCUPANCY/protocol/openid-connect/token")
-//                    .header("Content-Type", "application/x-www-form-urlencoded")
-//                    .header("Authorization", "Basic b2NjdXBhbmN5Y2xpZW50Ok50N05XTTNOTWFOSndZV2xMS053bkh4T1pIMUhWTDY2")
-//                    .field("grant_type", "client_credentials")
-//                    .asJson();
-
-//        } catch (UnirestException e) {
-//            throw new RuntimeException(e);
-//        }
-
-
         //return ResponseEntity.ok("prename: " + prename + "\nlastname: " + lastname + "\nid: " + kcid);
     }
 
@@ -153,13 +127,7 @@ public class OccuControl {
 
         return ResponseEntity.ok(this.bookingService.getAllPerDay(d));
     }
-//    @GetMapping("/user")
-//    public ResponseEntity<String> getUser(Principal principal) {
-//        JwtAuthenticationToken token = (JwtAuthenticationToken) principal;
-//        String userName = (String) token.getTokenAttributes().get("name");
-//        String userEmail = (String) token.getTokenAttributes().get("email");
-//        return ResponseEntity.ok("Hello User \nUser Name : " + userName + "\nUser Email : " + userEmail);
-//    }
+
 
 }
 

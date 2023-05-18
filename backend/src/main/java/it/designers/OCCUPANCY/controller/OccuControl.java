@@ -1,9 +1,13 @@
 package it.designers.OCCUPANCY.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.mashape.unirest.http.JsonNode;
+import com.mashape.unirest.http.exceptions.UnirestException;
 import it.designers.OCCUPANCY.BookingService;
 import it.designers.OCCUPANCY.dbtables.Booking;
 import it.designers.OCCUPANCY.dbtables.Reservation;
 
+import it.designers.OCCUPANCY.security.KeycloakServiceUser;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
@@ -85,12 +89,25 @@ public class OccuControl {
 
 
     @GetMapping("/verify") // trägt die keycloak id in eine extra datenbank ein obsolet wenn keycloak api mit serviceuser funktioniert
-    public ResponseEntity<String >firstLoginInsert(Principal principal){
+    public ResponseEntity<String >firstLoginInsert(Principal principal) throws UnirestException, JsonProcessingException {
         JwtAuthenticationToken token = (JwtAuthenticationToken) principal;
         String prename = (String) token.getTokenAttributes().get("given_name");
         String lastname = (String) token.getTokenAttributes().get("family_name");
         UUID kcid = UUID.fromString((String) token.getTokenAttributes().get("sub"));
         //UUID.fromString();
+
+
+
+        KeycloakServiceUser su = new KeycloakServiceUser();
+        String access_token = su.get_access_token();
+        String group_members = su.get_group_members(access_token, "13733942-ab89-46cc-b270-c5618aa70cbf");
+
+        System.out.println(group_members);
+
+        return ResponseEntity.ok(group_members);
+
+
+
 
 
 //        Collection<Reservation> custom2 = this.reservationRepository.findBycustom2(ts, datum);
@@ -101,8 +118,6 @@ public class OccuControl {
 //            try {
 //                mitarbeiterRepository.save(neuerDulli);
 //            } catch (Exception e){}
-
-
 //        HttpResponse<JsonNode> response;
 //        Unirest.setTimeouts(0, 0);
 //        try {
@@ -117,7 +132,7 @@ public class OccuControl {
 //        }
 
 
-        return ResponseEntity.ok("prename: " + prename + "\nlastname: " + lastname + "\nid: " + kcid);
+        //return ResponseEntity.ok("prename: " + prename + "\nlastname: " + lastname + "\nid: " + kcid);
     }
 
     @PutMapping(value = "/res/",consumes = MediaType.APPLICATION_JSON_VALUE)

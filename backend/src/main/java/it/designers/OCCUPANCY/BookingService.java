@@ -6,6 +6,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,6 +28,12 @@ public class BookingService {
     //get all -> Liste mit allem
     public List<Booking> getAll(){
         return this.bookingRepository.findAll();
+    }
+
+    //get all per day
+    public List<Booking> getAllPerDay(LocalDate d){
+        List<Booking> anEinemTag = this.bookingRepository.findByDatum(d);
+        return anEinemTag;
     }
 
     //get einzelnes Element Holen

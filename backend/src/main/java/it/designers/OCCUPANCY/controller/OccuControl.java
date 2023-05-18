@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import it.designers.OCCUPANCY.ReservationService;
 
 import java.security.Principal;
+import java.time.LocalDate;
 import java.util.*;
 
 // Der Controller interagiert mit Services und die Services haben die @Transactional Annotation und agieren mit den Repositories
@@ -145,6 +146,12 @@ public class OccuControl {
     public ResponseEntity<List<Booking>> getAllRes() {
 
         return ResponseEntity.ok(this.bookingService.getAll());
+    }
+
+    @GetMapping("/res-day/{d}") //spuckt ALLE reservierungen von einem tag aus -> ind d muss Datum: 2023-05-18
+    public ResponseEntity<List<Booking>> getAllResPerDay(@PathVariable LocalDate d) {
+
+        return ResponseEntity.ok(this.bookingService.getAllPerDay(d));
     }
 //    @GetMapping("/user")
 //    public ResponseEntity<String> getUser(Principal principal) {

@@ -31,10 +31,6 @@ public class OccupancyApplication implements CommandLineRunner {
 		Chair chair1 = new Chair();
 		Chair chair2 = new Chair();
 
-
-
-
-
 		Reservation neuesReservation1 = new Reservation();
 		Reservation neuesReservation2 = new Reservation();
 		Booking neuesBooking = new Booking();
@@ -49,7 +45,6 @@ public class OccupancyApplication implements CommandLineRunner {
 		neuesBooking.setDatum(LocalDate.now());
 		neuesBooking.setBucher(UUID.randomUUID());
 		neuesBooking.setTimeslot(1);
-
 
 		//neuesReservation.setBooking(neuesBooking);
 

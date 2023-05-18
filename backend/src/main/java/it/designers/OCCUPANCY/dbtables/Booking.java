@@ -28,6 +28,10 @@ public class Booking {
     @Column
     UUID bucher;
 
+    // neu das fehlt glaub ich noch, obwohl glaube ist doch nicht notwendig xd
+    //@Column
+    //UUID gruppe;
+
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn
     List<Reservation> reservations = new ArrayList<>();

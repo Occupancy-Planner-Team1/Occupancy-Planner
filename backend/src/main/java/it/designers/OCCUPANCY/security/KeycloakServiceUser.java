@@ -33,4 +33,9 @@ public class KeycloakServiceUser {
         return response.getBody().toString();
     }
 
+    // needed:
+    // public String getName(UUID id) -> funktion ( id ) gibt username zurück
+    // public List<UUID> getGruppenMitglieder -> funktion (gruppenid) gibt liste an mitglieder-userids zurück
+    // funktion: wenn rolle teamleiter oder projektleiter gibt gruppenid der eigenen gruppe zurück
+    // etc ;)
 }

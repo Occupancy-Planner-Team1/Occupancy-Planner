@@ -64,30 +64,28 @@ public class OccuControl {
 
 
 //--------------------------- TO DO -----------------------
-//   @GetMapping("/res/{date}/{ts-start}/{ts-duration}") gibt json mit belegung zurück
-
-//   @GetMapping("/resconfirm") gibt die doppelbuchungen zurück
-//   @GetMapping("/res/del/{date}/{ts}/{leaderid}") löscht reservierung anhand datum timeslot leaderid
+//   @GetMapping("/doppelbuchung") gibt die doppelbuchungen zurück
 //   @GetMapping("/res/del-booking/{bookingid}") löscht reservierung(en) anhand bookingid
 //   @GetMapping("/res/del-yesterday/") löscht reservierung(en) die vorbei sind
 //   @GetMapping("/res/day/{date}") gibt json mit allen plätzen an einem tag zurück
-
-
-
-
-    @GetMapping("/anonymous")
-//    public ResponseEntity<String> getAnonymous(@RequestBody int bla) {
-//        return ResponseEntity.ok(String.format("Hello Anonymous %s",bla));
+//    @GetMapping("/last-change")
+//    public Integer lastChange(){
+//        return this.reservationRepository.lastChange();
 //    }
+
+
+
+    // TESTING only
+    @GetMapping("/anonymous")
     public ResponseEntity<String> getAnonymous() {
         return ResponseEntity.ok("Hello Anonymous");
     }
 
-    @GetMapping("/anonymous/{bla}") // TESTING only
+    // TESTING only
+    @GetMapping("/anonymous/{bla}")
     public ResponseEntity<String> getAnonymous1(@PathVariable("bla") int bla) {
         return ResponseEntity.ok(String.format("Hello Anonymous %s",bla));
     }
-
 
     @GetMapping("/verify") // trägt die keycloak id in eine extra datenbank ein obsolet wenn keycloak api mit serviceuser funktioniert
     public ResponseEntity<String >firstLoginInsert(Principal principal) throws UnirestException, JsonProcessingException {
@@ -96,7 +94,6 @@ public class OccuControl {
         String lastname = (String) token.getTokenAttributes().get("family_name");
         UUID kcid = UUID.fromString((String) token.getTokenAttributes().get("sub"));
         //UUID.fromString();
-
 
 
         KeycloakServiceUser su = new KeycloakServiceUser();
@@ -118,13 +115,11 @@ public class OccuControl {
 
     @GetMapping("/res-all") //spuckt ALLE reservierungen aus
     public ResponseEntity<List<Booking>> getAllRes() {
-
         return ResponseEntity.ok(this.bookingService.getAll());
     }
 
     @GetMapping("/res-day/{d}") //spuckt ALLE reservierungen von einem tag aus -> ind d muss Datum: 2023-05-18
     public ResponseEntity<List<Booking>> getAllResPerDay(@PathVariable LocalDate d) {
-
         return ResponseEntity.ok(this.bookingService.getAllPerDay(d));
     }
 

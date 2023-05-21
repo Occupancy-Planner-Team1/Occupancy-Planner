@@ -8,6 +8,8 @@ import it.designers.OCCUPANCY.dbtables.Booking;
 import it.designers.OCCUPANCY.dbtables.Reservation;
 
 import it.designers.OCCUPANCY.security.KeycloakServiceUser;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
@@ -64,16 +66,32 @@ public class OccuControl {
 
 
 //--------------------------- TO DO -----------------------
-//   @GetMapping("/doppelbuchung") gibt die doppelbuchungen zurück
-//   @GetMapping("/res/del-booking/{bookingid}") löscht reservierung(en) anhand bookingid
-//   @GetMapping("/res/del-yesterday/") löscht reservierung(en) die vorbei sind
-//   @GetMapping("/res/day/{date}") gibt json mit allen plätzen an einem tag zurück
-//    @GetMapping("/last-change")
-//    public Integer lastChange(){
-//        return this.reservationRepository.lastChange();
-//    }
-
-
+//   @GetMapping("/doppelbuchung") gibt die doppelbuchungen zurück. ???? Müssen Strategie besprechen!
+//   
+    
+    /*@GetMapping("/doppelbuchung")
+    public ResponseEntity<List<Reservation>> getDoppelBuchung(){
+         Logik: Wenn ein stuhlsitzer mehrere reservation_ids hat, ist er bei mehreren Buchungen eingetragen.
+         Überprüfung ob doppelbuchung: Reservation_ids(primary key Booking table) von einem stuhlsitzer nehmen und im Booking Table die Timeslots vergleichen.-->
+         Wenn für 2 Verschiedene ids der gleiche Timeslot eingetragen ist==> Doppelbuchung. Umsetzung schwer. 
+    }*/
+    
+    @GetMapping("/res/del-yesterday")
+    public ResponseEntity deleteExpired() {
+    	
+    	LocalDate dateNow=LocalDate.now();
+    	
+    	try {
+    		return ResponseEntity.ok(bookingService.deleteExpired(dateNow));
+    	}
+    	catch(Exception e) {
+    		return ResponseEntity.status(HttpStatus.NOT_MODIFIED).body(e);
+    	}
+    	
+    	
+    	
+    }
+ 
 
     // TESTING only
     @GetMapping("/anonymous")

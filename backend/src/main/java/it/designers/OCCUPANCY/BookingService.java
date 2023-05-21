@@ -2,6 +2,7 @@ package it.designers.OCCUPANCY;
 
 import it.designers.OCCUPANCY.dbtables.Booking;
 import it.designers.OCCUPANCY.repository.BookingRepository;
+import it.designers.OCCUPANCY.repository.ReservationRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ import java.util.Optional;
 @Service
 public class BookingService {
     private BookingRepository bookingRepository;
+    private ReservationRepository resRepo;
 
     @Autowired
     public void setBookingRepository(BookingRepository bookingRepository) {
@@ -45,7 +47,13 @@ public class BookingService {
     public void delete(Booking booking){
         this.bookingRepository.delete(booking); //hier kann ein Fehler entstehen -> Controller abfangen Try Catch
     }
-
+    
+    public void deleteExpired(LocalDate date) {
+    	this.bookingRepository.deleteAllByIdInBatch(bookingRepository.findByExpired(date)); //Delete by Id anstatt SQL DELETE
+    	//this.bookingRepository.deleteExpired(date); das geht auch aber bei der oberen könnte man bspw. die gelöschten ids zurückgeben
+    }
+   
+    
 
 
 

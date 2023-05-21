@@ -25,7 +25,7 @@ import java.util.*;
 @RequestMapping("/auth")
 public class OccuControl {
 
-     private final ReservationService resService;
+     private final ReservationService resService; //wird momentan nicht mehr benötigt da reservierung von booking gemanaged wird
      private final BookingService bookingService;
 
     public OccuControl(ReservationService resService, BookingService bookingService) { // Dependencyinjection von Spring/ JPA bei Bedarf -> Also ich Konsumiere meine Services
@@ -33,120 +33,38 @@ public class OccuControl {
         this.bookingService = bookingService;
     }
     
-//    @GetMapping("res/{date}/{timeslot}/{dauer}")
-//	public ResponseEntity getMultipleTimeSlots(@PathVariable("date") String stringDate, @PathVariable("dauer") int dauer, @PathVariable("timeslot") int timeslot) {
-//		LocalDate date=LocalDate.parse(stringDate);
-//		return ResponseEntity.ok(this.resService.getMultipleTimeSlots(date, dauer, timeslot).toString());
-//	}
-//
-//    @DeleteMapping("res/del-booking/{bookingNo}")
-//	public ResponseEntity deleteReservationByBooking(@PathVariable("bookingNo") int bookingNo) {
-//		if(resService.deleteReservation(bookingNo)!=null) {
-//			return ResponseEntity.status(HttpStatus.SC_OK).body("Reservation deleted");
-//		}
-//		return ResponseEntity.status(HttpStatus.SC_NOT_FOUND).body("Reservation doesnt exist");
-//
-//	}
-
-    /*@PutMapping("book/{date}/{dauer}/{timeslot}/{leaderid}/{userid}/{stuhlId}/{bookingNo}")
-	public ResponseEntity setReservation(@PathVariable("date")String stringDate,@PathVariable("dauer")int dauer, @PathVariable("timeslot") int timeslot,@PathVariable("leaderid") String leaderid, @PathVariable("userid") String userid, @PathVariable("stuhlId") int chairId, @PathVariable("bookingNo") int booking) {
-		
-		LocalDate date=LocalDate.parse(stringDate);
-		
-		if(chairId<0 || chairId>32) {
-			return ResponseEntity.status(HttpStatus.SC_NOT_FOUND).body("Invalid chair index");
-		}
-		if(resService.saveReservation(date, dauer, timeslot, leaderid, userid, chairId, booking)!=null){
-			return ResponseEntity.status(HttpStatus.SC_OK).body("Reservation accepted");
-		}
-		return ResponseEntity.status(HttpStatus.SC_FORBIDDEN).body("Chair already reserved");
-		
-	}*/
-    
 
 
-//--------------------------- TO DO -----------------------
-<<<<<<< HEAD
-//   @GetMapping("/doppelbuchung") gibt die doppelbuchungen zurück. ???? Müssen Strategie besprechen!
-//   
-    
-    /*@GetMapping("/doppelbuchung")
-    public ResponseEntity<List<Reservation>> getDoppelBuchung(){
-         Logik: Wenn ein stuhlsitzer mehrere reservation_ids hat, ist er bei mehreren Buchungen eingetragen.
-         Überprüfung ob doppelbuchung: Reservation_ids(primary key Booking table) von einem stuhlsitzer nehmen und im Booking Table die Timeslots vergleichen.-->
-         Wenn für 2 Verschiedene ids der gleiche Timeslot eingetragen ist==> Doppelbuchung. Umsetzung schwer. 
-    }*/
-    
+
+
+/* // Kommentar: für löschen delete mapping nutzen, code geht so auch leider nicht. vbei
     @GetMapping("/res/del-yesterday")
-    public ResponseEntity deleteExpired() {
+    public void ResponseEntity deleteExpired() {
     	
     	LocalDate dateNow=LocalDate.now();
-    	
     	try {
     		return ResponseEntity.ok(bookingService.deleteExpired(dateNow));
     	}
     	catch(Exception e) {
     		return ResponseEntity.status(HttpStatus.NOT_MODIFIED).body(e);
     	}
-    	
-    	
-    	
-    }
- 
-=======
-//   @GetMapping("/doppelbuchung") gibt die doppelbuchungen zurück
-//   @GetMapping("/res/del-yesterday/") löscht reservierung(en) die vorbei sind
+  }
+*/
 
-
-//--------------------------- TO BE EXAMINED LUL -----------------------
-//   @GetMapping("/res/del-booking/{bookingid}") löscht reservierung(en) anhand bookingid
-//    @GetMapping("/last-change")
-//    public Integer lastChange(){
-//        return this.reservationRepository.lastChange();
-//    }
-
-    /*@GetMapping("/doppelbuchung")
-    public ResponseEntity<String> doppelbuchung(){
-        List<Booking> allBookings = this.bookingService.getAll();
-        List<Reservation> reservations = new ArrayList<>();
-        for (Booking b: allBookings) {
-            for (Reservation r:b.getReservations()) {
-                reservations.add(r);
-            }
-        }
-
-        for(int i=0; i<reservations.size();i++){
-            for(int j=0;j<reservations.size();j++){
-                if(reservations.get(i)==reservations.get(j)){
-                    System.out.println(reservations.get(i).getId());
-                    System.out.println(reservations.get(j).getId());
-                }
-            }
-        }
-
-
-
-        
-        
-        List<Reservation> res = this.resService.getAll();
-        System.out.println(this.bookingService.getAll().get(0).getReservations());
-        return ResponseEntity.ok("test");
-    }*/
-
-    @GetMapping("/last-change")
+    @GetMapping("/last-change") // nice tut ;)
     public ResponseEntity<Long> lastChange(){
         List<Booking> bookings = this.bookingService.lastChange();
         Long lastId = bookings.get(0).getId();
         return ResponseEntity.ok(lastId);
     }
 
-    @GetMapping("res/del-booking/{bookingid}")
+    @GetMapping("res/del-booking/{bookingid}") // kommentar: delete sollte keinen string zurückgeben! void oder <Booking> und exception: abfangen, dass eintrag nicht vorhanden
     public ResponseEntity<String> deletebyId(@PathVariable long bookingid){
         return ResponseEntity.ok(this.bookingService.deleteById(bookingid));
     }
 
 
->>>>>>> 1c0cf860ad222326966d471c894889b6dccab4e2
+
 
     // TESTING only
     @GetMapping("/anonymous")
@@ -160,14 +78,13 @@ public class OccuControl {
         return ResponseEntity.ok(String.format("Hello Anonymous %s",bla));
     }
 
-    @GetMapping("/verify") // trägt die keycloak id in eine extra datenbank ein obsolet wenn keycloak api mit serviceuser funktioniert
+    @GetMapping("/verify") // zum testen: liest token daten aus und service user wird getestet
     public ResponseEntity<String >firstLoginInsert(Principal principal) throws UnirestException, JsonProcessingException {
         JwtAuthenticationToken token = (JwtAuthenticationToken) principal;
         String prename = (String) token.getTokenAttributes().get("given_name");
         String lastname = (String) token.getTokenAttributes().get("family_name");
         UUID kcid = UUID.fromString((String) token.getTokenAttributes().get("sub"));
         //UUID.fromString();
-
 
         KeycloakServiceUser su = new KeycloakServiceUser();
         String access_token = su.get_access_token();
@@ -196,52 +113,59 @@ public class OccuControl {
         return ResponseEntity.ok(this.bookingService.getAllPerDay(d));
     }
 
-
 }
 
 
 
 
+//   @GetMapping("/doppelbuchung") gibt die doppelbuchungen zurück
 
 
 
+    /*@GetMapping("/doppelbuchung")
+    public ResponseEntity<String> doppelbuchung(){
+        List<Booking> allBookings = this.bookingService.getAll();
+        List<Reservation> reservations = new ArrayList<>();
+        for (Booking b: allBookings) {
+            for (Reservation r:b.getReservations()) {
+                reservations.add(r);
+            }
+        }
+
+        for(int i=0; i<reservations.size();i++){
+            for(int j=0;j<reservations.size();j++){
+                if(reservations.get(i)==reservations.get(j)){
+                    System.out.println(reservations.get(i).getId());
+                    System.out.println(reservations.get(j).getId());
+                }
+            }
+        }
+
+        List<Reservation> res = this.resService.getAll();
+        System.out.println(this.bookingService.getAll().get(0).getReservations());
+        return ResponseEntity.ok("test");
+    }*/
+//--------------------------- TO DO -----------------------
+
+//   @GetMapping("/doppelbuchung") gibt die doppelbuchungen zurück. ???? Müssen Strategie besprechen!
+//
+
+    /*@GetMapping("/doppelbuchung")
+    public ResponseEntity<List<Reservation>> getDoppelBuchung(){
+         Logik: Wenn ein stuhlsitzer mehrere reservation_ids hat, ist er bei mehreren Buchungen eingetragen.
+         Überprüfung ob doppelbuchung: Reservation_ids(primary key Booking table) von einem stuhlsitzer nehmen und im Booking Table die Timeslots vergleichen.-->
+         Wenn für 2 Verschiedene ids der gleiche Timeslot eingetragen ist==> Doppelbuchung. Umsetzung schwer.
+    }*/
 
 
-
-
-
-
-//------------------------RESERVIERUNG EINTRAGEN------------------------
-//    @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-//    public ResponseEntity<Reservation>neueReservierung(@RequestBody Reservation r){
-//        this.reservationRepository.save(r);
-//        return ResponseEntity.ok(r);
-//    }
-
-
-
-//    @GetMapping("/{ts}/{datum}")    //Display Status
-//    public ResponseEntity<Collection<Reservation>>getAllReservationsPerSlotDatum(@PathVariable String ts, @PathVariable String datum){
-//        Collection<Reservation> custom2 = this.reservationRepository.findBycustom2(ts, datum);
-//        return ResponseEntity.ok(custom2);
-//    }
-
-
-//    @GetMapping("/last-change")
-//    public Integer lastChange(){
-//        return this.reservationRepository.lastChange();
-//    }
-
-// Beispiel mit datenabrufen:
-
-/*public ResponseEntity<Employee> getEmployeeById(@PathVariable(value = "id") Long employeeId)
-        throws ResourceNotFoundException {
-    Employee employee = employeeRepository.findById(employeeId)
-            .orElseThrow(() -> new ResourceNotFoundException("Employee not found for this id :: " + employeeId));
-    return ResponseEntity.ok().body(employee);
-}
-*/
-
+//    @DeleteMapping("res/del-booking/{bookingNo}") // bookingno ist eigentlich die bookingid und ist ein long
+//	public ResponseEntity deleteReservationByBooking(@PathVariable("bookingNo") int bookingNo) {
+//		if(resService.deleteReservation(bookingNo)!=null) {
+//			return ResponseEntity.status(HttpStatus.SC_OK).body("Reservation deleted");
+//		}
+//		return ResponseEntity.status(HttpStatus.SC_NOT_FOUND).body("Reservation doesnt exist");
+//
+//	}
 
 
 

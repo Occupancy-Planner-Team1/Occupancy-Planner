@@ -26,9 +26,9 @@ public class WebSecurityConfig {
     //            .requestMatchers(HttpMethod.GET, "/test/admin", "/test/admin/**").hasRole(TEAMLEITER)
                 .requestMatchers(HttpMethod.GET, "/auth/*").hasAnyRole(TEAMLEITER, PROJEKTLEITER, MITARBEITER)
 
-    //            .requestMatchers(HttpMethod.POST, "/test/anonymous", "/test/anonymous/**").permitAll()
-    //            .requestMatchers(HttpMethod.POST, "/test/admin", "/test/admin/**").hasRole(TEAMLEITER)
-    //            .requestMatchers(HttpMethod.POST, "/test/user").hasAnyRole(TEAMLEITER, PROJEKTLEITER)
+                .requestMatchers(HttpMethod.DELETE, "/auth/", "/auth/**").hasAnyRole(TEAMLEITER, PROJEKTLEITER, MITARBEITER)
+
+                .requestMatchers(HttpMethod.PUT, "/auth/", "/auth/**").hasAnyRole(TEAMLEITER, PROJEKTLEITER, MITARBEITER)
                 .anyRequest().authenticated();
         http.oauth2ResourceServer()
                 .jwt()

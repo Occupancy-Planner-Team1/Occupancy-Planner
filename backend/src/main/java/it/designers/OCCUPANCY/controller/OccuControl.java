@@ -37,7 +37,7 @@ public class OccuControl {
 
 
 
- // Kommentar: für löschen delete mapping nutzen, code geht so auch leider nicht. vbei
+ // Kommentar: für löschen delete mapping nutzen! und den returnten datentyp in <> hinter responsesntity angeben
     @GetMapping("/res/del-yesterday")
     public ResponseEntity deleteExpired() {
     	
@@ -53,17 +53,20 @@ public class OccuControl {
   }
 
 
-    @GetMapping("/last-change") // nice tut ;)
+    @GetMapping("/last-change") // nice tut aber den try catch von emir nehmen ;)
     public ResponseEntity<Long> lastChange(){
         List<Booking> bookings = this.bookingService.lastChange();
         Long lastId = bookings.get(0).getId();
         return ResponseEntity.ok(lastId);
     }
 
+    //@DeleteMapping fürs löschen nutzen! Rechte: wenn bucher = token.uid
     @GetMapping("res/del-booking/{bookingid}") // kommentar: delete sollte keinen string zurückgeben! void oder <Booking> und exception: abfangen, dass eintrag nicht vorhanden
     public ResponseEntity<String> deletebyId(@PathVariable long bookingid){
         return ResponseEntity.ok(this.bookingService.deleteById(bookingid));
     }
+
+//noch ein delete für reservierungen wenn bucher != stuhlnutzerid und stuhlnutzerid = token.uuid sollte der reservation service machen
 
 
 
@@ -122,8 +125,6 @@ public class OccuControl {
 
 //   @GetMapping("/doppelbuchung") gibt die doppelbuchungen zurück
 
-
-
     /*@GetMapping("/doppelbuchung")
     public ResponseEntity<String> doppelbuchung(){
         List<Booking> allBookings = this.bookingService.getAll();
@@ -147,10 +148,6 @@ public class OccuControl {
         System.out.println(this.bookingService.getAll().get(0).getReservations());
         return ResponseEntity.ok("test");
     }*/
-//--------------------------- TO DO -----------------------
-
-//   @GetMapping("/doppelbuchung") gibt die doppelbuchungen zurück. ???? Müssen Strategie besprechen!
-//
 
     /*@GetMapping("/doppelbuchung")
     public ResponseEntity<List<Reservation>> getDoppelBuchung(){

@@ -36,20 +36,22 @@ public class OccuControl {
 
 
 
-/*
+
  // Kommentar: für löschen delete mapping nutzen, code geht so auch leider nicht. vbei
     @GetMapping("/res/del-yesterday")
-    public void ResponseEntity deleteExpired() {
+    public ResponseEntity deleteExpired() {
     	
     	LocalDate dateNow=LocalDate.now();
+    	
     	try {
-    		return ResponseEntity.ok(bookingService.deleteExpired(dateNow));
+    		this.bookingService.deleteExpired(dateNow);
+    		return ResponseEntity.status(HttpStatus.OK).body("Expired bookings deleted");
     	}
     	catch(Exception e) {
     		return ResponseEntity.status(HttpStatus.NOT_MODIFIED).body(e);
     	}
   }
-*/
+
 
     @GetMapping("/last-change") // nice tut ;)
     public ResponseEntity<Long> lastChange(){

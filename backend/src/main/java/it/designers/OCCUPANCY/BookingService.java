@@ -64,9 +64,8 @@ public class BookingService {
         this.bookingRepository.delete(booking); //hier kann ein Fehler entstehen -> Controller abfangen Try Catch
     }
     
-    public void deleteExpired(LocalDate date) {
-    	this.bookingRepository.deleteAllByIdInBatch(bookingRepository.findByExpired(date)); //Delete by Id anstatt SQL DELETE
-    	//this.bookingRepository.deleteExpired(date); das geht auch aber bei der oberen könnte man bspw. die gelöschten ids zurückgeben
+    public void deleteExpired(LocalDate date) { 
+    	this.bookingRepository.deleteAllInBatch(this.bookingRepository.getExpired(date));
     }
    
     

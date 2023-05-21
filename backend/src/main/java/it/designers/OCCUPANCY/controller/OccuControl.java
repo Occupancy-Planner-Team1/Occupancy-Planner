@@ -36,8 +36,8 @@ public class OccuControl {
 
 
 
-
-/* // Kommentar: für löschen delete mapping nutzen, code geht so auch leider nicht. vbei
+/*
+ // Kommentar: für löschen delete mapping nutzen, code geht so auch leider nicht. vbei
     @GetMapping("/res/del-yesterday")
     public void ResponseEntity deleteExpired() {
     	

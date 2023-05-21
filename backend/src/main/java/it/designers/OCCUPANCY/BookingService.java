@@ -24,6 +24,7 @@ public class BookingService {
         this.bookingRepository = bookingRepository;
     }
 
+    //ich glaube hier solltest du kein extra löschen implementieren, sondern das löschen von weiter unten benutzen :) löschen sollte entweder nicht oder zur bestätigung das gelöschte objekt oder eine http status zurückgeben
     public String deleteById(long id){
         if(this.bookingRepository.findById(id).isPresent()){
             this.bookingRepository.deleteById(id);
@@ -32,6 +33,7 @@ public class BookingService {
         return "Couldn't find or delete Booking with id " + id;
     }
 
+    //also wenn du hier die letzte buchung zurückgibst brauchst du keine liste sondern nur eine buchung
     public List<Booking> lastChange(){
         return this.bookingRepository.findAll(Sort.by(Sort.Direction.DESC,"id"));
     }

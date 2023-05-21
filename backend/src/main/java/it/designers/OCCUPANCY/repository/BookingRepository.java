@@ -17,6 +17,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query(value="SELECT b FROM Booking b WHERE b.datum=:d")
     List<Booking> findByDatum(LocalDate d);
     
+    // SELECT x.id FROM Booking x WHERE x.datum...
     @Query(value="SELECT id FROM Booking WHERE datum<:date", nativeQuery=true)
     List<Long> findByExpired(LocalDate date);
     

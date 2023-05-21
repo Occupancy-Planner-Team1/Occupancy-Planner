@@ -1,12 +1,11 @@
 package it.designers.OCCUPANCY.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import it.designers.OCCUPANCY.BookingService;
 import it.designers.OCCUPANCY.dbtables.Booking;
-import it.designers.OCCUPANCY.dbtables.Reservation;
 
+import it.designers.OCCUPANCY.dbtables.Reservation;
 import it.designers.OCCUPANCY.security.KeycloakServiceUser;
 
 import org.springframework.http.HttpStatus;
@@ -16,6 +15,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.web.bind.annotation.*;
 import it.designers.OCCUPANCY.ReservationService;
 
+import java.awt.print.Book;
 import java.security.Principal;
 import java.time.LocalDate;
 import java.util.*;
@@ -66,6 +66,7 @@ public class OccuControl {
 
 
 //--------------------------- TO DO -----------------------
+<<<<<<< HEAD
 //   @GetMapping("/doppelbuchung") gibt die doppelbuchungen zurück. ???? Müssen Strategie besprechen!
 //   
     
@@ -92,6 +93,60 @@ public class OccuControl {
     	
     }
  
+=======
+//   @GetMapping("/doppelbuchung") gibt die doppelbuchungen zurück
+//   @GetMapping("/res/del-yesterday/") löscht reservierung(en) die vorbei sind
+
+
+//--------------------------- TO BE EXAMINED LUL -----------------------
+//   @GetMapping("/res/del-booking/{bookingid}") löscht reservierung(en) anhand bookingid
+//    @GetMapping("/last-change")
+//    public Integer lastChange(){
+//        return this.reservationRepository.lastChange();
+//    }
+
+    /*@GetMapping("/doppelbuchung")
+    public ResponseEntity<String> doppelbuchung(){
+        List<Booking> allBookings = this.bookingService.getAll();
+        List<Reservation> reservations = new ArrayList<>();
+        for (Booking b: allBookings) {
+            for (Reservation r:b.getReservations()) {
+                reservations.add(r);
+            }
+        }
+
+        for(int i=0; i<reservations.size();i++){
+            for(int j=0;j<reservations.size();j++){
+                if(reservations.get(i)==reservations.get(j)){
+                    System.out.println(reservations.get(i).getId());
+                    System.out.println(reservations.get(j).getId());
+                }
+            }
+        }
+
+
+
+        
+        
+        List<Reservation> res = this.resService.getAll();
+        System.out.println(this.bookingService.getAll().get(0).getReservations());
+        return ResponseEntity.ok("test");
+    }*/
+
+    @GetMapping("/last-change")
+    public ResponseEntity<Long> lastChange(){
+        List<Booking> bookings = this.bookingService.lastChange();
+        Long lastId = bookings.get(0).getId();
+        return ResponseEntity.ok(lastId);
+    }
+
+    @GetMapping("res/del-booking/{bookingid}")
+    public ResponseEntity<String> deletebyId(@PathVariable long bookingid){
+        return ResponseEntity.ok(this.bookingService.deleteById(bookingid));
+    }
+
+
+>>>>>>> 1c0cf860ad222326966d471c894889b6dccab4e2
 
     // TESTING only
     @GetMapping("/anonymous")

@@ -5,6 +5,8 @@ import it.designers.OCCUPANCY.repository.BookingRepository;
 import it.designers.OCCUPANCY.repository.ReservationRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -20,6 +22,18 @@ public class BookingService {
     @Autowired
     public void setBookingRepository(BookingRepository bookingRepository) {
         this.bookingRepository = bookingRepository;
+    }
+
+    public String deleteById(long id){
+        if(this.bookingRepository.findById(id).isPresent()){
+            this.bookingRepository.deleteById(id);
+            return "Booking with id " + id + " was Deleted";
+        }
+        return "Couldn't find or delete Booking with id " + id;
+    }
+
+    public List<Booking> lastChange(){
+        return this.bookingRepository.findAll(Sort.by(Sort.Direction.DESC,"id"));
     }
 
     //save -> einzelnes Element Speichern Create + Update

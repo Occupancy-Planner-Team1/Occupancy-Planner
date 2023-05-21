@@ -26,7 +26,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     
    
 
-//    @Query("SELECT r FROM Reservation r WHERE r.timeslot = :ts")
+    //    @Query("SELECT r FROM Reservation r WHERE r.timeslot = :ts")
 //    Collection<Reservation> findBycustom1(String ts);
 
 

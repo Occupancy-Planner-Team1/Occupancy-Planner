@@ -17,7 +17,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query(value="SELECT b FROM Booking b WHERE b.datum=:d")
     List<Booking> findByDatum(LocalDate d);
 
-//    @Query("SELECT r FROM Reservation r WHERE r.timeslot = :ts")
+    //    @Query("SELECT r FROM Reservation r WHERE r.timeslot = :ts")
 //    Collection<Reservation> findBycustom1(String ts);
 
 

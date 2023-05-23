@@ -15,6 +15,7 @@ const ReservationPage = () => {
   const redirect_to_all = (e) => {
     navigate("./all?restime="+reservation_time);
   };
+
   return (
     <div className="App">
       <header className="container reservation-form d-flex justify-content-between">

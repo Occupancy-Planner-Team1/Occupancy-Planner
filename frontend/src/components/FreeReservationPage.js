@@ -1,109 +1,97 @@
 import { useSearchParams } from "react-router-dom";
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import logo from '../Logo-IT-Designers.svg';
+import { groupBy } from "core-js/actual/array/group-by";
+import axios from 'axios';
 
 const ReservationPage = () => {
   // variables & functions
   const [searchParams, setSearchParams] = useSearchParams();
+  const [timeslotdata, setTimeSlotData] = useState({});
   const timeslotref = useRef(null);
+
   useEffect(() => {
     let query = searchParams.get("restime");
     if (query!="") {
       document.getElementById(query+"min").checked = true;
     }
+    // Get Capacity & Reserved Seats from Backend
+    let timestamp_object = [
+      { "slot": "11:00-11:15" },
+      { "slot": "11:15-11:30" },
+      { "slot": "11:30-11:45" },
+      { "slot": "11:45-12:00" },
+      { "slot": "12:00-12:15" },
+      { "slot": "12:15-12:30" },
+      { "slot": "12:30-12:45" },
+      { "slot": "12:45-13:00" },
+      { "slot": "13:00-13:15" },
+      { "slot": "13:15-13:30" },
+      { "slot": "13:30-13:45" },
+      { "slot": "13:45-14:00" },
+    ];
+    const dt = new Date();
+    axios.get('/api/auth/res-day/'+dt.getFullYear()+'-'+('0' + (dt.getMonth()+1)).slice(-2)+'-'+('0' + dt.getDate()).slice(-2), { headers: { Authorization: 'Bearer ' + localStorage.getItem('kc_token') } }).then((result) => {
+      //Group Data by timeslot
+      console.log(result.data);
+      const data = result.data.groupBy(data => { return data.timeslot; });
+      for (const key in data) {
+        // Calculate capacity and round it to a fixed number
+        timestamp_object[key].capacity = Number((data[key].length/32).toFixed(1));
+        // Adding 
+        timestamp_object[key].data = data[key];
+      }
+      setTimeSlotData(timestamp_object);
+    });
   }, [timeslotref]);
+
   const changeTime = (e) => {
     console.log(e.target.value);
   };
   const changeTimeSlot = (e) => {
-    // fetch reserved chairs
-    seats.forEach((value)=>{
-      let element = document.getElementById("chair-"+value.chairId.toString());
-      switch (value.status) {
-        case 1:
-          element.setAttribute('class', 'reserved_reserved');
-          break;
-        case 2:
-          element.setAttribute('class', 'reserved_me');
-          break;
-        case 3:
-          element.setAttribute('class', 'reserved_guests');
-          break;
-        case 4:
-          element.setAttribute('class', 'reserved_employees');
-          break;
-        default:
-          break;
-      }
-    });
-    // eventlistener on free chairs
-    document.getElementById("sitzplan")?.querySelectorAll(`g[data-name="chair"]`).forEach((element)=>{
-      if (!element.classList.contains("reserved_reserved")) {
-        element.addEventListener("click", (e)=>{
-          // Get Id of clicked chair
-          console.log(e.target.parentElement.id);
-        })
-      }
-    });
+    if (timeslotdata[e.target.id].data) {
+      // eventlistener on free chairs
+      document.getElementById("sitzplan")?.querySelectorAll(`g[data-name="chair"]`).forEach((element)=>{
+        if (!element.classList.contains("reserved_reserved")) {
+          element.addEventListener("click", (e)=>{
+            // Get Id of clicked chair
+            console.log(e.target.parentElement.id);
+          })
+        }
+      });
+      // fetch reserved chairs
+      console.log(timeslotdata[e.target.id].data);
+      timeslotdata[e.target.id].data.forEach((value)=>{
+        value.reservations.forEach((el) => {
+          let element = document.getElementById("chair-"+el.chair.id.toString());
+          element?.setAttribute('class', 'reserved_reserved');
+          /* switch (value.status) {
+            case 1:
+              element.setAttribute('class', 'reserved_reserved');
+              break;
+            case 2:
+              element.setAttribute('class', 'reserved_me');
+              break;
+            case 3:
+              element.setAttribute('class', 'reserved_guests');
+              break;
+            case 4:
+              element.setAttribute('class', 'reserved_employees');
+              break;
+            default:
+              break;
+          }*/
+        });
+      });
+    }
   };
   // temp json responses
-  const slots = [
-    {
-      "slot": "11:00-11:15",
-      "capacity": 0.1
-    },
-    {
-      "slot": "11:15-11:30",
-      "capacity": 0.2
-    },
-    {
-      "slot": "11:30-11:45",
-      "capacity": 0.3
-    },
-    {
-      "slot": "11:45-12:00",
-      "capacity": 0.4
-    },
-    {
-      "slot": "12:00-12:15",
-      "capacity": 0.5
-    },
-    {
-      "slot": "12:15-12:30",
-      "capacity": 0.6
-    },
-    {
-      "slot": "12:30-12:45",
-      "capacity": 0.7
-    },
-    {
-      "slot": "12:45-13:00",
-      "capacity": 0.8
-    },
-    {
-      "slot": "13:00-13:15",
-      "capacity": 0.9
-    },
-    {
-      "slot": "13:15-13:30",
-      "capacity": 1.0
-    },
-    {
-      "slot": "13:30-13:45",
-      "capacity": 0.0
-    },
-    {
-      "slot": "13:45-14:00",
-      "capacity": 0.1
-    },
-  ];
   const seats = [
     { "chairId": 1, status: 1},
     { "chairId": 2, status: 2},
     { "chairId": 32, status: 1},
     { "chairId": 30, status: 1}
   ];
-
   // html
   return (
     <div className="App">
@@ -114,7 +102,7 @@ const ReservationPage = () => {
       <div className='container h-fill reservation-form'>
         <div className='d-flex justify-content-between'>
           <h3>Reservierungszeiten in Minuten</h3>
-          <h4 title='Thomas Müller'>TM</h4>
+          <h4 title='Thomas Müller'>{}</h4>
         </div>
         <div className='mb-3' ref={timeslotref}>
           <input type="radio" className="btn-check" name="reservation_time" id="15min" value="15" onChange={changeTime}/>
@@ -131,17 +119,17 @@ const ReservationPage = () => {
           <div>
             <p className="d-inline-block me-5">Auslastung</p>
             <div className="d-inline-block bg-status position-relative">
-              <p className="d-inline-block me-4">50%</p>
+              <p className="d-inline-block me-4">0%</p>
               <p className="d-inline-block">100%</p>
             </div>
           </div>
         </div>
         <div className="row">
           {
-            slots.map((value, key) => (
+            Object.keys(timeslotdata).map((key, i) => (
               <div className="col-12 col-sm-6 col-md-3 mb-2" key={key}>
                 <input type="radio" className="btn-check" name="time_slot" id={key} value={key+1} onChange={changeTimeSlot}/>
-                <label className={`btn recommended_time_slot reservation_status${value.capacity===1.0 ? "10" : value.capacity*10 } border px-5`} htmlFor={key}>{value.slot}</label>
+                <label className={`btn recommended_time_slot reservation_status${timeslotdata[i].capacity===1.0 ? "10" : timeslotdata[i].capacity*10 } border px-5`} htmlFor={key}>{timeslotdata[i].slot}</label>
               </div>
             ))
           }

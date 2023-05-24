@@ -38,7 +38,7 @@ public class OccuControl {
 
 
  // Kommentar: für löschen delete mapping nutzen! und den returnten datentyp in <> hinter responsesntity angeben
-    @GetMapping("/res/del-yesterday")
+    @DeleteMapping("/res/del-yesterday")
     public ResponseEntity deleteExpired() {
     	
     	LocalDate dateNow=LocalDate.now();
@@ -54,16 +54,36 @@ public class OccuControl {
 
 
     @GetMapping("/last-change") // nice tut aber den try catch von emir nehmen ;)
-    public ResponseEntity<Long> lastChange(){
-        List<Booking> bookings = this.bookingService.lastChange();
-        Long lastId = bookings.get(0).getId();
-        return ResponseEntity.ok(lastId);
+    public ResponseEntity lastChange(){
+        try {
+            Long lastId = this.bookingService.lastChange();
+            return ResponseEntity.status(HttpStatus.OK).body(lastId);
+        }
+        catch(Exception e) {
+            //Not Found warscheinlich nicht ganz passend.
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e);
+        }
     }
 
     //@DeleteMapping fürs löschen nutzen! Rechte: wenn bucher = token.uid
-    @GetMapping("res/del-booking/{bookingid}") // kommentar: delete sollte keinen string zurückgeben! void oder <Booking> und exception: abfangen, dass eintrag nicht vorhanden
-    public ResponseEntity<String> deletebyId(@PathVariable long bookingid){
-        return ResponseEntity.ok(this.bookingService.deleteById(bookingid));
+    @DeleteMapping("res/del-booking/{bookingid}") // kommentar: delete sollte keinen string zurückgeben! void oder <Booking> und exception: abfangen, dass eintrag nicht vorhanden
+    public ResponseEntity deletebyId(@PathVariable long bookingid,Principal principal){
+        JwtAuthenticationToken token = (JwtAuthenticationToken) principal;
+        //ist sub richtig als uuid vom token?
+        UUID tokenOwner = UUID.fromString((String) token.getTokenAttributes().get("sub"));
+        //tokenOwner = UUID.fromString("eb98da0e-a15d-416f-a4ba-fd42c6697e33");
+
+        if(tokenOwner.equals(this.bookingService.get(bookingid).getBucher())){
+            try {
+                this.bookingService.deleteById(bookingid);
+                return ResponseEntity.status(HttpStatus.OK).body(bookingid);
+            }
+            catch(Exception e) {
+                //Not Found warscheinlich nicht ganz passend.
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e);
+            }
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Sorry you can only Delete your own Bookings. " + tokenOwner + " " +this.bookingService.get(bookingid).getBucher() );
     }
 
 //noch ein delete für reservierungen wenn bucher != stuhlnutzerid und stuhlnutzerid = token.uuid sollte der reservation service machen

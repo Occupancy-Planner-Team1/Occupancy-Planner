@@ -1,5 +1,5 @@
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Roboto', sans-serif;
 }
 
 :root {
@@ -171,9 +171,14 @@ body {
   fill: rgba(186, 169, 61, 0.7);
 }
 
+#sitzplan>g>g:not(.reserved_reserved){
+  cursor: pointer;
+}
+
 .reserved_reserved path,
 .reserved_reserved circle {
   fill: rgba(255, 0, 0, 0.7);
+  cursor: not-allowed;
 }
 
 .reserved_reserved path:nth-child(2) {

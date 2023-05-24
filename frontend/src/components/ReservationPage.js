@@ -15,6 +15,11 @@ const ReservationPage = () => {
   const redirect_to_all = (e) => {
     navigate("./all?restime="+reservation_time);
   };
+  // UserInfo
+  let userinfo = JSON.parse(localStorage.getItem('kc_user'));
+  const shortname = userinfo.given_name.substring(0, 1)+''+userinfo.family_name.substring(0, 1);
+  const longname = userinfo.name;
+
   return (
     <div className="App">
       <header className="container reservation-form d-flex justify-content-between">
@@ -24,7 +29,7 @@ const ReservationPage = () => {
       <div className='container h-fill reservation-form'>
         <div className='d-flex justify-content-between'>
           <h3>Reservierungszeiten in Minuten</h3>
-          <h4 title='Thomas Müller'>TM</h4>
+          <h4 title={longname}>{shortname}</h4>
         </div>
         <div className='mb-3'>
           <input type="radio" className="btn-check" name="reservation_time" id="15min" value="15" onChange={changeTime}/>
@@ -49,7 +54,7 @@ const ReservationPage = () => {
         <div className="row">
           <div className="col-3 mb-2">
             <input type="radio" className="btn-check" name="time_slot" id="2" value="2" onChange={changeTimeSlot} checked/>
-            <label className="btn border px-5 recommended_time_slot reservation_status1 border px-5" htmlFor="2">11:15-11:30</label>
+            <label className="btn border w-100 recommended_time_slot reservation_status1 border" htmlFor="2">11:15-11:30</label>
           </div>
           <div className='d-flex justify-content-center'>
             <a className='btn text-center' onClick={redirect_to_all} href=''>Alle Anzeigen</a>
@@ -58,8 +63,8 @@ const ReservationPage = () => {
         <h3>Anzahl Personen</h3>
         <div>
           <h3 className="text-muted d-inline-block me-5">Gäste</h3>
-          <button className="btn border number-icons me-4">+</button>
-          <button className="btn border number-icons">-</button>
+          <button className="btn border number-icons me-4 d-inline-flex"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></button>
+          <button className="btn border number-icons d-inline-flex"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg></button>
         </div>
         <div className="w-100 d-flex mt-4 justify-content-center reservation-plan">
           <svg xmlns="http://www.w3.org/2000/svg" id="sitzplan" viewBox="0 0 1116.26 867.67">

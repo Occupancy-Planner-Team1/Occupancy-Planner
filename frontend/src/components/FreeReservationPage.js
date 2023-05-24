@@ -10,26 +10,21 @@ const ReservationPage = () => {
   const [timeslotdata, setTimeSlotData] = useState({});
   const timeslotref = useRef(null);
 
-  useEffect(() => {
-    let query = searchParams.get("restime");
-    if (query!="") {
-      document.getElementById(query+"min").checked = true;
+  //Create Timeslot objects
+  function timeslotGenerator(minutes) {
+    let ts = new Object(), st = new Date(0,0,0,11,0,0), et = new Date(0,0,0,11,minutes,0);
+    for (let index = 0; index < 12/(minutes/15); index++) {
+      let inner = new Object();
+      inner.slot = st.getHours()+":"+(st.getMinutes() < 10 ? '0' : '') + st.getMinutes()+" - "+et.getHours()+":"+(et.getMinutes() < 10 ? '0' : '') + et.getMinutes();
+      ts[index] = inner;
+      st = et;
+      et = new Date(et.getTime() + minutes*60000);
     }
-    // Get Capacity & Reserved Seats from Backend
-    let timestamp_object = [
-      { "slot": "11:00-11:15" },
-      { "slot": "11:15-11:30" },
-      { "slot": "11:30-11:45" },
-      { "slot": "11:45-12:00" },
-      { "slot": "12:00-12:15" },
-      { "slot": "12:15-12:30" },
-      { "slot": "12:30-12:45" },
-      { "slot": "12:45-13:00" },
-      { "slot": "13:00-13:15" },
-      { "slot": "13:15-13:30" },
-      { "slot": "13:30-13:45" },
-      { "slot": "13:45-14:00" },
-    ];
+    return ts;
+  }
+  // Get Capacity & Reserved Seats from Backend
+  function getReservedSeats(query) {
+    let timestamp_object = timeslotGenerator(query);
     const dt = new Date();
     axios.get('/api/auth/res-day/'+dt.getFullYear()+'-'+('0' + (dt.getMonth()+1)).slice(-2)+'-'+('0' + dt.getDate()).slice(-2), { headers: { Authorization: 'Bearer ' + localStorage.getItem('kc_token') } }).then((result) => {
       //Group Data by timeslot
@@ -37,30 +32,40 @@ const ReservationPage = () => {
       const data = result.data.groupBy(data => { return data.timeslot; });
       for (const key in data) {
         // Calculate capacity and round it to a fixed number
-        timestamp_object[key].capacity = Number((data[key].length/32).toFixed(1));
+        timestamp_object[key].capacity = Number((data[key].length/32).toFixed(1));//32 -> dynamische abfrage vom Backend
         // Adding 
         timestamp_object[key].data = data[key];
       }
+      console.log(timestamp_object);
       setTimeSlotData(timestamp_object);
     });
+  }
+  // After Website finish loading
+  useEffect(() => {
+    let query = searchParams.get("restime")!=null? searchParams.get("restime") : 15;
+    document.getElementById(query+"min").checked = true;
+    getReservedSeats(query);
   }, [timeslotref]);
-
+  //change minutes from slot
   const changeTime = (e) => {
-    console.log(e.target.value);
+    console.log(timeslotGenerator(e.target.value));
+    getReservedSeats(e.target.value);
   };
+  // UserInfo
+  let userinfo = JSON.parse(localStorage.getItem('kc_user'));
+  const shortname = userinfo.given_name.substring(0, 1)+''+userinfo.family_name.substring(0, 1);
+  const longname = userinfo.name;
+  const userid = userinfo.sub;
+  //
   const changeTimeSlot = (e) => {
+    // Clear Reservations
+    document.getElementById("sitzplan")?.querySelectorAll(`g`).forEach((element)=>{
+      element?.getAttribute('class');
+      element?.removeAttribute('class');
+    });
+    // Read Reservation
     if (timeslotdata[e.target.id].data) {
-      // eventlistener on free chairs
-      document.getElementById("sitzplan")?.querySelectorAll(`g[data-name="chair"]`).forEach((element)=>{
-        if (!element.classList.contains("reserved_reserved")) {
-          element.addEventListener("click", (e)=>{
-            // Get Id of clicked chair
-            console.log(e.target.parentElement.id);
-          })
-        }
-      });
       // fetch reserved chairs
-      console.log(timeslotdata[e.target.id].data);
       timeslotdata[e.target.id].data.forEach((value)=>{
         value.reservations.forEach((el) => {
           let element = document.getElementById("chair-"+el.chair.id.toString());
@@ -84,15 +89,33 @@ const ReservationPage = () => {
         });
       });
     }
+    // eventlistener on free chairs
+    document.getElementById("sitzplan")?.querySelectorAll(`g[data-name="chair"]`).forEach((element)=>{
+      if (!element.classList.contains("reserved_reserved")) {
+        element.addEventListener("click", (e)=>{
+          console.log(e.target.parentElement.id);
+          let disableclick = false;
+          if (disableclick===false) {
+            disableclick=true;
+            // Get Id of clicked chair
+            //Array own BookingId`s 1-4 Entries
+            axios.delete('/api/auth/res/del-booking/{bookingid}', { headers: { Authorization: 'Bearer ' + localStorage.getItem('kc_token') } }).then((result) => {
+              console.log(result.status);
+            });
+            //Res Put changed chairs
+            //Object function create returning Entry putbooking()
+            axios.put('/api/auth/res/', { headers: { Authorization: 'Bearer ' + localStorage.getItem('kc_token') } }).then((result) => {
+              if (result.status===200) {
+                disableclick=false;                
+              }
+              console.log(result.status);
+            });
+          }
+        })
+      }
+    });
   };
-  // temp json responses
-  const seats = [
-    { "chairId": 1, status: 1},
-    { "chairId": 2, status: 2},
-    { "chairId": 32, status: 1},
-    { "chairId": 30, status: 1}
-  ];
-  // html
+  // Graphic 
   return (
     <div className="App">
       <header className="container reservation-form d-flex justify-content-between">
@@ -102,17 +125,20 @@ const ReservationPage = () => {
       <div className='container h-fill reservation-form'>
         <div className='d-flex justify-content-between'>
           <h3>Reservierungszeiten in Minuten</h3>
-          <h4 title='Thomas Müller'>{}</h4>
+          <h4 title={longname}>{shortname}</h4>
         </div>
-        <div className='mb-3' ref={timeslotref}>
-          <input type="radio" className="btn-check" name="reservation_time" id="15min" value="15" onChange={changeTime}/>
-          <label className="btn border px-4 recommended_time_slot me-3" htmlFor="15min">15</label>
-          <input type="radio" className="btn-check" name="reservation_time" id="30min" value="30" onChange={changeTime}/>
-          <label className="btn border px-4 recommended_time_slot me-3" htmlFor="30min">30</label>
-          <input type="radio" className="btn-check" name="reservation_time" id="45min" value="45" onChange={changeTime}/>
-          <label className="btn border px-4 recommended_time_slot me-3" htmlFor="45min">45</label>
-          <input type="radio" className="btn-check" name="reservation_time" id="60min" value="60" onChange={changeTime}/>
-          <label className="btn border px-4 recommended_time_slot" htmlFor="60min">60</label>
+        <div className='mb-3 d-flex justify-content-between'>
+          <div ref={timeslotref}>
+            <input type="radio" className="btn-check" name="reservation_time" id="15min" value="15" onChange={changeTime}/>
+            <label className="btn border px-4 recommended_time_slot me-3" htmlFor="15min">15</label>
+            <input type="radio" className="btn-check" name="reservation_time" id="30min" value="30" onChange={changeTime}/>
+            <label className="btn border px-4 recommended_time_slot me-3" htmlFor="30min">30</label>
+            <input type="radio" className="btn-check" name="reservation_time" id="45min" value="45" onChange={changeTime}/>
+            <label className="btn border px-4 recommended_time_slot me-3" htmlFor="45min">45</label>
+            <input type="radio" className="btn-check" name="reservation_time" id="60min" value="60" onChange={changeTime}/>
+            <label className="btn border px-4 recommended_time_slot" htmlFor="60min">60</label>
+          </div>
+          <input type="date" className="btn border custom-input"/>
         </div>
         <div className='d-flex justify-content-between'>
           <h3>Freie Reservierungsslots</h3>
@@ -129,7 +155,7 @@ const ReservationPage = () => {
             Object.keys(timeslotdata).map((key, i) => (
               <div className="col-12 col-sm-6 col-md-3 mb-2" key={key}>
                 <input type="radio" className="btn-check" name="time_slot" id={key} value={key+1} onChange={changeTimeSlot}/>
-                <label className={`btn recommended_time_slot reservation_status${timeslotdata[i].capacity===1.0 ? "10" : timeslotdata[i].capacity*10 } border px-5`} htmlFor={key}>{timeslotdata[i].slot}</label>
+                <label className={`btn recommended_time_slot w-100${timeslotdata[i].data!==undefined ? ' reservation_status'+(timeslotdata[i].capacity===1.0 ? "10" : timeslotdata[i].capacity*10) : ''} border`} htmlFor={key}>{timeslotdata[i].slot}</label>
               </div>
             ))
           }
@@ -137,8 +163,8 @@ const ReservationPage = () => {
         <h3>Anzahl Personen</h3>
         <div>
           <h3 className="text-muted d-inline-block me-5">{`Gäste`}</h3>
-          <button className="btn border number-icons me-4">+</button>
-          <button className="btn border number-icons">-</button>
+          <button className="btn border number-icons me-4 d-inline-flex"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></button>
+          <button className="btn border number-icons d-inline-flex"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg></button>
         </div>
         {
           /*<div className="d-inline-block">

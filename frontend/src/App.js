@@ -1,7 +1,7 @@
 import "bootstrap/dist/css/bootstrap.min.css"
 import './App.css';
-import ReservationPage from './components/FreeReservationPage';
-import ReservationPage1 from './components/ReservationPage';
+import ReservationPage from './components/FreeReservationPage'; // 
+import ReservationPage1 from './components/ReservationPage'; //
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import React from 'react';
 

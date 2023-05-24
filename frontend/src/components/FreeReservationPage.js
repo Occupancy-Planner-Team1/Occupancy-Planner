@@ -8,6 +8,7 @@ const ReservationPage = () => {
   // variables & functions
   const [searchParams, setSearchParams] = useSearchParams();
   const [timeslotdata, setTimeSlotData] = useState({});
+  const [timeslot, setTimeSlot] = useState();
   const timeslotref = useRef(null);
 
   //Create Timeslot objects
@@ -28,7 +29,6 @@ const ReservationPage = () => {
     const dt = new Date();
     axios.get('/api/auth/res-day/'+dt.getFullYear()+'-'+('0' + (dt.getMonth()+1)).slice(-2)+'-'+('0' + dt.getDate()).slice(-2), { headers: { Authorization: 'Bearer ' + localStorage.getItem('kc_token') } }).then((result) => {
       //Group Data by timeslot
-      console.log(result.data);
       const data = result.data.groupBy(data => { return data.timeslot; });
       for (const key in data) {
         // Calculate capacity and round it to a fixed number
@@ -36,9 +36,18 @@ const ReservationPage = () => {
         // Adding 
         timestamp_object[key].data = data[key];
       }
-      console.log(timestamp_object);
       setTimeSlotData(timestamp_object);
     });
+  }
+  // Create JSON Reservation
+  function createReservation(rid, sid, cid) {
+    let reservation = {"id": rid, "stuhlsitzer": sid, "chair": {"id": cid, "tisch": null, "posx": null,"posy": null}};
+    return reservation;
+  }
+  // Create JSON for PUT Booking
+  function putBooking(id, date, ts, sub, resobj) {
+    let booking = {"id": id, "datum": date, "timeslot": ts, "bucher": sub, "reservations": resobj};
+    return booking;
   }
   // After Website finish loading
   useEffect(() => {
@@ -58,6 +67,7 @@ const ReservationPage = () => {
   const userid = userinfo.sub;
   //
   const changeTimeSlot = (e) => {
+    let ts = e.target.id;
     // Clear Reservations
     document.getElementById("sitzplan")?.querySelectorAll(`g`).forEach((element)=>{
       element?.getAttribute('class');
@@ -88,30 +98,75 @@ const ReservationPage = () => {
           }*/
         });
       });
-    }
+    }    
+    /*{
+      "id": 1,
+      "datum": "2023-05-24",
+      "timeslot": 1,
+      "bucher": "20874c72-e57f-4b0b-a6ba-c43af20cbe1d",
+      "reservations": [
+          {
+              "id": 1,
+              "stuhlsitzer": "fcf1b1cb-57b2-437f-a858-f9bd3fb8e41f",
+              "chair": {
+                  "id": 1,
+                  "tisch": null,
+                  "posx": null,
+                  "posy": null
+              }
+          },
+          {
+              "id": 2,
+              "stuhlsitzer": "fb37e39d-67f8-410a-bc61-8ea4bc008daa",
+              "chair": {
+                  "id": 2,
+                  "tisch": null,
+                  "posx": null,
+                  "posy": null
+              }
+          }
+      ]
+    }*/
     // eventlistener on free chairs
     document.getElementById("sitzplan")?.querySelectorAll(`g[data-name="chair"]`).forEach((element)=>{
       if (!element.classList.contains("reserved_reserved")) {
         element.addEventListener("click", (e)=>{
-          console.log(e.target.parentElement.id);
           let disableclick = false;
           if (disableclick===false) {
             disableclick=true;
+            let reservationobj = new Array(), bookingobj = new Object();
+            reservationobj.push(createReservation(1, "fcf1b1cb-57b2-437f-a858-f9bd3fb8e41f", 1));
+            reservationobj.push(createReservation(2, "fb37e39d-67f8-410a-bc61-8ea4bc008daa", 1));
+            bookingobj = putBooking(88, "2023-05-24", 1, "12344c72-e57f-4b0b-a6ba-c43af20cbe1d", reservationobj);
+            let tempdata = {
+              "id": 88,
+              "datum": "2023-05-24",
+              "timeslot": Number(ts),
+              "bucher": "7de17acb-b735-4219-a328-3f09cd3983a3",
+              "reservations": [
+                createReservation(1, "fcf1b1cb-57b2-437f-a858-f9bd3fb8e41f", Number(element.id.split("-")[1]))
+              ]
+            };
+            console.log(tempdata);
+            /*
             // Get Id of clicked chair
-            //Array own BookingId`s 1-4 Entries
+            //Array own BookingId`s 1-4 Entries (ts, date, userid)
             axios.delete('/api/auth/res/del-booking/{bookingid}', { headers: { Authorization: 'Bearer ' + localStorage.getItem('kc_token') } }).then((result) => {
               console.log(result.status);
             });
+            */
             //Res Put changed chairs
             //Object function create returning Entry putbooking()
-            axios.put('/api/auth/res/', { headers: { Authorization: 'Bearer ' + localStorage.getItem('kc_token') } }).then((result) => {
-              if (result.status===200) {
-                disableclick=false;                
-              }
-              console.log(result.status);
-            });
+            //axios({ method: 'put', url: '/api/auth/res/', data: tempdata, headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + localStorage.getItem('kc_token') } }).catch((e)=>{ console.log(e); });
           }
         })
+      }
+      if (!element.classList.contains("reserved_reserved") && element.classList.contains("reserved_me")) {
+        // only delete Reservation
+        axios.delete('/api/auth/res/del-booking/{bookingid}', { headers: { Authorization: 'Bearer ' + localStorage.getItem('kc_token') } }).then((result) => {
+          console.log(result.status);
+        });
+        // delete Reservation with mulitple reservations -> clear seat in json
       }
     });
   };

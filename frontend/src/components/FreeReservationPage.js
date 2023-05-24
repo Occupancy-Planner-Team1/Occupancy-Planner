@@ -39,6 +39,35 @@ const ReservationPage = () => {
       setTimeSlotData(timestamp_object);
     });
   }
+
+  function checkDataCurrent() {
+    let check;
+    const myInterval = setInterval(function(){
+      axios.get('/api/auth/last-change', { headers: { Authorization: 'Bearer ' + localStorage.getItem('kc_token') } }).then((result) => {
+        //console.log(result.data);
+        if(check && check != result.data){
+          clearInterval(myInterval);
+          currentDailyData(dacument.getElementById());
+        }
+        check = result.data;
+        console.log(check);
+      });
+    }, 2000);
+  }
+
+  function currentDailyData(date){
+    
+    axios.get('/api/auth/res-day/'+ date, { headers: { Authorization: 'Bearer ' + localStorage.getItem('kc_token') } }).then((result) => {
+      //Group Data by timeslot
+      console.log(result.data);
+      const data = result.data.groupBy(data => { return data.bucher; });
+      console.log("sortiert");
+      console.log(data);
+    });
+  }
+
+
+
   // Create JSON Reservation
   function createReservation(rid, sid, cid) {
     let reservation = {"id": rid, "stuhlsitzer": sid, "chair": {"id": cid, "tisch": null, "posx": null,"posy": null}};

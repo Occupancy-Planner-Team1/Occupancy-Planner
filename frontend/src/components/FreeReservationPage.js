@@ -10,6 +10,7 @@ const ReservationPage = () => {
   const [timeslotdata, setTimeSlotData] = useState({});
   const [timeslot, setTimeSlot] = useState();
   const timeslotref = useRef(null);
+  const [rawData, setRawData] = useState({});
 
   //Create Timeslot objects
   function timeslotGenerator(minutes) {
@@ -41,32 +42,45 @@ const ReservationPage = () => {
   }
 
   function checkDataCurrent() {
-    let check;
+    currentDailyData(document.getElementById("696969").value);
+    let check = null;
     const myInterval = setInterval(function(){
       axios.get('/api/auth/last-change', { headers: { Authorization: 'Bearer ' + localStorage.getItem('kc_token') } }).then((result) => {
         //console.log(result.data);
         if(check && check != result.data){
+          currentDailyData(document.getElementById("696969").value);
           clearInterval(myInterval);
-          currentDailyData(dacument.getElementById());
         }
         check = result.data;
         console.log(check);
       });
     }, 2000);
   }
-
+  
   function currentDailyData(date){
-    
+    console.log(date);
     axios.get('/api/auth/res-day/'+ date, { headers: { Authorization: 'Bearer ' + localStorage.getItem('kc_token') } }).then((result) => {
-      //Group Data by timeslot
-      console.log(result.data);
-      const data = result.data.groupBy(data => { return data.bucher; });
-      console.log("sortiert");
-      console.log(data);
+      //console.log(result.data);
+      setRawData(result.data);
+      //console.log(rawData);
+      capacity(1);
     });
   }
 
-
+  function capacity(ts){
+    //console.log(rawData);
+    if(rawData.length != 0){
+      let groupedData = rawData.groupBy(data => { return data.timeslot; });
+      //console.log(groupedData);
+      for (const key in groupedData) {
+        //console.log(groupedData[key]);
+        // Calculate capacity and round it to a fixed number
+        //timestamp_object[key].capacity = Number((data[key].length/32).toFixed(1));//32 -> dynamische abfrage vom Backend
+        // Adding 
+        //timestamp_object[key].data = data[key];
+      }
+    }
+  }
 
   // Create JSON Reservation
   function createReservation(rid, sid, cid) {
@@ -83,7 +97,11 @@ const ReservationPage = () => {
     let query = searchParams.get("restime")!=null? searchParams.get("restime") : 15;
     document.getElementById(query+"min").checked = true;
     getReservedSeats(query);
-  }, [timeslotref]);
+    const date = new Date();
+    document.getElementById("696969").value = date.getFullYear()+'-'+('0' + (date.getMonth()+1)).slice(-2)+'-'+('0' + date.getDate()).slice(-2);
+    checkDataCurrent();
+  }, [timeslotref, rawData]);
+
   //change minutes from slot
   const changeTime = (e) => {
     console.log(timeslotGenerator(e.target.value));
@@ -223,7 +241,7 @@ const ReservationPage = () => {
             <input type="radio" className="btn-check" name="reservation_time" id="60min" value="60" onChange={changeTime}/>
             <label className="btn border px-4 recommended_time_slot" htmlFor="60min">60</label>
           </div>
-          <input type="date" className="btn border custom-input"/>
+          <input type="date" className="btn border custom-input" id="696969"/>
         </div>
         <div className='d-flex justify-content-between'>
           <h3>Freie Reservierungsslots</h3>

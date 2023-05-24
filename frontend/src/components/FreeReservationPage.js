@@ -7,10 +7,9 @@ import axios from 'axios';
 const ReservationPage = () => {
   // variables & functions
   const [searchParams, setSearchParams] = useSearchParams();
-  const [timeslotdata, setTimeSlotData] = useState({});
-  const [timeslot, setTimeSlot] = useState();
+  let [timeslotdata, setTimeSlotData] = useState({});
+  const [time, setTime] = useState();
   const timeslotref = useRef(null);
-  const [rawData, setRawData] = useState({});
 
   //Create Timeslot objects
   function timeslotGenerator(minutes) {
@@ -25,10 +24,10 @@ const ReservationPage = () => {
     return ts;
   }
   // Get Capacity & Reserved Seats from Backend
-  function getReservedSeats(query) {
-    let timestamp_object = timeslotGenerator(query);
+  async function getReservedSeats (time) {
+    let timestamp_object = timeslotGenerator(time);
     const dt = new Date();
-    axios.get('/api/auth/res-day/'+dt.getFullYear()+'-'+('0' + (dt.getMonth()+1)).slice(-2)+'-'+('0' + dt.getDate()).slice(-2), { headers: { Authorization: 'Bearer ' + localStorage.getItem('kc_token') } }).then((result) => {
+    await axios.get('/api/auth/res-day/'+ document.getElementById("selectedDate").value, { headers: { Authorization: 'Bearer ' + localStorage.getItem('kc_token') } }).then((result) => {
       //Group Data by timeslot
       const data = result.data.groupBy(data => { return data.timeslot; });
       for (const key in data) {
@@ -39,49 +38,8 @@ const ReservationPage = () => {
       }
       setTimeSlotData(timestamp_object);
     });
+    return timestamp_object;
   }
-
-  function checkDataCurrent() {
-    currentDailyData(document.getElementById("696969").value);
-    let check = null;
-    const myInterval = setInterval(function(){
-      axios.get('/api/auth/last-change', { headers: { Authorization: 'Bearer ' + localStorage.getItem('kc_token') } }).then((result) => {
-        //console.log(result.data);
-        if(check && check != result.data){
-          currentDailyData(document.getElementById("696969").value);
-          clearInterval(myInterval);
-        }
-        check = result.data;
-        console.log(check);
-      });
-    }, 2000);
-  }
-  
-  function currentDailyData(date){
-    console.log(date);
-    axios.get('/api/auth/res-day/'+ date, { headers: { Authorization: 'Bearer ' + localStorage.getItem('kc_token') } }).then((result) => {
-      //console.log(result.data);
-      setRawData(result.data);
-      //console.log(rawData);
-      capacity(1);
-    });
-  }
-
-  function capacity(ts){
-    //console.log(rawData);
-    if(rawData.length != 0){
-      let groupedData = rawData.groupBy(data => { return data.timeslot; });
-      //console.log(groupedData);
-      for (const key in groupedData) {
-        //console.log(groupedData[key]);
-        // Calculate capacity and round it to a fixed number
-        //timestamp_object[key].capacity = Number((data[key].length/32).toFixed(1));//32 -> dynamische abfrage vom Backend
-        // Adding 
-        //timestamp_object[key].data = data[key];
-      }
-    }
-  }
-
   // Create JSON Reservation
   function createReservation(rid, sid, cid) {
     let reservation = {"id": rid, "stuhlsitzer": sid, "chair": {"id": cid, "tisch": null, "posx": null,"posy": null}};
@@ -92,38 +50,18 @@ const ReservationPage = () => {
     let booking = {"id": id, "datum": date, "timeslot": ts, "bucher": sub, "reservations": resobj};
     return booking;
   }
-  // After Website finish loading
-  useEffect(() => {
-    let query = searchParams.get("restime")!=null? searchParams.get("restime") : 15;
-    document.getElementById(query+"min").checked = true;
-    getReservedSeats(query);
-    const date = new Date();
-    document.getElementById("696969").value = date.getFullYear()+'-'+('0' + (date.getMonth()+1)).slice(-2)+'-'+('0' + date.getDate()).slice(-2);
-    checkDataCurrent();
-  }, [timeslotref, rawData]);
-
-  //change minutes from slot
-  const changeTime = (e) => {
-    console.log(timeslotGenerator(e.target.value));
-    getReservedSeats(e.target.value);
-  };
-  // UserInfo
-  let userinfo = JSON.parse(localStorage.getItem('kc_user'));
-  const shortname = userinfo.given_name.substring(0, 1)+''+userinfo.family_name.substring(0, 1);
-  const longname = userinfo.name;
-  const userid = userinfo.sub;
   //
-  const changeTimeSlot = (e) => {
-    let ts = e.target.id;
+  function updateDataToChairs(ts, tsd) {
     // Clear Reservations
     document.getElementById("sitzplan")?.querySelectorAll(`g`).forEach((element)=>{
       element?.getAttribute('class');
       element?.removeAttribute('class');
     });
+    console.log(tsd[ts]);
     // Read Reservation
-    if (timeslotdata[e.target.id].data) {
+    if (tsd[ts].data!==undefined) {
       // fetch reserved chairs
-      timeslotdata[e.target.id].data.forEach((value)=>{
+      tsd[ts].data.forEach((value)=>{
         value.reservations.forEach((el) => {
           let element = document.getElementById("chair-"+el.chair.id.toString());
           element?.setAttribute('class', 'reserved_reserved');
@@ -146,6 +84,31 @@ const ReservationPage = () => {
         });
       });
     }    
+  }
+  // After Website finish loading
+  useEffect(() => {
+    let query = searchParams.get("restime")!=null ? searchParams.get("restime") : 15;
+    setTime(query?.toString());
+    document.getElementById(query+"min").checked = true;
+    const dt = new Date();
+    document.getElementById("selectedDate").value = dt.getFullYear()+'-'+('0' + (dt.getMonth()+1)).slice(-2)+'-'+('0' + dt.getDate()).slice(-2);
+    getReservedSeats(query);
+  }, [timeslotref]);
+  //change minutes from slot
+  const changeTime = (e) => {
+    setTime(e.target.value);
+    console.log(timeslotGenerator(e.target.value));
+    getReservedSeats(e.target.value);
+  };
+  // UserInfo
+  let userinfo = JSON.parse(localStorage.getItem('kc_user'));
+  const shortname = userinfo.given_name.substring(0, 1)+''+userinfo.family_name.substring(0, 1);
+  const longname = userinfo.name;
+  const userid = userinfo.sub;
+  //
+  const changeTimeSlot = (e) => {
+    let ts = e.target.id;
+    updateDataToChairs(ts, timeslotdata);
     /*{
       "id": 1,
       "datum": "2023-05-24",
@@ -177,7 +140,7 @@ const ReservationPage = () => {
     // eventlistener on free chairs
     document.getElementById("sitzplan")?.querySelectorAll(`g[data-name="chair"]`).forEach((element)=>{
       if (!element.classList.contains("reserved_reserved")) {
-        element.addEventListener("click", (e)=>{
+        element.addEventListener("click", async (e)=>{
           let disableclick = false;
           if (disableclick===false) {
             disableclick=true;
@@ -186,7 +149,7 @@ const ReservationPage = () => {
             reservationobj.push(createReservation(2, "fb37e39d-67f8-410a-bc61-8ea4bc008daa", 1));
             bookingobj = putBooking(88, "2023-05-24", 1, "12344c72-e57f-4b0b-a6ba-c43af20cbe1d", reservationobj);
             let tempdata = {
-              "id": 88,
+              "id": 100,
               "datum": "2023-05-24",
               "timeslot": Number(ts),
               "bucher": userid,
@@ -195,7 +158,7 @@ const ReservationPage = () => {
               ]
             };
             console.log(tempdata);
-            
+
             /*
             // Get Id of clicked chair
             //Array own BookingId`s 1-4 Entries (ts, date, userid)
@@ -205,7 +168,13 @@ const ReservationPage = () => {
             */
             //Res Put changed chairs
             //Object function create returning Entry putbooking()
-            axios({ method: 'put', url: '/api/auth/res/', data: tempdata, headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + localStorage.getItem('kc_token') } }).catch((e)=>{ console.log(e); });
+            await axios({ method: 'put', url: '/api/auth/res/', data: tempdata, headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + localStorage.getItem('kc_token') } }).then((e)=>{
+              getReservedSeats(time).then((res)=>{
+                updateDataToChairs(ts, res);
+              }).catch((e)=>{
+                console.log(e);
+              });
+            });
           }
         })
       }
@@ -241,7 +210,7 @@ const ReservationPage = () => {
             <input type="radio" className="btn-check" name="reservation_time" id="60min" value="60" onChange={changeTime}/>
             <label className="btn border px-4 recommended_time_slot" htmlFor="60min">60</label>
           </div>
-          <input type="date" className="btn border custom-input" id="696969"/>
+          <input type="date" className="btn border custom-input" id="selectedDate"/>
         </div>
         <div className='d-flex justify-content-between'>
           <h3>Freie Reservierungsslots</h3>

@@ -47,9 +47,10 @@ const ReservationPage = () => {
     const myInterval = setInterval(function(){
       axios.get('/api/auth/last-change', { headers: { Authorization: 'Bearer ' + localStorage.getItem('kc_token') } }).then((result) => {
         //console.log(result.data);
+        console.log(check && check != result.data);
         if(check && check != result.data){
           currentDailyData(document.getElementById("696969").value);
-          clearInterval(myInterval);
+          //clearInterval(myInterval);
         }
         check = result.data;
         console.log(check);

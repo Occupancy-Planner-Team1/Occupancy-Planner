@@ -9,6 +9,7 @@ const ReservationPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   let [timeslotdata, setTimeSlotData] = useState({});
   const [time, setTime] = useState();
+  const [timeslot, setTimeSlot] = useState();
   const timeslotref = useRef(null);
 
   //Create Timeslot objects
@@ -57,7 +58,6 @@ const ReservationPage = () => {
       element?.getAttribute('class');
       element?.removeAttribute('class');
     });
-    console.log(tsd[ts]);
     // Read Reservation
     if (tsd[ts].data!==undefined) {
       // fetch reserved chairs
@@ -100,6 +100,14 @@ const ReservationPage = () => {
     console.log(timeslotGenerator(e.target.value));
     getReservedSeats(e.target.value);
   };
+  //change Date
+  const changeDate = (e) => {
+    getReservedSeats(time).then((res)=>{
+      updateDataToChairs(timeslot, res);
+    }).catch((e)=>{
+      console.log(e);
+    });
+  };
   // UserInfo
   let userinfo = JSON.parse(localStorage.getItem('kc_user'));
   const shortname = userinfo.given_name.substring(0, 1)+''+userinfo.family_name.substring(0, 1);
@@ -108,6 +116,7 @@ const ReservationPage = () => {
   //
   const changeTimeSlot = (e) => {
     let ts = e.target.id;
+    setTimeSlot(ts);
     updateDataToChairs(ts, timeslotdata);
     /*{
       "id": 1,
@@ -210,7 +219,7 @@ const ReservationPage = () => {
             <input type="radio" className="btn-check" name="reservation_time" id="60min" value="60" onChange={changeTime}/>
             <label className="btn border px-4 recommended_time_slot" htmlFor="60min">60</label>
           </div>
-          <input type="date" className="btn border custom-input" id="selectedDate"/>
+          <input type="date" className="btn border custom-input" id="selectedDate" onChange={changeDate}/>
         </div>
         <div className='d-flex justify-content-between'>
           <h3>Freie Reservierungsslots</h3>

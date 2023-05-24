@@ -148,6 +148,7 @@ const ReservationPage = () => {
               ]
             };
             console.log(tempdata);
+            
             /*
             // Get Id of clicked chair
             //Array own BookingId`s 1-4 Entries (ts, date, userid)

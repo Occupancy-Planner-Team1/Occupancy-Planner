@@ -142,7 +142,7 @@ const ReservationPage = () => {
               "id": 88,
               "datum": "2023-05-24",
               "timeslot": Number(ts),
-              "bucher": "7de17acb-b735-4219-a328-3f09cd3983a3",
+              "bucher": userid,
               "reservations": [
                 createReservation(1, "fcf1b1cb-57b2-437f-a858-f9bd3fb8e41f", Number(element.id.split("-")[1]))
               ]
@@ -158,7 +158,7 @@ const ReservationPage = () => {
             */
             //Res Put changed chairs
             //Object function create returning Entry putbooking()
-            //axios({ method: 'put', url: '/api/auth/res/', data: tempdata, headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + localStorage.getItem('kc_token') } }).catch((e)=>{ console.log(e); });
+            axios({ method: 'put', url: '/api/auth/res/', data: tempdata, headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + localStorage.getItem('kc_token') } }).catch((e)=>{ console.log(e); });
           }
         })
       }

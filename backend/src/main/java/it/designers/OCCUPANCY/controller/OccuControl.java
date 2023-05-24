@@ -38,7 +38,7 @@ public class OccuControl {
 
 
  // Kommentar: für löschen delete mapping nutzen! und den returnten datentyp in <> hinter responsesntity angeben
-    @GetMapping("/res/del-yesterday")
+    @DeleteMapping("/res/del-yesterday")
     public ResponseEntity deleteExpired() {
     	
     	LocalDate dateNow=LocalDate.now();

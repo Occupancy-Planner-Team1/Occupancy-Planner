@@ -15,7 +15,7 @@ public class KeycloakServiceUser {
         Unirest.setTimeouts(0, 0);
         HttpResponse<String> response = Unirest.post("http://localhost:8069/realms/OCCUPANCY/protocol/openid-connect/token")
                 .header("Content-Type", "application/x-www-form-urlencoded")
-                .header("Authorization", "Basic b2NjdXBhbmN5Y2xpZW50Ok50N05XTTNOTWFOSndZV2xMS053bkh4T1pIMUhWTDY2")
+                .header("Authorization", "Basic b2NjdXBhbmN5Y2xpZW50OmVNTGJid25VU052d2NlYkF0TThCc2ZvOU8xcmpjMEZh")
                 .field("grant_type", "client_credentials")
                 .asString();
         ObjectMapper mapper = new JsonMapper();
@@ -33,8 +33,19 @@ public class KeycloakServiceUser {
         return response.getBody().toString();
     }
 
-    // needed:
-    // public String getName(UUID id) -> funktion ( id ) gibt username zurück
+    // Get username
+    public String get_user_name(String token, String userID) throws UnirestException, JsonProcessingException {
+        Unirest.setTimeouts(0, 0);
+        HttpResponse<com.mashape.unirest.http.JsonNode> response = Unirest.get("http://localhost:8069/admin/realms/OCCUPANCY/users/"+userID)
+                .header("Authorization", "Bearer "+token)
+                .asJson();
+        ObjectMapper mapper = new JsonMapper();
+        JsonNode json = mapper.readTree(response.getBody().toString());
+        
+        String userName = json.get("username").asText();
+        return userName;
+    }
+    
     // Get User Info
     public String get_user_info(String token, String userID) throws UnirestException, JsonProcessingException {
         Unirest.setTimeouts(0, 0);

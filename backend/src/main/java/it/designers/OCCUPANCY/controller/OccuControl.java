@@ -9,6 +9,7 @@ import it.designers.OCCUPANCY.dbtables.Reservation;
 import it.designers.OCCUPANCY.security.KeycloakServiceUser;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
@@ -31,6 +32,7 @@ public class OccuControl {
     public OccuControl(ReservationService resService, BookingService bookingService) { // Dependencyinjection von Spring/ JPA bei Bedarf -> Also ich Konsumiere meine Services
         this.resService=resService;
         this.bookingService = bookingService;
+   
     }
     
 
@@ -117,9 +119,9 @@ public class OccuControl {
 
         System.out.println(group_members);
 
-        return ResponseEntity.ok(group_members);
+        //return ResponseEntity.ok(group_members);
 
-        //return ResponseEntity.ok("prename: " + prename + "\nlastname: " + lastname + "\nid: " + kcid);
+        return ResponseEntity.ok("prename: " + prename + "\nlastname: " + lastname + "\nid: " + kcid);
     }
 
     @PutMapping(value = "/res/",consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -136,6 +138,22 @@ public class OccuControl {
     @GetMapping("/res-day/{d}") //spuckt ALLE reservierungen von einem tag aus -> ind d muss Datum: 2023-05-18
     public ResponseEntity<List<Booking>> getAllResPerDay(@PathVariable LocalDate d) {
         return ResponseEntity.ok(this.bookingService.getAllPerDay(d));
+    }
+    
+    
+    @GetMapping("/res-username/{UUID}") //username beim klicken auf Stuhl zurückgeben
+    public ResponseEntity<String> getUserName(@PathVariable("UUID") UUID id, Principal principal) throws JsonProcessingException, UnirestException {
+    	
+    	KeycloakServiceUser su = new KeycloakServiceUser(); 
+    	
+    	String access_token = su.get_access_token();
+    	try {
+    	String userName=su.get_user_name(access_token, id.toString()); 
+		return ResponseEntity.ok(userName);
+    	}catch(Exception e) {
+    		return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid UserID");
+    	}
+    	
     }
 
 }

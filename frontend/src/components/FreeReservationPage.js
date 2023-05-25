@@ -10,7 +10,7 @@ const ReservationPage = () => {
   const [timeslotdata, setTimeSlotData] = useState({});
   const [timeslot, setTimeSlot] = useState();
   const timeslotref = useRef(null);
-  const [rawData, setRawData] = useState({});
+  let rawDataDaily = new Object();
 
   //Create Timeslot objects
   function timeslotGenerator(minutes) {
@@ -41,7 +41,21 @@ const ReservationPage = () => {
     });
   }
 
-  function checkDataCurrent() {
+
+  async function currentDailyData(date){
+    console.log("pull the data");
+    //console.log(date);
+    await axios.get('/api/auth/res-day/'+ date, { headers: { Authorization: 'Bearer ' + localStorage.getItem('kc_token') } }).then((result) => {
+      //console.log(result.data);
+      rawDataDaily = result.data;
+    });
+  }
+  
+  function capacity(){
+    console.log(rawDataDaily);
+  }
+
+  /*function checkDataCurrent() {
     currentDailyData(document.getElementById("696969").value);
     let check = null;
     const myInterval = setInterval(function(){
@@ -81,7 +95,7 @@ const ReservationPage = () => {
         //timestamp_object[key].data = data[key];
       }
     }
-  }
+  }*/
 
   // Create JSON Reservation
   function createReservation(rid, sid, cid) {
@@ -100,8 +114,20 @@ const ReservationPage = () => {
     getReservedSeats(query);
     const date = new Date();
     document.getElementById("696969").value = date.getFullYear()+'-'+('0' + (date.getMonth()+1)).slice(-2)+'-'+('0' + date.getDate()).slice(-2);
-    checkDataCurrent();
-  }, [timeslotref, rawData]);
+    
+    // Silas: ---------------------------------------------------
+    currentDailyData(document.getElementById("696969").value); 
+    let lastChange = 0;
+    const interval = setInterval(() => {
+      axios.get('/api/auth/last-change', { headers: { Authorization: 'Bearer ' + localStorage.getItem('kc_token') } }).then((result) => {
+        if(lastChange && result.data != lastChange) { 
+          currentDailyData(document.getElementById("696969").value);
+          capacity(1); 
+        }
+        lastChange = result.data;
+      });
+    }, 2000);
+  }, [timeslotref]);
 
   //change minutes from slot
   const changeTime = (e) => {

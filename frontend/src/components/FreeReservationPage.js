@@ -94,7 +94,6 @@ const ReservationPage = () => {
     console.log(workedDataDaily);
     console.log(specifiedWorkedDataDaily);
     return specifiedWorkedDataDaily;
-
   }
 
 
@@ -159,19 +158,22 @@ const ReservationPage = () => {
     document.getElementById("696969").value = date.getFullYear()+'-'+('0' + (date.getMonth()+1)).slice(-2)+'-'+('0' + date.getDate()).slice(-2);
     
     // Silas: ---------------------------------------------------
-    console.log("pull first:");
+    // Load the data from the day picked in the Calendar
     currentDailyData(document.getElementById("696969").value); 
     let lastChange = 0;
+    // Check every 2 secons if the data has changed
     const interval = setInterval(() => {
       axios.get('/api/auth/last-change', { headers: { Authorization: 'Bearer ' + localStorage.getItem('kc_token') } }).then((result) => {
         if(lastChange && result.data != lastChange) { 
-          console.log("RELOAD");
+          // If the data has changed => reload
+          console.log("RELOAD DATA");
           currentDailyData(document.getElementById("696969").value);
         }
         lastChange = result.data;
       });
     }, 2000);
   }, [timeslotref]);
+
 
   //change minutes from slot
   const changeTime = (e) => {

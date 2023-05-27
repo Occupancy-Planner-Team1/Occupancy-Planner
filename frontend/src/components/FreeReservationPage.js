@@ -45,7 +45,6 @@ const ReservationPage = () => {
 
 
   async function currentDailyData(date){
-    console.log("pull the data");
     await axios.get('/api/auth/res-day/'+ date, { headers: { Authorization: 'Bearer ' + localStorage.getItem('kc_token') } }).then((result) => {
       rawDataDaily = result.data;
     });
@@ -59,8 +58,6 @@ const ReservationPage = () => {
   // For multiple results put the keywords in a string seperated by a commas.
   // For example: dataInTimeslot("bookingTimeslot=1,bookerId=...", "bookingid,reservationId,chairId");
   function specifiedData(keywordStringcondition, keywordStringResult) {
-    console.log("specifiedData");
-    console.log(rawDataDaily);
     let workedDataDaily = rawDataDaily;
     let specifiedWorkedDataDaily = [];
     
@@ -91,7 +88,7 @@ const ReservationPage = () => {
         eval(command);
       }
     }
-    console.log(workedDataDaily);
+    //console.log(workedDataDaily);
     console.log(specifiedWorkedDataDaily);
     return specifiedWorkedDataDaily;
   }

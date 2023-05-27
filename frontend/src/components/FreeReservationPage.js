@@ -50,7 +50,7 @@ const ReservationPage = () => {
       rawDataDaily = result.data;
     });
 
-    specifiedData("bookingTimeslot=2,bookerId=894f9505-5c20-493c-95f8-19f0bb238b56", "bookingid,reservationId,chairId");
+    specifiedData("bookingTimeslot=1,bookingId=52", "bookerId,bookingId,bookingTimeslot");
   }
   
   // Give a keyword=data touple as a condition and a keyword to specify the result.
@@ -62,6 +62,7 @@ const ReservationPage = () => {
     console.log("specifiedData");
     console.log(rawDataDaily);
     let workedDataDaily = rawDataDaily;
+    let specifiedWorkedDataDaily = [];
     
     // If a name changed in the datamodell, this map has to be changed to !!
     // The map maps the keywords on the names of the datamodell
@@ -76,15 +77,24 @@ const ReservationPage = () => {
       let command = `workedDataDaily = workedDataDaily.filter(workedDataDaily => workedDataDaily.${conditionKeyword} == "${conditionData}");`;
       // execute the command
       eval(command);
-
-      // Filter for the specif data the user wants
-      // Get the keywords out of the string
-      for(let keyword of keywordStringResult.split(",")) {
-        
+      if(workedDataDaily.length == 0) { console.log("WARNING: keyword=data touple does not exist!"); }
+    }
+    // Filter for the specif data the user wants
+    // Get the keywords out of the string
+    for(let keyword of keywordStringResult.split(",")) {
+      // Change the keyword to fit the datamodell
+      let newKeyword = nameAssignment.get(keyword);
+      for(let i in workedDataDaily) {
+        // build a command to create a new array with specified data only
+        let command = `specifiedWorkedDataDaily.push(workedDataDaily[${i}].${newKeyword});`
+        // execute the command
+        eval(command);
       }
     }
-    if(workedDataDaily.length == 0) { console.log("WARNING: keyword=data touple does not exist!"); }
     console.log(workedDataDaily);
+    console.log(specifiedWorkedDataDaily);
+    return specifiedWorkedDataDaily;
+
   }
 
 

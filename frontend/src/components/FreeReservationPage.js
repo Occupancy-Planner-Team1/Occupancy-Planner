@@ -50,35 +50,43 @@ const ReservationPage = () => {
       rawDataDaily = result.data;
     });
 
-    dataInTimeslot("bookingDate=2023-05-25,bookingTimeslot=1", "bookingid,reservationId,chairId");
+    specifiedData("bookingTimeslot=2,bookerId=894f9505-5c20-493c-95f8-19f0bb238b56", "bookingid,reservationId,chairId");
   }
   
-  // Give a keyword + data as a condition and a keyword to specify the result.
-  // The keyword is on of the following strings: "bookingid", "bookingDate"(year-month-day), "bookingTimeslot"(0-11), "bookerId", "reservationId", "reservationUserId", "chairId", "chair_table", "positionX", "positionY"
-  // For multiple conditions put the keyword + data as condition touple in a string  separated by commas
-  // For multiple results put the keywords in a string seperated by a commas
-  // For example: dataInTimeslot("bookingDate=2023-05-27,bookingTimeslot=1", "bookingid,reservationId,chairId");
-  function dataInTimeslot(keywordStringcondition, keywordStringResult){
-    console.log("reservationInTimeslot");
+  // Give a keyword=data touple as a condition and a keyword to specify the result.
+  // The keywords have to be one of the following strings: "bookingId", "bookingTimeslot"(0-11), "bookerId", "reservationId", "reservationUserId", "chairUserId", "chairId", "chair_table", "positionX", "positionY"
+  // For multiple conditions put the keyword=data condition touple in a string  separated by commas.
+  // For multiple results put the keywords in a string seperated by a commas.
+  // For example: dataInTimeslot("bookingTimeslot=1,bookerId=...", "bookingid,reservationId,chairId");
+  function specifiedData(keywordStringcondition, keywordStringResult) {
+    console.log("specifiedData");
     console.log(rawDataDaily);
+    let workedDataDaily = rawDataDaily;
+    
+    // If a name changed in the datamodell, this map has to be changed to !!
+    // The map maps the keywords on the names of the datamodell
+    const nameAssignment = new Map([ ["bookingId", "id"], ["bookingTimeslot", "timeslot"], ["bookerId", "bucher"], ["reservationId", "id"], ["chairUserId", "stuhlsitzer"], ["chairId", "id"], ["chair_table", "tisch"], ["positionX", "posx"], ["positionY", "posy"]  ]);
+
+    // get the keyword=data touple out of the string
     for(let condition of keywordStringcondition.split(",")) {
-      let array = condition.split("=")
-      let conditionKeyword = array[0];
-      let conditionData = array[1];
+      let tempArray = condition.split("=");
+      let conditionKeyword = nameAssignment.get(tempArray[0]);
+      let conditionData = tempArray[1];
+      // build a command to execute with the changing keyword=data touple 
+      let command = `workedDataDaily = workedDataDaily.filter(workedDataDaily => workedDataDaily.${conditionKeyword} == "${conditionData}");`;
+      // execute the command
+      eval(command);
+
+      // Filter for the specif data the user wants
+      // Get the keywords out of the string
       for(let keyword of keywordStringResult.split(",")) {
-        let workedDataDaily;
-        if(conditionKeyword == "bookingDate"){
-          for(let i in rawDataDaily)
-            if(rawDataDaily[i].datum == conditionData) {console.log(rawDataDaily[i]);}
-        }
-        else{
-          let command = `workedDataDaily = rawDataDaily.find(workedDataDaily => workedDataDaily.${conditionKeyword} == ${conditionData});`;
-          eval(command);
-        }
-        //console.log(workedDataDaily);
+        
       }
     }
+    if(workedDataDaily.length == 0) { console.log("WARNING: keyword=data touple does not exist!"); }
+    console.log(workedDataDaily);
   }
+
 
   /*function checkDataCurrent() {
     currentDailyData(document.getElementById("696969").value);
@@ -147,6 +155,7 @@ const ReservationPage = () => {
     const interval = setInterval(() => {
       axios.get('/api/auth/last-change', { headers: { Authorization: 'Bearer ' + localStorage.getItem('kc_token') } }).then((result) => {
         if(lastChange && result.data != lastChange) { 
+          console.log("RELOAD");
           currentDailyData(document.getElementById("696969").value);
         }
         lastChange = result.data;

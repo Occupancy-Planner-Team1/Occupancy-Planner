@@ -10,7 +10,9 @@ const ReservationPage = () => {
   const [timeslotdata, setTimeSlotData] = useState({});
   const [timeslot, setTimeSlot] = useState();
   const timeslotref = useRef(null);
-  let rawDataDaily = new Object();
+  let rawDataDaily = new Object(); // The daily raw Data which is updated every 2 seconds
+  let keywords =[]; // 
+  let requestedData = new Object();
 
   //Create Timeslot objects
   function timeslotGenerator(minutes) {
@@ -44,15 +46,38 @@ const ReservationPage = () => {
 
   async function currentDailyData(date){
     console.log("pull the data");
-    //console.log(date);
     await axios.get('/api/auth/res-day/'+ date, { headers: { Authorization: 'Bearer ' + localStorage.getItem('kc_token') } }).then((result) => {
-      //console.log(result.data);
       rawDataDaily = result.data;
     });
+
+    dataInTimeslot("bookingDate=2023-05-25,bookingTimeslot=1", "bookingid,reservationId,chairId");
   }
   
-  function capacity(){
+  // Give a keyword + data as a condition and a keyword to specify the result.
+  // The keyword is on of the following strings: "bookingid", "bookingDate"(year-month-day), "bookingTimeslot"(0-11), "bookerId", "reservationId", "reservationUserId", "chairId", "chair_table", "positionX", "positionY"
+  // For multiple conditions put the keyword + data as condition touple in a string  separated by commas
+  // For multiple results put the keywords in a string seperated by a commas
+  // For example: dataInTimeslot("bookingDate=2023-05-27,bookingTimeslot=1", "bookingid,reservationId,chairId");
+  function dataInTimeslot(keywordStringcondition, keywordStringResult){
+    console.log("reservationInTimeslot");
     console.log(rawDataDaily);
+    for(let condition of keywordStringcondition.split(",")) {
+      let array = condition.split("=")
+      let conditionKeyword = array[0];
+      let conditionData = array[1];
+      for(let keyword of keywordStringResult.split(",")) {
+        let workedDataDaily;
+        if(conditionKeyword == "bookingDate"){
+          for(let i in rawDataDaily)
+            if(rawDataDaily[i].datum == conditionData) {console.log(rawDataDaily[i]);}
+        }
+        else{
+          let command = `workedDataDaily = rawDataDaily.find(workedDataDaily => workedDataDaily.${conditionKeyword} == ${conditionData});`;
+          eval(command);
+        }
+        //console.log(workedDataDaily);
+      }
+    }
   }
 
   /*function checkDataCurrent() {
@@ -116,13 +141,13 @@ const ReservationPage = () => {
     document.getElementById("696969").value = date.getFullYear()+'-'+('0' + (date.getMonth()+1)).slice(-2)+'-'+('0' + date.getDate()).slice(-2);
     
     // Silas: ---------------------------------------------------
+    console.log("pull first:");
     currentDailyData(document.getElementById("696969").value); 
     let lastChange = 0;
     const interval = setInterval(() => {
       axios.get('/api/auth/last-change', { headers: { Authorization: 'Bearer ' + localStorage.getItem('kc_token') } }).then((result) => {
         if(lastChange && result.data != lastChange) { 
           currentDailyData(document.getElementById("696969").value);
-          capacity(1); 
         }
         lastChange = result.data;
       });

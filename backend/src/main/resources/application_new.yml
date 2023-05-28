@@ -1,0 +1,53 @@
+spring:
+  application:
+    name: occupancyapp
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8069/realms/OCCUPANCY
+          jwk-set-uri: http://localhost:8069/realms/OCCUPANCY/protocol/openid-connect/certs
+      client:
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:8069/realms/OCCUPANCY
+            user-name-attribute: preferred_username
+        registration:
+          keycloak:
+            client-secret: Nt7NWM3NMaNJwYWlLKNwnHxOZH1HVL66
+            client-id: occupancyclient
+            scope: openid
+            authorization-grant-type: authorization_code
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          lob:
+            non_contextual_creation: 'true'
+    hibernate:
+      ddl-auto: update
+    show-sql: 'true'
+  datasource:
+    hikari:
+      connectionTimeout: '20000'
+      maximumPoolSize: '5'
+    password: '123'
+    username: keycloak
+    url: jdbc:postgresql://localhost:5432/postgres
+
+jwt:
+  auth:
+    converter:
+      resource-id: occupancyclient
+      principal-attribute: preferred_username
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+
+server:
+  port: '18069'
+  servlet:
+    context-path: /api
+

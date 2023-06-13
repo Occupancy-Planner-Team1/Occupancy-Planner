@@ -27,39 +27,71 @@ public class OccupancyApplication implements CommandLineRunner {
 		//List<Reservation> all = service1.getAll();
 
 		
-/*
+
 		Chair chair0 = new Chair();
+		chair0.setChairName("chair_0");
 		Chair chair1 = new Chair();
+		chair1.setChairName("chair_1");
 		Chair chair2 = new Chair();
+		chair2.setChairName("chair_2");
 		Chair chair3 = new Chair();
+		chair3.setChairName("chair_3");
 		Chair chair4 = new Chair();
+		chair4.setChairName("chair_4");
 		Chair chair5 = new Chair();
+		chair5.setChairName("chair_5");
 		Chair chair6 = new Chair();
+		chair6.setChairName("chair_6");
 		Chair chair7 = new Chair();
+		chair7.setChairName("chair_7");
 		Chair chair8 = new Chair();
+		chair8.setChairName("chair_8");
 		Chair chair9 = new Chair();
+		chair9.setChairName("chair_9");
 		Chair chair10 = new Chair();
+		chair10.setChairName("chair_10");
 		Chair chair11 = new Chair();
+		chair11.setChairName("chair_11");
 		Chair chair12 = new Chair();
+		chair12.setChairName("chair_12");
 		Chair chair13 = new Chair();
+		chair13.setChairName("chair_13");
 		Chair chair14 = new Chair();
+		chair14.setChairName("chair_14");
 		Chair chair15 = new Chair();
+		chair15.setChairName("chair_15");
 		Chair chair16 = new Chair();
+		chair16.setChairName("chair_16");
 		Chair chair17 = new Chair();
+		chair17.setChairName("chair_17");
 		Chair chair18 = new Chair();
+		chair18.setChairName("chair_18");
 		Chair chair19 = new Chair();
+		chair19.setChairName("chair_19");
 		Chair chair20 = new Chair();
+		chair20.setChairName("chair_20");
 		Chair chair21 = new Chair();
+		chair21.setChairName("chair_21");
 		Chair chair22 = new Chair();
+		chair22.setChairName("chair_22");
 		Chair chair23 = new Chair();
+		chair23.setChairName("chair_23");
 		Chair chair24 = new Chair();
+		chair24.setChairName("chair_24");
 		Chair chair25 = new Chair();
+		chair25.setChairName("chair_25");
 		Chair chair26 = new Chair();
+		chair26.setChairName("chair_26");
 		Chair chair27 = new Chair();
+		chair27.setChairName("chair_27");
 		Chair chair28 = new Chair();
+		chair28.setChairName("chair_28");
 		Chair chair29 = new Chair();
+		chair29.setChairName("chair_29");
 		Chair chair30 = new Chair();
+		chair30.setChairName("chair_30");
 		Chair chair31 = new Chair();
+		chair31.setChairName("chair_31");
 
 		Reservation neuesReservation0 = new Reservation();
 		Reservation neuesReservation1 = new Reservation();
@@ -173,7 +205,7 @@ public class OccupancyApplication implements CommandLineRunner {
 		neuesBooking.getReservations().add(neuesReservation31);
 
 		service1.save(neuesBooking);
-*/
+
 
 	}
 }

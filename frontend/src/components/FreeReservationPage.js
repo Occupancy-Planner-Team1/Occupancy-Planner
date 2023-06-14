@@ -51,13 +51,10 @@ const ReservationPage = () => {
 
     //specifiedData("bookingTimeslot=1", "reservationId,chairUserId,chairId");
     console.log(rawDataDaily);
-    getReservedSeatsInTimeslots(1,1);
+    getReservedSeatsInTimeslots(3,2);
 
   }
   
-  // timeslot: 0-12; 0 is the first timeslot and 12 the last one
-  // duration: 1-4; how many timeslots are put together to get one big timelot
-  // return: in timeslot x bookingId with the chairs
   function getDataInTimeslots(timeslot,duration){
     let dataForTimeslot = [];
     for(let n=1; n <= duration; n++){
@@ -69,11 +66,14 @@ const ReservationPage = () => {
       }
       timeslot = timeslot + 1;
     }
-
+    
     console.log(dataForTimeslot);
     return dataForTimeslot;
   }
-
+  
+  // timeslot: 0-12; 0 is the first timeslot and 12 the last one
+  // duration: 1-4; how many timeslots are put together to get one big timelot
+  // return: all used chairs in the given timelots
   function getReservedSeatsInTimeslots(timeslot,duration){
     let reservedSeats = [];
     let bookingIdArray = [];
@@ -90,7 +90,6 @@ const ReservationPage = () => {
     for(let a in tmpArray){
       for(let b in tmpArray[a]){
         for(let c in tmpArray[a][b]){
-          //console.log(tmpArray[a][b][c]);
           reservedSeats.push(tmpArray[a][b][c]);
         }
       }

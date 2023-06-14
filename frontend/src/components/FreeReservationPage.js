@@ -51,25 +51,57 @@ const ReservationPage = () => {
 
     //specifiedData("bookingTimeslot=1", "reservationId,chairUserId,chairId");
     console.log(rawDataDaily);
-    getReservedSeatsInTimeslots(3,1);
+    getReservedSeatsInTimeslots(1,1);
 
   }
   
   // timeslot: 0-12; 0 is the first timeslot and 12 the last one
   // duration: 1-4; how many timeslots are put together to get one big timelot
   // return: in timeslot x bookingId with the chairs
-  function getReservedSeatsInTimeslots(timeslot,duration){
+  function getDataInTimeslots(timeslot,duration){
     let dataForTimeslot = [];
-    let bookingIdArray = specifiedData(`bookingTimeslot=${timeslot}`,"bookingId");
-    
-    
-    for (let i in bookingIdArray[0]){
-      dataForTimeslot.push(bookingIdArray[0][i])
-      dataForTimeslot.push(specifiedData(`bookingId=${bookingIdArray[0][i]}`,"reservationId,chairUserId,chairId"));
+    for(let n=1; n <= duration; n++){
+      console.log(timeslot);
+      let bookingIdArray = specifiedData(`bookingTimeslot=${timeslot}`,"bookingId");
+      for (let i in bookingIdArray[0]){
+        dataForTimeslot.push(bookingIdArray[0][i]);
+        dataForTimeslot.push(specifiedData(`bookingId=${bookingIdArray[0][i]}`,"reservationId,chairUserId,chairId"));
+      }
+      timeslot = timeslot + 1;
     }
-    
-    return dataForTimeslot;
+
     console.log(dataForTimeslot);
+    return dataForTimeslot;
+  }
+
+  function getReservedSeatsInTimeslots(timeslot,duration){
+    let reservedSeats = [];
+    let bookingIdArray = [];
+    let tmpArray = [];
+    for(let n=1; n <= duration; n++){
+      bookingIdArray = specifiedData(`bookingTimeslot=${timeslot}`,"bookingId");
+      for (let i in bookingIdArray[0]){
+        tmpArray.push(specifiedData(`bookingId=${bookingIdArray[0][i]}`,"chairId"));
+      }
+      timeslot = timeslot + 1;
+    }
+
+    // sum up all chairs to one array
+    for(let a in tmpArray){
+      for(let b in tmpArray[a]){
+        for(let c in tmpArray[a][b]){
+          //console.log(tmpArray[a][b][c]);
+          reservedSeats.push(tmpArray[a][b][c]);
+        }
+      }
+    }
+    // delete the duplicates
+    let uniqueReservedSeats = reservedSeats.filter((c, index) => { 
+      return reservedSeats.indexOf(c) === index;
+    });
+
+    console.log(uniqueReservedSeats);
+    return reservedSeats;
   }
   
 

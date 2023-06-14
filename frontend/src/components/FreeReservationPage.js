@@ -49,11 +49,29 @@ const ReservationPage = () => {
       rawDataDaily = result.data;
     });
 
-    specifiedData("bookingTimeslot=1", "chairUserId,chairId,reservationId");
+    //specifiedData("bookingTimeslot=1", "reservationId,chairUserId,chairId");
+    console.log(rawDataDaily);
+    getReservedSeatsInTimeslots(3,1);
+
   }
   
-
-
+  // timeslot: 0-12; 0 is the first timeslot and 12 the last one
+  // duration: 1-4; how many timeslots are put together to get one big timelot
+  // return: in timeslot x bookingId with the chairs
+  function getReservedSeatsInTimeslots(timeslot,duration){
+    let dataForTimeslot = [];
+    let bookingIdArray = specifiedData(`bookingTimeslot=${timeslot}`,"bookingId");
+    
+    
+    for (let i in bookingIdArray[0]){
+      dataForTimeslot.push(bookingIdArray[0][i])
+      dataForTimeslot.push(specifiedData(`bookingId=${bookingIdArray[0][i]}`,"reservationId,chairUserId,chairId"));
+    }
+    
+    return dataForTimeslot;
+    console.log(dataForTimeslot);
+  }
+  
 
   // Give a keyword=data touple as a condition and a keyword to specify the result.
   // The keywords have to be one of the following strings: "bookingId", "bookingTimeslot"(0-11), "bookerId", "reservationId", "reservationUserId", "chairUserId", "chairId", "chair_table", "positionX", "positionY"
@@ -62,7 +80,7 @@ const ReservationPage = () => {
   // For example: dataInTimeslot("bookingTimeslot=1,bookerId=...", "bookingid,reservationId,chairId");
   // Important! Please use right now only level 1 keywords for the filter and level 2 and 3 keywords to specify the result data
   function specifiedData(keywordStringcondition, keywordStringResult) {
-    console.log(rawDataDaily);
+    //console.log(rawDataDaily);
     let conditionKeyword; // holds the keyword to filter the raw data
     let conditionData;  // holds the data to be filtered after
     let resultKeyword;  // holds the keyword to specify the result set
@@ -92,7 +110,7 @@ const ReservationPage = () => {
       // call the filter function
       workedDataDaily = filterData(workedDataDaily,conditionKeyword, conditionData,levelString);
     }
-    console.log(workedDataDaily);
+    //console.log(workedDataDaily);
 
     // Get the keywords for specifing the result out of the string
     for(let keyword of keywordStringResult.split(",")) {
@@ -102,7 +120,8 @@ const ReservationPage = () => {
       // call the function to specify the data
       specifiedWorkedDataDaily.push(specifyData(workedDataDaily,resultKeyword,levelString,nameAssignment)); 
     }
-    console.log(specifiedWorkedDataDaily);
+    //console.log(specifiedWorkedDataDaily);
+    return specifiedWorkedDataDaily;
   }
 
   function filterData(data,conditionKeyword,conditionData,levelString) {

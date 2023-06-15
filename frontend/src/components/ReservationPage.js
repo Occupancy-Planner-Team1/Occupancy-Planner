@@ -16,7 +16,7 @@ const ReservationPage = () => {
     navigate("./all?restime="+reservation_time);
   };
   // UserInfo
-  let userinfo = JSON.parse(localStorage.getItem('kc_user'));
+  let userinfo = JSON.parse(sessionStorage.getItem('kc_user'));
   const shortname = userinfo.given_name.substring(0, 1)+''+userinfo.family_name.substring(0, 1);
   const longname = userinfo.name;
 

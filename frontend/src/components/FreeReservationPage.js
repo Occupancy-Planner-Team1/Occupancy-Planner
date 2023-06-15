@@ -8,11 +8,13 @@ const ReservationPage = () => {
   // variables & functions
   const [searchParams, setSearchParams] = useSearchParams();
   const [timeslotdata, setTimeSlotData] = useState({});
-  const [timeslot, setTimeSlot] = useState();
+  const [dailydata, setDailyData] = useState([]);
+  const [currentts, setCurrentTimeslot] = useState(-1);
   const timeslotref = useRef(null);
   let rawDataDaily = new Object(); // The daily raw Data which is updated every 2 seconds
   let keywords =[]; // 
   let requestedData = new Object();
+  let timeslotbackup = 0;
 
   //Create Timeslot objects
   function timeslotGenerator(minutes) {
@@ -30,7 +32,7 @@ const ReservationPage = () => {
   function getReservedSeats(query) {
     let timestamp_object = timeslotGenerator(query);
     const dt = new Date();
-    axios.get('/api/auth/res-day/'+dt.getFullYear()+'-'+('0' + (dt.getMonth()+1)).slice(-2)+'-'+('0' + dt.getDate()).slice(-2), { headers: { Authorization: 'Bearer ' + localStorage.getItem('kc_token') } }).then((result) => {
+    axios.get('/api/auth/res-day/'+dt.getFullYear()+'-'+('0' + (dt.getMonth()+1)).slice(-2)+'-'+('0' + dt.getDate()).slice(-2), { headers: { Authorization: 'Bearer ' + sessionStorage.getItem('kc_token') } }).then((result) => {
       //Group Data by timeslot
       const data = result.data.groupBy(data => { return data.timeslot; });
       for (const key in data) {
@@ -43,17 +45,56 @@ const ReservationPage = () => {
     });
   }
 
-
   async function currentDailyData(date){
-    await axios.get('/api/auth/res-day/'+ date, { headers: { Authorization: 'Bearer ' + localStorage.getItem('kc_token') } }).then((result) => {
-      rawDataDaily = result.data;
+    await axios.get('/api/auth/res-day/'+ date, { headers: { Authorization: 'Bearer ' + sessionStorage.getItem('kc_token') } }).then((result) => {
+        //rawDataDaily = result.data;
+        document.getElementById("body")?.classList.remove("disabled_map");
+        setDailyData(result.data);
     });
 
     specifiedData("bookingTimeslot=1", "chairUserId,chairId,reservationId");
   }
-  
 
+  // Create JSON Reservation
+  function createReservation(sid, cid, cname) {
+    let reservation = {"id": null, "stuhlsitzer": sid, "chair": {"id": cid, "chairName" : cname, "tisch": null, "posx": null,"posy": null}};
+    return reservation;
+  }
 
+  //Click function on Chair
+  async function clickChair(e) {
+    if (currentts!==(-1)) {
+      let data = {
+        "id": 0,
+        "datum": document.getElementById("696969").value,
+        "timeslot": currentts,
+        "bucher": userid,
+        "reservations": [
+          createReservation(userid, Number(e.target.parentElement.id.split("_")[1]), `chair_${Number(e.target.parentElement.id.split("_")[1])}`)
+        ]
+      };
+      if (!e.target.parentElement.classList.contains("reserved_reserved")) {
+          document.getElementById("body")?.classList.add("disabled_map");
+          //timeslot nicht der richtige
+          // Get Id of clicked chair
+          //Array own BookingId`s 1-4 Entries (ts, date, userid)
+          //axios.delete('/api/auth/res/del-booking/{bookingid}', { headers: { Authorization: 'Bearer ' + sessionStorage.getItem('kc_token') } }).then((result) => {
+          //  console.log(result.status);
+          //});
+          
+          //Res Put changed chairs
+          
+          await axios({ method: 'put', url: '/api/auth/res/', data: data, headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + sessionStorage.getItem('kc_token') } });
+      }
+      if (!e.target.parentElement.classList.contains("reserved_reserved") && e.target.parentElement.classList.contains("reserved_me")) {
+        // only delete Reservation
+        //axios.delete('/api/auth/res/del-booking/{bookingid}', { headers: { Authorization: 'Bearer ' + sessionStorage.getItem('kc_token') } }).then((result) => {
+        //  console.log(result.status);
+        //});
+        // delete Reservation with mulitple reservations -> clear seat in json
+      }
+    }
+  }
 
   // Give a keyword=data touple as a condition and a keyword to specify the result.
   // The keywords have to be one of the following strings: "bookingId", "bookingTimeslot"(0-11), "bookerId", "reservationId", "reservationUserId", "chairUserId", "chairId", "chair_table", "positionX", "positionY"
@@ -62,13 +103,12 @@ const ReservationPage = () => {
   // For example: dataInTimeslot("bookingTimeslot=1,bookerId=...", "bookingid,reservationId,chairId");
   // Important! Please use right now only level 1 keywords for the filter and level 2 and 3 keywords to specify the result data
   function specifiedData(keywordStringcondition, keywordStringResult) {
-    console.log(rawDataDaily);
     let conditionKeyword; // holds the keyword to filter the raw data
     let conditionData;  // holds the data to be filtered after
     let resultKeyword;  // holds the keyword to specify the result set
     let levelString;
 
-    let workedDataDaily = rawDataDaily;
+    let workedDataDaily = dailydata;
     let specifiedWorkedDataDaily = [];
     
     
@@ -92,7 +132,7 @@ const ReservationPage = () => {
       // call the filter function
       workedDataDaily = filterData(workedDataDaily,conditionKeyword, conditionData,levelString);
     }
-    console.log(workedDataDaily);
+    //console.log(workedDataDaily);
 
     // Get the keywords for specifing the result out of the string
     for(let keyword of keywordStringResult.split(",")) {
@@ -102,10 +142,11 @@ const ReservationPage = () => {
       // call the function to specify the data
       specifiedWorkedDataDaily.push(specifyData(workedDataDaily,resultKeyword,levelString,nameAssignment)); 
     }
-    console.log(specifiedWorkedDataDaily);
+    return specifiedWorkedDataDaily;
+    //console.log(specifiedWorkedDataDaily);
   }
 
-  function filterData(data,conditionKeyword,conditionData,levelString) {
+  function filterData(data, conditionKeyword,conditionData, levelString) {
     let command; // build a command to execute with the changing keyword=data touple
     let workedDataDaily = [];
 
@@ -115,7 +156,6 @@ const ReservationPage = () => {
     if(workedDataDaily.length == 0) console.log("WARNING: keyword=data touple does not exist!");
     return workedDataDaily;
   }
-
 
   // Filter for the specif result data the user wants to see
   function specifyData(workedDataDaily,resultKeyword,levelString,nameAssignment) {
@@ -149,7 +189,6 @@ const ReservationPage = () => {
 
     return specifiedWorkedDataDaily;
   }
-
 
 /*
       let command; // build a command to execute with the changing keyword=data touple 
@@ -260,18 +299,6 @@ const ReservationPage = () => {
     return specifiedWorkedDataDaily;
   }*/
 
-
-
-  // Create JSON Reservation
-  function createReservation(rid, sid, cid) {
-    let reservation = {"id": rid, "stuhlsitzer": sid, "chair": {"id": cid, "tisch": null, "posx": null,"posy": null}};
-    return reservation;
-  }
-  // Create JSON for PUT Booking
-  function putBooking(id, date, ts, sub, resobj) {
-    let booking = {"id": id, "datum": date, "timeslot": ts, "bucher": sub, "reservations": resobj};
-    return booking;
-  }
   // After Website finish loading
   useEffect(() => {
     let query = searchParams.get("restime")!=null? searchParams.get("restime") : 15;
@@ -279,14 +306,17 @@ const ReservationPage = () => {
     getReservedSeats(query);
     const date = new Date();
     document.getElementById("696969").value = date.getFullYear()+'-'+('0' + (date.getMonth()+1)).slice(-2)+'-'+('0' + date.getDate()).slice(-2);
-    
+    // Click function to all chairs
+    document.getElementById("sitzplan")?.querySelectorAll(`g[data-name="chair"]`).forEach((element)=>{
+      element.addEventListener("click", clickChair);
+    });
     // Silas: ---------------------------------------------------
     // Load the data from the day picked in the Calendar
     currentDailyData(document.getElementById("696969").value); 
     let lastChange = 0;
     // Check every 2 secons if the data has changed
     const interval = setInterval(() => {
-      axios.get('/api/auth/last-change', { headers: { Authorization: 'Bearer ' + localStorage.getItem('kc_token') } }).then((result) => {
+      axios.get('/api/auth/last-change', { headers: { Authorization: 'Bearer ' + sessionStorage.getItem('kc_token') } }).then((result) => {
         if(lastChange && result.data != lastChange) { 
           // If the data has changed => reload
           console.log("RELOAD DATA");
@@ -295,7 +325,28 @@ const ReservationPage = () => {
         lastChange = result.data;
       });
     }, 2000);
-  }, [timeslotref]);
+  }, []);
+  
+  // Render chairs
+  useEffect(()=>{
+    // Clear Reservations
+    document.getElementById("sitzplan")?.querySelectorAll(`g`).forEach((element)=>{
+      element?.getAttribute('class');
+      element?.removeAttribute('class');
+    });
+    let ts = specifiedData(`bookingTimeslot=${currentts}`, "chairUserId,reservationId,chairId");
+    try {
+      for (const key in ts[2]) {
+        if (ts[0][key]===userid) {
+          document.getElementById(ts[2][key]).setAttribute('class', 'reserved_me');
+        } else {
+          document.getElementById(ts[2][key]).setAttribute('class', 'reserved_reserved');
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }, [currentts, dailydata]);
 
 
   //change minutes from slot
@@ -304,116 +355,11 @@ const ReservationPage = () => {
     getReservedSeats(e.target.value);
   };
   // UserInfo
-  let userinfo = JSON.parse(localStorage.getItem('kc_user'));
+  let userinfo = JSON.parse(sessionStorage.getItem('kc_user'));
   const shortname = userinfo.given_name.substring(0, 1)+''+userinfo.family_name.substring(0, 1);
   const longname = userinfo.name;
   const userid = userinfo.sub;
-  //
-  const changeTimeSlot = (e) => {
-    let ts = e.target.id;
-    // Clear Reservations
-    document.getElementById("sitzplan")?.querySelectorAll(`g`).forEach((element)=>{
-      element?.getAttribute('class');
-      element?.removeAttribute('class');
-    });
-    // Read Reservation
-    if (timeslotdata[e.target.id].data) {
-      // fetch reserved chairs
-      timeslotdata[e.target.id].data.forEach((value)=>{
-        value.reservations.forEach((el) => {
-          let element = document.getElementById("chair-"+el.chair.id.toString());
-          element?.setAttribute('class', 'reserved_reserved');
-          /* switch (value.status) {
-            case 1:
-              element.setAttribute('class', 'reserved_reserved');
-              break;
-            case 2:
-              element.setAttribute('class', 'reserved_me');
-              break;
-            case 3:
-              element.setAttribute('class', 'reserved_guests');
-              break;
-            case 4:
-              element.setAttribute('class', 'reserved_employees');
-              break;
-            default:
-              break;
-          }*/
-        });
-      });
-    }    
-    /*{
-      "id": 1,
-      "datum": "2023-05-24",
-      "timeslot": 1,
-      "bucher": "20874c72-e57f-4b0b-a6ba-c43af20cbe1d",
-      "reservations": [
-          {
-              "id": 1,
-              "stuhlsitzer": "fcf1b1cb-57b2-437f-a858-f9bd3fb8e41f",
-              "chair": {
-                  "id": 1,
-                  "tisch": null,
-                  "posx": null,
-                  "posy": null
-              }
-          },
-          {
-              "id": 2,
-              "stuhlsitzer": "fb37e39d-67f8-410a-bc61-8ea4bc008daa",
-              "chair": {
-                  "id": 2,
-                  "tisch": null,
-                  "posx": null,
-                  "posy": null
-              }
-          }
-      ]
-    }*/
-    // eventlistener on free chairs
-    document.getElementById("sitzplan")?.querySelectorAll(`g[data-name="chair"]`).forEach((element)=>{
-      if (!element.classList.contains("reserved_reserved")) {
-        element.addEventListener("click", (e)=>{
-          let disableclick = false;
-          if (disableclick===false) {
-            disableclick=true;
-            let reservationobj = new Array(), bookingobj = new Object();
-            reservationobj.push(createReservation(1, "fcf1b1cb-57b2-437f-a858-f9bd3fb8e41f", 1));
-            reservationobj.push(createReservation(2, "fb37e39d-67f8-410a-bc61-8ea4bc008daa", 1));
-            bookingobj = putBooking(88, "2023-05-24", 1, "12344c72-e57f-4b0b-a6ba-c43af20cbe1d", reservationobj);
-            let tempdata = {
-              "id": 88,
-              "datum": "2023-05-24",
-              "timeslot": Number(ts),
-              "bucher": userid,
-              "reservations": [
-                createReservation(1, "fcf1b1cb-57b2-437f-a858-f9bd3fb8e41f", Number(element.id.split("-")[1]))
-              ]
-            };
-            console.log(tempdata);
-            
-            /*
-            // Get Id of clicked chair
-            //Array own BookingId`s 1-4 Entries (ts, date, userid)
-            axios.delete('/api/auth/res/del-booking/{bookingid}', { headers: { Authorization: 'Bearer ' + localStorage.getItem('kc_token') } }).then((result) => {
-              console.log(result.status);
-            });
-            */
-            //Res Put changed chairs
-            //Object function create returning Entry putbooking()
-            axios({ method: 'put', url: '/api/auth/res/', data: tempdata, headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + localStorage.getItem('kc_token') } }).catch((e)=>{ console.log(e); });
-          }
-        })
-      }
-      if (!element.classList.contains("reserved_reserved") && element.classList.contains("reserved_me")) {
-        // only delete Reservation
-        axios.delete('/api/auth/res/del-booking/{bookingid}', { headers: { Authorization: 'Bearer ' + localStorage.getItem('kc_token') } }).then((result) => {
-          console.log(result.status);
-        });
-        // delete Reservation with mulitple reservations -> clear seat in json
-      }
-    });
-  };
+
   // Graphic 
   return (
     <div className="App">
@@ -453,7 +399,7 @@ const ReservationPage = () => {
           {
             Object.keys(timeslotdata).map((key, i) => (
               <div className="col-12 col-sm-6 col-md-3 mb-2" key={key}>
-                <input type="radio" className="btn-check" name="time_slot" id={key} value={key+1} onChange={changeTimeSlot}/>
+                <input type="radio" className="btn-check" name="time_slot" id={key} value={key+1}  onChange={(e)=>{setCurrentTimeslot(parseInt(e.target.id))}}/>
                 <label className={`btn recommended_time_slot w-100${timeslotdata[i].data!==undefined ? ' reservation_status'+(timeslotdata[i].capacity===1.0 ? "10" : timeslotdata[i].capacity*10) : ''} border`} htmlFor={key}>{timeslotdata[i].slot}</label>
               </div>
             ))
@@ -474,145 +420,145 @@ const ReservationPage = () => {
           <svg xmlns="http://www.w3.org/2000/svg" id="sitzplan" viewBox="0 0 1116.26 867.67">
             <g id="section">
               <circle cx="899.07" cy="146.5" r="64" fill="#003a70"/>
-              <g id="chair-1" data-name="chair">
+              <g id="chair_1" data-name="chair" onClick={clickChair}>
                 <path d="M1208.88,113.24l12,12-42.42,42.43-12-12c-10.93-10.93-10.3-29.29,1.42-41S1198,102.31,1208.88,113.24Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M1199.73,105.42a.93.93,0,0,1-1,.19c-10.55-4.62-23.78-2.23-32.93,6.92s-11.55,22.38-6.92,32.94a1,1,0,0,1-.19,1h0a1,1,0,0,1-1.34,0l-4.28-4.28c-10.93-10.93-10.3-29.3,1.41-41s30.08-12.35,41-1.42l4.28,4.29a.94.94,0,0,1,0,1.33Z" transform="translate(-360.22 -59.5)" fill="#7d9bc1"/>
               </g>
-              <g id="chair-2" data-name="chair">
+              <g id="chair_2" data-name="chair" onClick={clickChair}>
                 <path d="M1166.52,256.84l12-12L1221,287.24l-12,12c-10.93,10.93-29.3,10.3-41-1.41S1155.59,267.77,1166.52,256.84Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M1158.7,266a.92.92,0,0,1,.19,1c-4.62,10.56-2.23,23.78,6.92,32.94s22.38,11.54,32.94,6.92a.91.91,0,0,1,1,.19h0a1,1,0,0,1,0,1.34l-4.28,4.28c-10.93,10.93-29.29,10.3-41-1.42s-12.35-30.08-1.41-41l4.28-4.28a.94.94,0,0,1,1.33,0Z" transform="translate(-360.22 -59.5)" fill="#7d9bc1"/>
               </g>
-              <g id="chair-3" data-name="chair">
+              <g id="chair_3" data-name="chair" onClick={clickChair}>
                 <path d="M1310.12,298.76l-12-12,42.42-42.43,12,12c10.93,10.93,10.3,29.29-1.42,41S1321.05,309.69,1310.12,298.76Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M1319.27,306.58a.93.93,0,0,1,1-.19c10.55,4.62,23.78,2.23,32.93-6.92s11.55-22.38,6.92-32.94a1,1,0,0,1,.19-1h0a1,1,0,0,1,1.34,0l4.28,4.28c10.93,10.93,10.3,29.3-1.41,41s-30.08,12.35-41,1.42l-4.28-4.29a.94.94,0,0,1,0-1.33Z" transform="translate(-360.22 -59.5)" fill="#7d9bc1"/>
               </g>
-              <g id="chair-4" data-name="chair">
+              <g id="chair_4" data-name="chair" onClick={clickChair}>
                 <path d="M1352,155.16l-12,12-42.42-42.42,12-12c10.93-10.93,29.29-10.3,41,1.41S1363,144.23,1352,155.16Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M1359.86,146a1,1,0,0,1-.19-1c4.63-10.56,2.24-23.78-6.92-32.94s-22.38-11.54-32.93-6.92a.93.93,0,0,1-1-.19h0a1,1,0,0,1,0-1.34l4.28-4.28c10.94-10.93,29.3-10.3,41,1.42s12.34,30.08,1.41,41L1361.2,146a1,1,0,0,1-1.34,0Z" transform="translate(-360.22 -59.5)" fill="#7d9bc1"/>
               </g>
             </g>
             <g id="section-2" data-name="section">
               <circle cx="654.07" cy="257.5" r="64" fill="#003a70"/>
-              <g id="chair-5" data-name="chair">
+              <g id="chair_5" data-name="chair" onClick={clickChair}>
                 <path d="M963.88,224.24l12,12-42.42,42.43-12-12c-10.93-10.93-10.3-29.29,1.42-41S953,213.31,963.88,224.24Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M954.73,216.42a.93.93,0,0,1-1.05.19c-10.55-4.62-23.78-2.23-32.93,6.92s-11.55,22.38-6.92,32.94a1,1,0,0,1-.19,1h0a1,1,0,0,1-1.34,0L908,253.23c-10.93-10.93-10.3-29.3,1.41-41s30.08-12.35,41-1.42l4.28,4.29a.94.94,0,0,1,0,1.33Z" transform="translate(-360.22 -59.5)" fill=" #7d9bc1"/>
               </g>
-              <g id="chair-6" data-name="chair">
+              <g id="chair_6" data-name="chair" onClick={clickChair}>
                 <path d="M921.52,367.84l12-12L976,398.24l-12,12c-10.93,10.93-29.3,10.3-41-1.41S910.59,378.77,921.52,367.84Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M913.7,377a.92.92,0,0,1,.19,1c-4.62,10.56-2.23,23.78,6.92,32.94s22.38,11.54,32.94,6.92a.91.91,0,0,1,1,.19h0a1,1,0,0,1,0,1.34l-4.28,4.28c-10.93,10.93-29.29,10.3-41-1.42s-12.35-30.08-1.41-41l4.28-4.28a.94.94,0,0,1,1.33,0Z" transform="translate(-360.22 -59.5)" fill=" #7d9bc1"/>
               </g>
-              <g id="chair-7" data-name="chair">
+              <g id="chair_7" data-name="chair" onClick={clickChair}>
                 <path d="M1065.12,409.76l-12-12,42.42-42.43,12,12c10.93,10.93,10.3,29.29-1.42,41S1076.05,420.69,1065.12,409.76Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M1074.27,417.58a.93.93,0,0,1,1-.19c10.55,4.62,23.78,2.23,32.93-6.92s11.55-22.38,6.92-32.94a1,1,0,0,1,.19-1h0a1,1,0,0,1,1.34,0l4.28,4.28c10.93,10.93,10.3,29.3-1.41,41s-30.08,12.35-41,1.42l-4.28-4.29a.94.94,0,0,1,0-1.33Z" transform="translate(-360.22 -59.5)" fill=" #7d9bc1"/>
               </g>
-              <g id="chair-8" data-name="chair">
+              <g id="chair_8" data-name="chair" onClick={clickChair}>
                 <path d="M1107,266.16l-12,12-42.42-42.42,12-12c10.93-10.93,29.29-10.3,41,1.41S1118,255.23,1107,266.16Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M1114.86,257a1,1,0,0,1-.19-1c4.63-10.56,2.24-23.78-6.92-32.94s-22.38-11.54-32.93-6.92a.93.93,0,0,1-1-.19h0a1,1,0,0,1,0-1.34l4.28-4.28c10.94-10.93,29.3-10.3,41,1.42s12.34,30.08,1.41,41L1116.2,257a1,1,0,0,1-1.34,0Z" transform="translate(-360.22 -59.5)" fill=" #7d9bc1"/>
               </g>
             </g>
             <g id="section-3" data-name="section">
               <circle cx="388.07" cy="114.5" r="64" fill=" #003a70"/>
-              <g id="chair-9" data-name="chair">
+              <g id="chair_9" data-name="chair" onClick={clickChair}>
                 <path d="M697.88,81.24l12,12-42.42,42.43-12-12c-10.93-10.93-10.3-29.29,1.42-41S687,70.31,697.88,81.24Z" transform="translate(-360.22 -59.5)" fill=" #003a70"/>
                 <path d="M688.73,73.42a.93.93,0,0,1-1.05.19c-10.55-4.62-23.78-2.23-32.93,6.92s-11.55,22.38-6.92,32.94a1,1,0,0,1-.19,1h0a1,1,0,0,1-1.34,0L642,110.23c-10.93-10.93-10.3-29.3,1.41-41s30.08-12.35,41-1.42l4.28,4.29a.94.94,0,0,1,0,1.33Z" transform="translate(-360.22 -59.5)" fill=" #7d9bc1"/>
               </g>
-              <g id="chair-10" data-name="chair">
+              <g id="chair_10" data-name="chair" onClick={clickChair}>
                 <path d="M655.52,224.84l12-12L710,255.24l-12,12c-10.93,10.93-29.3,10.3-41-1.41S644.59,235.77,655.52,224.84Z" transform="translate(-360.22 -59.5)" fill=" #003a70"/>
                 <path d="M647.7,234a.92.92,0,0,1,.19,1c-4.62,10.56-2.23,23.78,6.92,32.94s22.38,11.54,32.94,6.92a.91.91,0,0,1,1,.19h0a1,1,0,0,1,0,1.34l-4.28,4.28c-10.93,10.93-29.29,10.3-41-1.42s-12.35-30.08-1.41-41l4.28-4.28a.94.94,0,0,1,1.33,0Z" transform="translate(-360.22 -59.5)" fill=" #7d9bc1"/>
               </g>
-              <g id="chair-11" data-name="chair">
+              <g id="chair_11" data-name="chair" onClick={clickChair}>
                 <path d="M799.12,266.76l-12-12,42.42-42.43,12,12c10.93,10.93,10.3,29.29-1.42,41S810.05,277.69,799.12,266.76Z" transform="translate(-360.22 -59.5)" fill=" #003a70"/>
                 <path d="M808.27,274.58a.93.93,0,0,1,1.05-.19c10.55,4.62,23.78,2.23,32.93-6.92s11.55-22.38,6.92-32.94a1,1,0,0,1,.19-1h0a1,1,0,0,1,1.34,0l4.28,4.28c10.93,10.93,10.3,29.3-1.41,41s-30.08,12.35-41,1.42l-4.28-4.29a.94.94,0,0,1,0-1.33Z" transform="translate(-360.22 -59.5)" fill=" #7d9bc1"/>
               </g>
-              <g id="chair-12" data-name="chair">
+              <g id="chair_12" data-name="chair" onClick={clickChair}>
                 <path d="M841,123.16l-12,12L786.6,92.76l12-12c10.93-10.93,29.29-10.3,41,1.41S852,112.23,841,123.16Z" transform="translate(-360.22 -59.5)" fill=" #003a70"/>
                 <path d="M848.86,114a1,1,0,0,1-.19-1c4.63-10.56,2.24-23.78-6.92-32.94s-22.38-11.54-32.93-6.92a.93.93,0,0,1-1.05-.19h0a1,1,0,0,1,0-1.34l4.28-4.28c10.94-10.93,29.3-10.3,41,1.42s12.34,30.08,1.41,41L850.2,114a1,1,0,0,1-1.34,0Z" transform="translate(-360.22 -59.5)" fill=" #7d9bc1"/>
               </g>
             </g>
             <g id="section-4" data-name="section">
               <circle cx="114.07" cy="257.5" r="64" fill=" #003a70"/>
-              <g id="chair-13" data-name="chair">
+              <g id="chair_13" data-name="chair" onClick={clickChair}>
                 <path d="M423.88,224.24l12,12-42.42,42.43-12-12c-10.93-10.93-10.3-29.29,1.42-41S413,213.31,423.88,224.24Z" transform="translate(-360.22 -59.5)" fill=" #003a70"/>
                 <path d="M414.73,216.42a.93.93,0,0,1-1.05.19c-10.55-4.62-23.78-2.23-32.93,6.92s-11.55,22.38-6.92,32.94a1,1,0,0,1-.19,1h0a1,1,0,0,1-1.34,0L368,253.23c-10.93-10.93-10.3-29.3,1.41-41s30.08-12.35,41-1.42l4.28,4.29a.94.94,0,0,1,0,1.33Z" transform="translate(-360.22 -59.5)" fill=" #7d9bc1"/>
               </g>
-              <g id="chair-14" data-name="chair">
+              <g id="chair_14" data-name="chair" onClick={clickChair}>
                 <path d="M381.52,367.84l12-12L436,398.24l-12,12c-10.93,10.93-29.3,10.3-41-1.41S370.59,378.77,381.52,367.84Z" transform="translate(-360.22 -59.5)" fill=" #003a70"/>
                 <path d="M373.7,377a.92.92,0,0,1,.19,1c-4.62,10.56-2.23,23.78,6.92,32.94s22.38,11.54,32.94,6.92a.91.91,0,0,1,1,.19h0a1,1,0,0,1,0,1.34l-4.28,4.28c-10.93,10.93-29.29,10.3-41-1.42s-12.35-30.08-1.41-41l4.28-4.28a.94.94,0,0,1,1.33,0Z" transform="translate(-360.22 -59.5)" fill=" #7d9bc1"/>
               </g>
-              <g id="chair-15" data-name="chair">
+              <g id="chair_15" data-name="chair" onClick={clickChair}>
                 <path d="M525.12,409.76l-12-12,42.42-42.43,12,12c10.93,10.93,10.3,29.29-1.42,41S536.05,420.69,525.12,409.76Z" transform="translate(-360.22 -59.5)" fill=" #003a70"/>
                 <path d="M534.27,417.58a.93.93,0,0,1,1.05-.19c10.55,4.62,23.78,2.23,32.93-6.92s11.55-22.38,6.92-32.94a1,1,0,0,1,.19-1h0a1,1,0,0,1,1.34,0l4.28,4.28c10.93,10.93,10.3,29.3-1.41,41s-30.08,12.35-41,1.42l-4.28-4.29a.94.94,0,0,1,0-1.33Z" transform="translate(-360.22 -59.5)" fill=" #7d9bc1"/>
               </g>
-              <g id="chair-16" data-name="chair">
+              <g id="chair_16" data-name="chair" onClick={clickChair}>
                 <path d="M567,266.16l-12,12L512.6,235.76l12-12c10.93-10.93,29.29-10.3,41,1.41S578,255.23,567,266.16Z" transform="translate(-360.22 -59.5)" fill=" #003a70"/>
                 <path d="M574.86,257a1,1,0,0,1-.19-1c4.63-10.56,2.24-23.78-6.92-32.94s-22.38-11.54-32.93-6.92a.93.93,0,0,1-1.05-.19h0a1,1,0,0,1,0-1.34l4.28-4.28c10.94-10.93,29.3-10.3,41,1.42s12.34,30.08,1.41,41L576.2,257a1,1,0,0,1-1.34,0Z" transform="translate(-360.22 -59.5)" fill=" #7d9bc1"/>
               </g>
             </g>
             <g id="big_section">
-              <g id="chair-17" data-name="chair">
+              <g id="chair_17" data-name="chair" onClick={clickChair}>
                 <path d="M986.89,567.67v17h-60v-17c0-15.46,13.43-28,30-28S986.89,552.21,986.89,567.67Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M985.94,555.67a1,1,0,0,1-.87-.61c-4.19-10.73-15.23-18.39-28.18-18.39s-24,7.66-28.18,18.39a1,1,0,0,1-.88.61h0a1,1,0,0,1-.94-.95v-6.05c0-15.46,13.43-28,30-28s30,12.54,30,28v6.05a1,1,0,0,1-.95.95Z" transform="translate(-360.22 -59.5)" fill=" #7d9bc1"/>
               </g>
-              <g id="chair-18" data-name="chair">
+              <g id="chair_18" data-name="chair" onClick={clickChair}>
                 <path d="M925.83,880.17v-17h60v17c0,15.46-13.43,28-30,28S925.83,895.63,925.83,880.17Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M926.78,892.17a.93.93,0,0,1,.87.6c4.19,10.74,15.24,18.4,28.18,18.4s24-7.66,28.19-18.4a.93.93,0,0,1,.87-.6h0a.94.94,0,0,1,.94.94v6.06c0,15.46-13.43,28-30,28s-30-12.54-30-28v-6.06a1,1,0,0,1,.95-.94Z" transform="translate(-360.22 -59.5)" fill=" #7d9bc1"/>
               </g>
-              <g id="chair-19" data-name="chair">
+              <g id="chair_19" data-name="chair" onClick={clickChair}>
                 <path d="M857,612h17v60H857c-15.46,0-28-13.43-28-30S841.54,612,857,612Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M845,612.94a.94.94,0,0,1-.6.88C833.66,618,826,629.05,826,642s7.66,24,18.4,28.18a.94.94,0,0,1,.6.88h0a.94.94,0,0,1-.94.94H838c-15.46,0-28-13.43-28-30s12.54-30,28-30h6.06a.94.94,0,0,1,.94.94Z" transform="translate(-360.22 -59.5)" fill=" #7d9bc1"/>
               </g>
-              <g id="chair-20" data-name="chair">
+              <g id="chair_20" data-name="chair" onClick={clickChair}>
                 <path d="M857,694.5h17v60H857c-15.46,0-28-13.43-28-30S841.54,694.5,857,694.5Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M845,695.44a.94.94,0,0,1-.6.88c-10.74,4.19-18.4,15.23-18.4,28.18s7.66,24,18.4,28.18a.94.94,0,0,1,.6.88h0a.94.94,0,0,1-.94.94H838c-15.46,0-28-13.43-28-30s12.54-30,28-30h6.06a.94.94,0,0,1,.94.94Z" transform="translate(-360.22 -59.5)" fill=" #7d9bc1"/>
               </g>
-              <g id="chair-21" data-name="chair">
+              <g id="chair_21" data-name="chair" onClick={clickChair}>
                 <path d="M856,777h17v60H856c-15.46,0-28-13.43-28-30S840.54,777,856,777Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M844,777.94a.94.94,0,0,1-.6.88C832.66,783,825,794.05,825,807s7.66,24,18.4,28.18a.94.94,0,0,1,.6.88h0a.94.94,0,0,1-.94.94H837c-15.46,0-28-13.43-28-30s12.54-30,28-30h6.06a.94.94,0,0,1,.94.94Z" transform="translate(-360.22 -59.5)" fill=" #7d9bc1"/>
               </g>
-              <g id="chair-22" data-name="chair">
+              <g id="chair_22" data-name="chair" onClick={clickChair}>
                 <path d="M1058.61,837.5h-17v-60h17c15.46,0,28,13.43,28,30S1074.07,837.5,1058.61,837.5Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M1070.61,836.56a.94.94,0,0,1,.61-.88c10.73-4.19,18.39-15.23,18.39-28.18s-7.66-24-18.39-28.18a.94.94,0,0,1-.61-.88h0a.94.94,0,0,1,1-.94h6c15.46,0,28,13.43,28,30s-12.54,30-28,30h-6a.94.94,0,0,1-1-.94Z" transform="translate(-360.22 -59.5)" fill=" #7d9bc1"/>
               </g>
-              <g id="chair-23" data-name="chair">
+              <g id="chair_23" data-name="chair" onClick={clickChair}>
                 <path d="M1058.61,755h-17V695h17c15.46,0,28,13.43,28,30S1074.07,755,1058.61,755Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M1070.61,754.06a.94.94,0,0,1,.61-.88C1082,749,1089.61,738,1089.61,725s-7.66-24-18.39-28.18a.94.94,0,0,1-.61-.88h0a.94.94,0,0,1,1-.94h6c15.46,0,28,13.43,28,30s-12.54,30-28,30h-6a.94.94,0,0,1-1-.94Z" transform="translate(-360.22 -59.5)" fill=" #7d9bc1"/>
               </g>
-              <g id="chair-24" data-name="chair">
+              <g id="chair_24" data-name="chair" onClick={clickChair}>
                 <path d="M1059.61,672.5h-17v-60h17c15.46,0,28,13.43,28,30S1075.07,672.5,1059.61,672.5Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M1071.61,671.56a.94.94,0,0,1,.61-.88c10.73-4.19,18.39-15.23,18.39-28.18s-7.66-24-18.39-28.18a.94.94,0,0,1-.61-.88h0a.94.94,0,0,1,1-.94h6c15.46,0,28,13.43,28,30s-12.54,30-28,30h-6a.94.94,0,0,1-1-.94Z" transform="translate(-360.22 -59.5)" fill=" #7d9bc1"/>
               </g>
               <path d="M1006.72,846H910.34c-13-75-14.54-152.89,0-234h96.38C1020.59,689.66,1020.4,767.71,1006.72,846Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
             </g>
             <g id="big_section-2" data-name="big_section">
-              <g id="chair-25" data-name="chair">
+              <g id="chair_25" data-name="chair" onClick={clickChair}>
                 <path d="M1356.75,567.42v17h-60v-17c0-15.46,13.43-28,30-28S1356.75,552,1356.75,567.42Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M1355.81,555.42a1,1,0,0,1-.88-.61c-4.19-10.73-15.23-18.39-28.18-18.39s-24,7.66-28.18,18.39a1,1,0,0,1-.88.61h0a1,1,0,0,1-.94-.95v-6.05c0-15.46,13.43-28,30-28s30,12.54,30,28v6.05a1,1,0,0,1-.94.95Z" transform="translate(-360.22 -59.5)" fill="#7d9bc1"/>
               </g>
-              <g id="chair-26" data-name="chair">
+              <g id="chair_26" data-name="chair" onClick={clickChair}>
                 <path d="M1295.69,879.92v-17h60v17c0,15.46-13.43,28-30,28S1295.69,895.38,1295.69,879.92Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M1296.64,891.92a.93.93,0,0,1,.87.6c4.2,10.74,15.24,18.4,28.18,18.4s24-7.66,28.19-18.4a.93.93,0,0,1,.87-.6h0a.94.94,0,0,1,.94.94v6.06c0,15.46-13.43,28-30,28s-30-12.54-30-28v-6.06a1,1,0,0,1,1-.94Z" transform="translate(-360.22 -59.5)" fill="#7d9bc1"/>
               </g>
-              <g id="chair-27" data-name="chair">
+              <g id="chair_27" data-name="chair" onClick={clickChair}>
                 <path d="M1226.86,611.75h17v60h-17c-15.46,0-28-13.43-28-30S1211.4,611.75,1226.86,611.75Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M1214.86,612.69a.94.94,0,0,1-.6.88c-10.74,4.19-18.4,15.23-18.4,28.18s7.66,24,18.4,28.18a.94.94,0,0,1,.6.88h0a.94.94,0,0,1-.94.94h-6.06c-15.46,0-28-13.43-28-30s12.54-30,28-30h6.06a.94.94,0,0,1,.94.94Z" transform="translate(-360.22 -59.5)" fill="#7d9bc1"/>
               </g>
-              <g id="chair-28" data-name="chair">
+              <g id="chair_28" data-name="chair" onClick={clickChair}>
                 <path d="M1226.86,694.25h17v60h-17c-15.46,0-28-13.43-28-30S1211.4,694.25,1226.86,694.25Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M1214.86,695.19a.94.94,0,0,1-.6.88c-10.74,4.19-18.4,15.23-18.4,28.18s7.66,24,18.4,28.18a.94.94,0,0,1,.6.88h0a.94.94,0,0,1-.94.94h-6.06c-15.46,0-28-13.43-28-30s12.54-30,28-30h6.06a.94.94,0,0,1,.94.94Z" transform="translate(-360.22 -59.5)" fill="#7d9bc1"/>
               </g>
-              <g id="chair-29" data-name="chair">
+              <g id="chair_29" data-name="chair" onClick={clickChair}>
                 <path d="M1225.86,776.75h17v60h-17c-15.46,0-28-13.43-28-30S1210.4,776.75,1225.86,776.75Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M1213.86,777.69a.94.94,0,0,1-.6.88c-10.74,4.19-18.4,15.23-18.4,28.18s7.66,24,18.4,28.18a.94.94,0,0,1,.6.88h0a.94.94,0,0,1-.94.94h-6.06c-15.46,0-28-13.43-28-30s12.54-30,28-30h6.06a.94.94,0,0,1,.94.94Z" transform="translate(-360.22 -59.5)" fill="#7d9bc1"/>
               </g>
-              <g id="chair-30" data-name="chair">
+              <g id="chair_30" data-name="chair" onClick={clickChair}>
                 <path d="M1428.47,837.25h-17v-60h17c15.46,0,28,13.43,28,30S1443.93,837.25,1428.47,837.25Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M1440.47,836.31a.94.94,0,0,1,.61-.88c10.73-4.19,18.39-15.23,18.39-28.18s-7.66-24-18.39-28.18a.94.94,0,0,1-.61-.88h0a1,1,0,0,1,1-.94h6c15.46,0,28,13.43,28,30s-12.54,30-28,30h-6a1,1,0,0,1-1-.94Z" transform="translate(-360.22 -59.5)" fill="#7d9bc1"/>
               </g>
-              <g id="chair-31" data-name="chair">
+              <g id="chair_31" data-name="chair" onClick={clickChair}>
                 <path d="M1428.47,754.75h-17v-60h17c15.46,0,28,13.43,28,30S1443.93,754.75,1428.47,754.75Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M1440.47,753.81a.94.94,0,0,1,.61-.88c10.73-4.19,18.39-15.23,18.39-28.18s-7.66-24-18.39-28.18a.94.94,0,0,1-.61-.88h0a1,1,0,0,1,1-.94h6c15.46,0,28,13.43,28,30s-12.54,30-28,30h-6a1,1,0,0,1-1-.94Z" transform="translate(-360.22 -59.5)" fill="#7d9bc1"/>
               </g>
-              <g id="chair-32" data-name="chair">
+              <g id="chair_32" data-name="chair" onClick={clickChair}>
                 <path d="M1429.47,672.25h-17v-60h17c15.46,0,28,13.43,28,30S1444.93,672.25,1429.47,672.25Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M1441.47,671.31a.94.94,0,0,1,.61-.88c10.73-4.19,18.39-15.23,18.39-28.18s-7.66-24-18.39-28.18a.94.94,0,0,1-.61-.88h0a1,1,0,0,1,1-.94h6c15.46,0,28,13.43,28,30s-12.54,30-28,30h-6a1,1,0,0,1-1-.94Z" transform="translate(-360.22 -59.5)" fill="#7d9bc1"/>
               </g>

@@ -8,9 +8,15 @@ keycloak.init({ onLoad: "login-required", flow: 'implicit'}).then((auth) => {
     } else {
         console.debug("Authenticated");
         keycloak.loadUserInfo().then((userinfo)=>{
-            localStorage.setItem('kc_user', JSON.stringify(userinfo));
+            sessionStorage.setItem('kc_user', JSON.stringify(userinfo));
         })
-        localStorage.setItem('kc_token', (keycloak.token!==undefined ? keycloak.token : ""));
+        //keycloak.updateToken(10).then((result) => {
+        //    console.log(result);
+        //    sessionStorage.setItem('kc_token', (keycloak.token!==undefined ? keycloak.token : ""));
+        //}).catch((err) => {
+        //    console.log(err);
+        //});
+        sessionStorage.setItem('kc_token', (keycloak.token!==undefined ? keycloak.token : ""));
     }
 }).catch(err => console.log(err));
 //

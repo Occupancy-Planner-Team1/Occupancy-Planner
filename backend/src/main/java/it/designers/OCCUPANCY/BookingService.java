@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Transactional
 @Service
@@ -68,6 +69,9 @@ public class BookingService {
     	this.bookingRepository.deleteAllInBatch(this.bookingRepository.getExpired(date));
     }
    
+    public List <Booking> getAllFromUser(UUID id){
+    	return this.bookingRepository.findAllByUserId(id);
+    }
     
 
 

@@ -26,11 +26,11 @@ import java.util.*;
 @RequestMapping("/auth")
 public class OccuControl {
 
-     private final ReservationService resService; //wird momentan nicht mehr benötigt da reservierung von booking gemanaged wird
+     //private final ReservationService resService; //wird momentan nicht mehr benötigt da reservierung von booking gemanaged wird
      private final BookingService bookingService;
 
-    public OccuControl(ReservationService resService, BookingService bookingService) { // Dependencyinjection von Spring/ JPA bei Bedarf -> Also ich Konsumiere meine Services
-        this.resService=resService;
+    public OccuControl(BookingService bookingService) { // Dependencyinjection von Spring/ JPA bei Bedarf -> Also ich Konsumiere meine Services
+        //this.resService=resService;
         this.bookingService = bookingService;
    
     }
@@ -39,7 +39,7 @@ public class OccuControl {
 
 
 
- // Kommentar: für löschen delete mapping nutzen! und den returnten datentyp in <> hinter responsesntity angeben
+ // Delete yesterday wird nie genutzt, muss auf 1,2,3 Monate geändert werden
     @DeleteMapping("/res/del-yesterday")
     public ResponseEntity deleteExpired() {
     	
@@ -50,7 +50,8 @@ public class OccuControl {
     		return ResponseEntity.status(HttpStatus.OK).body("Expired bookings deleted");
     	}
     	catch(Exception e) {
-    		return ResponseEntity.status(HttpStatus.NOT_MODIFIED).body(e);
+    		e.printStackTrace();
+    		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
     	}
   }
 
@@ -140,9 +141,21 @@ public class OccuControl {
         return ResponseEntity.ok(this.bookingService.getAllPerDay(d));
     }
     
+    //für erste ReservationPage recommended timeslot/timeframe
+    @GetMapping("/res-all/user/{userid}")
+    public ResponseEntity<List<Booking>> getAllResUser(@PathVariable("userid") UUID id, Principal principal) throws JsonProcessingException, UnirestException{
+    	try {
+    		return ResponseEntity.status(HttpStatus.OK).body(this.bookingService.getAllFromUser(id));
+    	}catch(Exception e) {
+    		e.printStackTrace();
+    		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+    	}
+    	
+    }
     
-    @GetMapping("/res-username/{UUID}") //username beim klicken auf Stuhl zurückgeben
-    public ResponseEntity<String> getUserName(@PathVariable("UUID") UUID id, Principal principal) throws JsonProcessingException, UnirestException {
+    
+    @GetMapping("/res-username/{userid}") //username beim klicken auf Stuhl zurückgeben
+    public ResponseEntity<String> getUserName(@PathVariable("userid") UUID id, Principal principal) throws JsonProcessingException, UnirestException {
     	
     	KeycloakServiceUser su = new KeycloakServiceUser(); 
     	

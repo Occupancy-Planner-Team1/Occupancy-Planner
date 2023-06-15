@@ -52,7 +52,10 @@ const ReservationPage = () => {
         setDailyData(result.data);
     });
 
-    specifiedData("bookingTimeslot=1", "chairUserId,chairId,reservationId");
+    //specifiedData("bookingTimeslot=1", "reservationId,chairUserId,chairId");
+    console.log(rawDataDaily);
+    getReservedSeatsInTimeslots(3,2);
+
   }
 
   // Create JSON Reservation
@@ -95,6 +98,55 @@ const ReservationPage = () => {
       }
     }
   }
+  
+  function getDataInTimeslots(timeslot,duration){
+    let dataForTimeslot = [];
+    for(let n=1; n <= duration; n++){
+      console.log(timeslot);
+      let bookingIdArray = specifiedData(`bookingTimeslot=${timeslot}`,"bookingId");
+      for (let i in bookingIdArray[0]){
+        dataForTimeslot.push(bookingIdArray[0][i]);
+        dataForTimeslot.push(specifiedData(`bookingId=${bookingIdArray[0][i]}`,"reservationId,chairUserId,chairId"));
+      }
+      timeslot = timeslot + 1;
+    }
+    
+    console.log(dataForTimeslot);
+    return dataForTimeslot;
+  }
+  
+  // timeslot: 0-12; 0 is the first timeslot and 12 the last one
+  // duration: 1-4; how many timeslots are put together to get one big timelot
+  // return: all used chairs in the given timelots
+  function getReservedSeatsInTimeslots(timeslot,duration){
+    let reservedSeats = [];
+    let bookingIdArray = [];
+    let tmpArray = [];
+    for(let n=1; n <= duration; n++){
+      bookingIdArray = specifiedData(`bookingTimeslot=${timeslot}`,"bookingId");
+      for (let i in bookingIdArray[0]){
+        tmpArray.push(specifiedData(`bookingId=${bookingIdArray[0][i]}`,"chairId"));
+      }
+      timeslot = timeslot + 1;
+    }
+
+    // sum up all chairs to one array
+    for(let a in tmpArray){
+      for(let b in tmpArray[a]){
+        for(let c in tmpArray[a][b]){
+          reservedSeats.push(tmpArray[a][b][c]);
+        }
+      }
+    }
+    // delete the duplicates
+    let uniqueReservedSeats = reservedSeats.filter((c, index) => { 
+      return reservedSeats.indexOf(c) === index;
+    });
+
+    console.log(uniqueReservedSeats);
+    return reservedSeats;
+  }
+  
 
   // Give a keyword=data touple as a condition and a keyword to specify the result.
   // The keywords have to be one of the following strings: "bookingId", "bookingTimeslot"(0-11), "bookerId", "reservationId", "reservationUserId", "chairUserId", "chairId", "chair_table", "positionX", "positionY"
@@ -103,6 +155,7 @@ const ReservationPage = () => {
   // For example: dataInTimeslot("bookingTimeslot=1,bookerId=...", "bookingid,reservationId,chairId");
   // Important! Please use right now only level 1 keywords for the filter and level 2 and 3 keywords to specify the result data
   function specifiedData(keywordStringcondition, keywordStringResult) {
+    //console.log(rawDataDaily);
     let conditionKeyword; // holds the keyword to filter the raw data
     let conditionData;  // holds the data to be filtered after
     let resultKeyword;  // holds the keyword to specify the result set
@@ -142,8 +195,8 @@ const ReservationPage = () => {
       // call the function to specify the data
       specifiedWorkedDataDaily.push(specifyData(workedDataDaily,resultKeyword,levelString,nameAssignment)); 
     }
-    return specifiedWorkedDataDaily;
     //console.log(specifiedWorkedDataDaily);
+    return specifiedWorkedDataDaily;
   }
 
   function filterData(data, conditionKeyword,conditionData, levelString) {

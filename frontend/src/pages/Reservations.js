@@ -1,62 +1,281 @@
 import { useSearchParams } from "react-router-dom";
-import React, { useRef, useEffect, useState } from 'react';
-import logo from '../Logo-IT-Designers.svg';
-import { groupBy } from "core-js/actual/array/group-by";
+import React, { useContext, useEffect, useState } from 'react';
+import AuthContext from "../components/shared/AuthContext";
 import axios from 'axios';
+//Assets
+import logo from '../assets/Logo-IT-Designers.svg';
 
-const ReservationPage = () => {
+const SuggestedReservation = () => {
   // variables & functions
   const [searchParams, setSearchParams] = useSearchParams();
-  const [timeslotdata, setTimeSlotData] = useState({});
-  const [dailydata, setDailyData] = useState([]);
-  const [currentts, setCurrentTimeslot] = useState(-1);
-  const timeslotref = useRef(null);
-  let rawDataDaily = new Object(); // The daily raw Data which is updated every 2 seconds
+  const [generatedts, setGeneratedTs] = useState({}); // Generated Timeslots: 11:00-11:15, 11:15-11:30, ...
+  const [currentts, setCurrentTimeslot] = useState(-1); // Selected Timeslot 0-11
+  const [dailydata, setDailyData] = useState([]); // The daily raw Data which is updated every 2 seconds
+  const [currentduration, setCurrentDuration] = useState(1); //
+  const { token, user } = useContext(AuthContext); 
   let keywords =[]; // 
   let requestedData = new Object();
-  let timeslotbackup = 0;
 
-  //Create Timeslot objects
-  function timeslotGenerator(minutes) {
-    let ts = new Object(), st = new Date(0,0,0,11,0,0), et = new Date(0,0,0,11,minutes,0);
-    for (let index = 0; index < 12/(minutes/15); index++) {
-      let inner = new Object();
-      inner.slot = st.getHours()+":"+(st.getMinutes() < 10 ? '0' : '') + st.getMinutes()+" - "+et.getHours()+":"+(et.getMinutes() < 10 ? '0' : '') + et.getMinutes();
-      ts[index] = inner;
-      st = et;
-      et = new Date(et.getTime() + minutes*60000);
-    }
-    return ts;
-  }
-  // Get Capacity & Reserved Seats from Backend
-  function getReservedSeats(query) {
-    let timestamp_object = timeslotGenerator(query);
-    const dt = new Date();
-    axios.get('/api/auth/res-day/'+dt.getFullYear()+'-'+('0' + (dt.getMonth()+1)).slice(-2)+'-'+('0' + dt.getDate()).slice(-2), { headers: { Authorization: 'Bearer ' + sessionStorage.getItem('kc_token') } }).then((result) => {
-      //Group Data by timeslot
-      const data = result.data.groupBy(data => { return data.timeslot; });
-      for (const key in data) {
-        // Calculate capacity and round it to a fixed number
-        timestamp_object[key].capacity = Number((data[key].length/32).toFixed(1));//32 -> dynamische abfrage vom Backend
-        // Adding 
-        timestamp_object[key].data = data[key];
-      }
-      setTimeSlotData(timestamp_object);
-    });
-  }
 
   async function currentDailyData(date){
-    await axios.get('/api/auth/res-day/'+ date, { headers: { Authorization: 'Bearer ' + sessionStorage.getItem('kc_token') } }).then((result) => {
+    await axios.get('/api/auth/res-day/'+ date, { headers: { Authorization: 'Bearer ' + token } }).then((result) => {
         //rawDataDaily = result.data;
         document.getElementById("body")?.classList.remove("disabled_map");
         setDailyData(result.data);
     });
 
     //specifiedData("bookingTimeslot=1", "reservationId,chairUserId,chairId");
-    console.log(rawDataDaily);
-    getReservedSeatsInTimeslots(3,2);
+    //getReservedSeatsInTimeslots(3,2);
 
   }
+
+  function getDataInTimeslots(timeslot, duration){
+    let dataForTimeslot = [];
+    for(let n=1; n <= duration; n++){
+      let bookingIdArray = specifiedData(`bookingTimeslot=${timeslot}`,"bookingId");
+      for (let i in bookingIdArray[0]){
+        //dataForTimeslot.push(bookingIdArray[0][i]);
+        dataForTimeslot.push(specifiedData(`bookingId=${bookingIdArray[0][i]}`,"reservationId,chairUserId,chairId"));
+      }
+      timeslot = timeslot + 1;
+    }
+    return dataForTimeslot;
+  }
+
+  // timeslot: 0-12; 0 is the first timeslot and 12 the last one
+  // duration: 1-4; how many timeslots are put together to get one big timelot
+  // return: all used chairs in the given timelots
+  function getReservedSeatsInTimeslots(timeslot, duration){
+      let reservedSeats = [];
+      let bookingIdArray = [];
+      let tmpArray = [];
+      for(let n=1; n <= duration; n++){
+          bookingIdArray = specifiedData(`bookingTimeslot=${timeslot}`,"bookingId");
+          for (let i in bookingIdArray[0]){
+          tmpArray.push(specifiedData(`bookingId=${bookingIdArray[0][i]}`,"chairId"));
+          }
+          timeslot = timeslot + 1;
+      }
+
+      // sum up all chairs to one array
+      for(let a in tmpArray){
+          for(let b in tmpArray[a]){
+          for(let c in tmpArray[a][b]){
+              reservedSeats.push(tmpArray[a][b][c]);
+          }
+          }
+      }
+      // delete the duplicates
+      let uniqueReservedSeats = reservedSeats.filter((c, index) => { 
+          return reservedSeats.indexOf(c) === index;
+      });
+
+      //console.log(uniqueReservedSeats);
+      return reservedSeats;
+  }  
+
+  // Give a keyword=data touple as a condition and a keyword to specify the result.
+  // The keywords have to be one of the following strings: "bookingId", "bookingTimeslot"(0-11), "bookerId", "reservationId", "reservationUserId", "chairUserId", "chairId", "chair_table", "positionX", "positionY"
+  // For multiple conditions put the keyword=data condition touple in a string  separated by commas.
+  // For multiple results put the keywords in a string seperated by a commas.
+  // For example: dataInTimeslot("bookingTimeslot=1,bookerId=...", "bookingid,reservationId,chairId");
+  // Important! Please use right now only level 1 keywords for the filter and level 2 and 3 keywords to specify the result data
+  function specifiedData(keywordStringcondition, keywordStringResult) {
+      let conditionKeyword; // holds the keyword to filter the raw data
+      let conditionData;  // holds the data to be filtered after
+      let resultKeyword;  // holds the keyword to specify the result set
+      let levelString;
+
+      let workedDataDaily = dailydata;
+      let specifiedWorkedDataDaily = [];
+
+
+      // If a name changed in the datamodell, this map has to be changed to !!
+      // The map maps the keywords on to the names used in the datamodell
+      const nameAssignment = new Map([ ["bookingId", "id"], ["bookingTimeslot", "timeslot"], ["bookerId", "bucher"], ["reservationId", "id"], ["chairUserId", "stuhlsitzer"], ["chairId", "chairName"], ["chair_table", "tisch"], ["positionX", "posx"], ["positionY", "posy"]  ]);
+
+      // To find the data in the mutlidimesnional Datastructure, we establish three drifferent level where the data could be:
+      // 1. In the booking array; 2. In the reservation array in the booking array; 3. In the chair object in the reservation array 
+      const level = new Map([ ["bookingId", "level_1"], ["bookingTimeslot", "level_1"], ["bookerId", "level_1"], ["reservationId", "level_2"], ["chairUserId", "level_2"], ["chairId", "level_3"], ["chair_table", "level_3"], ["positionX", "level_3"], ["positionY", "level_3"] ]);
+
+
+      // get the keyword=data touple out of the string
+      for(let condition of keywordStringcondition.split(",")) {
+          let tempArray = condition.split("=");
+          // Change the keyword to fit the datamodell
+          conditionKeyword = nameAssignment.get(tempArray[0]);
+          conditionData = tempArray[1];
+          levelString = level.get(tempArray[0]);
+          
+          // call the filter function
+          workedDataDaily = filterData(workedDataDaily,conditionKeyword, conditionData,levelString);
+      }
+      //console.log(workedDataDaily);
+
+      // Get the keywords for specifing the result out of the string
+      for(let keyword of keywordStringResult.split(",")) {
+          // Change the keyword to fit the datamodell
+          resultKeyword = nameAssignment.get(keyword);
+          levelString = level.get(keyword);
+          // call the function to specify the data
+          specifiedWorkedDataDaily.push(specifyData(workedDataDaily,resultKeyword,levelString,nameAssignment)); 
+      }
+      //console.log(specifiedWorkedDataDaily);
+      return specifiedWorkedDataDaily;
+  }
+
+  function filterData(data, conditionKeyword,conditionData, levelString) {
+      let command; // build a command to execute with the changing keyword=data touple
+      let workedDataDaily = [];
+
+      command = `workedDataDaily = data.filter(workedDataDaily => workedDataDaily.${conditionKeyword} == "${conditionData}");`;
+      eval(command);
+
+      if(workedDataDaily.length == 0) console.log("WARNING: keyword=data touple does not exist!");
+      return workedDataDaily;
+  }
+
+  // Filter for the specif result data the user wants to see
+  function specifyData(workedDataDaily,resultKeyword,levelString,nameAssignment) {
+      let command; // build a command to execute with the changing keyword=data touple
+      let specifiedWorkedDataDaily = [];
+
+      for(let i in workedDataDaily) {
+          if(levelString == "level_1") {
+          // build a command to create a new array with specified data only
+          command = `specifiedWorkedDataDaily.push(workedDataDaily[${i}].${resultKeyword});`
+          // execute the command
+          eval(command);
+          }
+          else if(levelString == "level_2" || levelString == "level_3"){
+          for(let n in workedDataDaily[i].reservations) {
+              let command = `workedDataDaily[${i}].reservations[${n}].${nameAssignment.get("chairUserId")}`
+              if(eval(command)){
+                if(levelString == "level_2") { 
+                    command = `specifiedWorkedDataDaily.push(workedDataDaily[${i}].reservations[${n}].${resultKeyword});` 
+                }
+                if(levelString == "level_3") { 
+                    command = `specifiedWorkedDataDaily.push(workedDataDaily[${i}].reservations[${n}].chair.${resultKeyword});` 
+                    //console.log(specifiedWorkedDataDaily.push(workedDataDaily[i].reservations[n].chair.chairName));
+                }
+              }
+              // execute the command
+              eval(command);
+            }
+        } 
+    }
+
+    return specifiedWorkedDataDaily;
+  }
+
+  /*
+        let command; // build a command to execute with the changing keyword=data touple 
+
+        if(level.get(tempArray[0]) == "level_1"){
+          command = `workedDataDaily = workedDataDaily.filter(workedDataDaily => workedDataDaily.${conditionKeyword} == "${conditionData}");`;
+        }
+
+        if(level.get(tempArray[0]) == "level_2") {
+          //console.log(workedDataDaily[1].reservations);   
+          for(let i in rawDataDaily) {
+            workedDataDaily = rawDataDaily[i].reservations;
+            command = `workedDataDaily = workedDataDaily.filter(workedDataDaily => workedDataDaily.${conditionKeyword} == "${conditionData}");`;
+            console.log(workedDataDaily);
+          }
+          
+          
+          
+          /*tmpArray = workedDataDaily[1].reservations;
+          command = `tmpArray = tmpArray.filter(tmpArray => tmpArray.${conditionKeyword} == "${conditionData}");`;
+
+          /*for(let i in workedDataDaily) {
+            console.log("start");
+            //console.log(workedDataDaily[i].reservations);
+            tmpArray = workedDataDaily[i].reservations;
+            //console.log(tmpArray = tmpArray.filter(tmpArray => tmpArray.id == 453));
+            command = `tmpArray = tmpArray.filter(tmpArray => tmpArray.${conditionKeyword} == "${conditionData}");`;
+            //command = `workedDataDaily = workedDataDaily.filter(workedDataDaily => workedDataDaily[${i}].reservations.${conditionKeyword} == "${conditionData}");`;
+          }
+        }
+        // execute the command
+        eval(command);
+        if(workedDataDaily.length == 0) { console.log("WARNING: keyword=data touple does not exist!"); }
+      
+
+
+      // Filter for the specif data the user wants
+      // Get the keywords out of the string
+      for(let keyword of keywordStringResult.split(",")) {
+        // Change the keyword to fit the datamodell
+        let newKeyword = nameAssignment.get(keyword);
+
+        // Iterate over the array on the top level
+        for(let i in workedDataDaily) {
+          if(level.get(keyword) == "level_1") {
+            // build a command to create a new array with specified data only
+            let command = `specifiedWorkedDataDaily.push(workedDataDaily[${i}].${newKeyword});`
+            // execute the command
+            eval(command);
+          }
+
+          else if(level.get(keyword) == "level_2" || level.get(keyword) == "level_3"){
+            for(let n in workedDataDaily[i].reservations) {
+              let tmpKeyword = nameAssignment.get("chairUserId");
+              let command = `workedDataDaily[${i}].reservations[${n}].${tmpKeyword}`
+              if(eval(command)){
+                if(level.get(keyword) == "level_2") { 
+                  command = `specifiedWorkedDataDaily.push(workedDataDaily[${i}].reservations[${n}].${newKeyword});` 
+                }
+                if(level.get(keyword) == "level_3") { 
+                  command = `specifiedWorkedDataDaily.push(workedDataDaily[${i}].reservations[${n}].chair.${newKeyword});` 
+                }
+              }
+              // execute the command
+              eval(command);
+            }
+          }
+        }
+      }
+      //console.log(workedDataDaily);
+      //console.log(workedDataDaily);
+      console.log(specifiedWorkedDataDaily);
+      return specifiedWorkedDataDaily;
+    }
+      
+      
+      
+      // Iterate over the array on the top level
+        for(let i in workedDataDaily) {
+          if(level.get(keyword) == "level_1") {
+            // build a command to create a new array with specified data only
+            let command = `specifiedWorkedDataDaily.push(workedDataDaily[${i}].${newKeyword});`
+            // execute the command
+            eval(command);
+          }
+
+          else if(level.get(keyword) == "level_2" || level.get(keyword) == "level_3"){
+            for(let n in workedDataDaily[i].reservations) {
+              let tmpKeyword = nameAssignment.get("chairUserId");
+              let command = `workedDataDaily[${i}].reservations[${n}].${tmpKeyword}`
+              if(eval(command)){
+                if(level.get(keyword) == "level_2") { 
+                  command = `specifiedWorkedDataDaily.push(workedDataDaily[${i}].reservations[${n}].${newKeyword});` 
+                }
+                if(level.get(keyword) == "level_3") { 
+                  command = `specifiedWorkedDataDaily.push(workedDataDaily[${i}].reservations[${n}].chair.${newKeyword});` 
+                }
+              }
+              // execute the command
+              eval(command);
+            }
+          }
+        }
+      
+      //console.log(workedDataDaily);
+      //console.log(workedDataDaily);
+      console.log(specifiedWorkedDataDaily);
+      return specifiedWorkedDataDaily;
+    }*/
 
   // Create JSON Reservation
   function createReservation(sid, cid, cname) {
@@ -66,6 +285,7 @@ const ReservationPage = () => {
 
   //Click function on Chair
   async function clickChair(e) {
+    console.log(currentts);
     if (currentts!==(-1)) {
       let data = {
         "id": 0,
@@ -78,7 +298,6 @@ const ReservationPage = () => {
       };
       if (!e.target.parentElement.classList.contains("reserved_reserved")) {
           document.getElementById("body")?.classList.add("disabled_map");
-          //timeslot nicht der richtige
           // Get Id of clicked chair
           //Array own BookingId`s 1-4 Entries (ts, date, userid)
           //axios.delete('/api/auth/res/del-booking/{bookingid}', { headers: { Authorization: 'Bearer ' + sessionStorage.getItem('kc_token') } }).then((result) => {
@@ -97,272 +316,17 @@ const ReservationPage = () => {
         // delete Reservation with mulitple reservations -> clear seat in json
       }
     }
-  }
-  
-  function getDataInTimeslots(timeslot,duration){
-    let dataForTimeslot = [];
-    for(let n=1; n <= duration; n++){
-      console.log(timeslot);
-      let bookingIdArray = specifiedData(`bookingTimeslot=${timeslot}`,"bookingId");
-      for (let i in bookingIdArray[0]){
-        dataForTimeslot.push(bookingIdArray[0][i]);
-        dataForTimeslot.push(specifiedData(`bookingId=${bookingIdArray[0][i]}`,"reservationId,chairUserId,chairId"));
-      }
-      timeslot = timeslot + 1;
-    }
-    
-    console.log(dataForTimeslot);
-    return dataForTimeslot;
-  }
-  
-  // timeslot: 0-12; 0 is the first timeslot and 12 the last one
-  // duration: 1-4; how many timeslots are put together to get one big timelot
-  // return: all used chairs in the given timelots
-  function getReservedSeatsInTimeslots(timeslot,duration){
-    let reservedSeats = [];
-    let bookingIdArray = [];
-    let tmpArray = [];
-    for(let n=1; n <= duration; n++){
-      bookingIdArray = specifiedData(`bookingTimeslot=${timeslot}`,"bookingId");
-      for (let i in bookingIdArray[0]){
-        tmpArray.push(specifiedData(`bookingId=${bookingIdArray[0][i]}`,"chairId"));
-      }
-      timeslot = timeslot + 1;
-    }
-
-    // sum up all chairs to one array
-    for(let a in tmpArray){
-      for(let b in tmpArray[a]){
-        for(let c in tmpArray[a][b]){
-          reservedSeats.push(tmpArray[a][b][c]);
-        }
-      }
-    }
-    // delete the duplicates
-    let uniqueReservedSeats = reservedSeats.filter((c, index) => { 
-      return reservedSeats.indexOf(c) === index;
-    });
-
-    console.log(uniqueReservedSeats);
-    return reservedSeats;
-  }
-  
-
-  // Give a keyword=data touple as a condition and a keyword to specify the result.
-  // The keywords have to be one of the following strings: "bookingId", "bookingTimeslot"(0-11), "bookerId", "reservationId", "reservationUserId", "chairUserId", "chairId", "chair_table", "positionX", "positionY"
-  // For multiple conditions put the keyword=data condition touple in a string  separated by commas.
-  // For multiple results put the keywords in a string seperated by a commas.
-  // For example: dataInTimeslot("bookingTimeslot=1,bookerId=...", "bookingid,reservationId,chairId");
-  // Important! Please use right now only level 1 keywords for the filter and level 2 and 3 keywords to specify the result data
-  function specifiedData(keywordStringcondition, keywordStringResult) {
-    //console.log(rawDataDaily);
-    let conditionKeyword; // holds the keyword to filter the raw data
-    let conditionData;  // holds the data to be filtered after
-    let resultKeyword;  // holds the keyword to specify the result set
-    let levelString;
-
-    let workedDataDaily = dailydata;
-    let specifiedWorkedDataDaily = [];
-    
-    
-    // If a name changed in the datamodell, this map has to be changed to !!
-    // The map maps the keywords on to the names used in the datamodell
-    const nameAssignment = new Map([ ["bookingId", "id"], ["bookingTimeslot", "timeslot"], ["bookerId", "bucher"], ["reservationId", "id"], ["chairUserId", "stuhlsitzer"], ["chairId", "chairName"], ["chair_table", "tisch"], ["positionX", "posx"], ["positionY", "posy"]  ]);
-    
-    // To find the data in the mutlidimesnional Datastructure, we establish three drifferent level where the data could be:
-    // 1. In the booking array; 2. In the reservation array in the booking array; 3. In the chair object in the reservation array 
-    const level = new Map([ ["bookingId", "level_1"], ["bookingTimeslot", "level_1"], ["bookerId", "level_1"], ["reservationId", "level_2"], ["chairUserId", "level_2"], ["chairId", "level_3"], ["chair_table", "level_3"], ["positionX", "level_3"], ["positionY", "level_3"] ]);
-    
-
-    // get the keyword=data touple out of the string
-    for(let condition of keywordStringcondition.split(",")) {
-      let tempArray = condition.split("=");
-      // Change the keyword to fit the datamodell
-      conditionKeyword = nameAssignment.get(tempArray[0]);
-      conditionData = tempArray[1];
-      levelString = level.get(tempArray[0]);
-      
-      // call the filter function
-      workedDataDaily = filterData(workedDataDaily,conditionKeyword, conditionData,levelString);
-    }
-    //console.log(workedDataDaily);
-
-    // Get the keywords for specifing the result out of the string
-    for(let keyword of keywordStringResult.split(",")) {
-      // Change the keyword to fit the datamodell
-      resultKeyword = nameAssignment.get(keyword);
-      levelString = level.get(keyword);
-      // call the function to specify the data
-      specifiedWorkedDataDaily.push(specifyData(workedDataDaily,resultKeyword,levelString,nameAssignment)); 
-    }
-    //console.log(specifiedWorkedDataDaily);
-    return specifiedWorkedDataDaily;
-  }
-
-  function filterData(data, conditionKeyword,conditionData, levelString) {
-    let command; // build a command to execute with the changing keyword=data touple
-    let workedDataDaily = [];
-
-    command = `workedDataDaily = data.filter(workedDataDaily => workedDataDaily.${conditionKeyword} == "${conditionData}");`;
-    eval(command);
-
-    if(workedDataDaily.length == 0) console.log("WARNING: keyword=data touple does not exist!");
-    return workedDataDaily;
-  }
-
-  // Filter for the specif result data the user wants to see
-  function specifyData(workedDataDaily,resultKeyword,levelString,nameAssignment) {
-    let command; // build a command to execute with the changing keyword=data touple
-    let specifiedWorkedDataDaily = [];
-
-    for(let i in workedDataDaily) {
-      if(levelString == "level_1") {
-        // build a command to create a new array with specified data only
-        command = `specifiedWorkedDataDaily.push(workedDataDaily[${i}].${resultKeyword});`
-        // execute the command
-        eval(command);
-      }
-      else if(levelString == "level_2" || levelString == "level_3"){
-        for(let n in workedDataDaily[i].reservations) {
-          let command = `workedDataDaily[${i}].reservations[${n}].${nameAssignment.get("chairUserId")}`
-          if(eval(command)){
-            if(levelString == "level_2") { 
-              command = `specifiedWorkedDataDaily.push(workedDataDaily[${i}].reservations[${n}].${resultKeyword});` 
-            }
-            if(levelString == "level_3") { 
-              command = `specifiedWorkedDataDaily.push(workedDataDaily[${i}].reservations[${n}].chair.${resultKeyword});` 
-              //console.log(specifiedWorkedDataDaily.push(workedDataDaily[i].reservations[n].chair.chairName));
-            }
-          }
-          // execute the command
-          eval(command);
-        }
-      }
-    }
-
-    return specifiedWorkedDataDaily;
-  }
-
-/*
-      let command; // build a command to execute with the changing keyword=data touple 
-
-      if(level.get(tempArray[0]) == "level_1"){
-        command = `workedDataDaily = workedDataDaily.filter(workedDataDaily => workedDataDaily.${conditionKeyword} == "${conditionData}");`;
-      }
-
-      if(level.get(tempArray[0]) == "level_2") {
-        //console.log(workedDataDaily[1].reservations);   
-        for(let i in rawDataDaily) {
-          workedDataDaily = rawDataDaily[i].reservations;
-          command = `workedDataDaily = workedDataDaily.filter(workedDataDaily => workedDataDaily.${conditionKeyword} == "${conditionData}");`;
-          console.log(workedDataDaily);
-        }
-        
-        
-        
-        /*tmpArray = workedDataDaily[1].reservations;
-        command = `tmpArray = tmpArray.filter(tmpArray => tmpArray.${conditionKeyword} == "${conditionData}");`;
-
-        /*for(let i in workedDataDaily) {
-          console.log("start");
-          //console.log(workedDataDaily[i].reservations);
-          tmpArray = workedDataDaily[i].reservations;
-          //console.log(tmpArray = tmpArray.filter(tmpArray => tmpArray.id == 453));
-          command = `tmpArray = tmpArray.filter(tmpArray => tmpArray.${conditionKeyword} == "${conditionData}");`;
-          //command = `workedDataDaily = workedDataDaily.filter(workedDataDaily => workedDataDaily[${i}].reservations.${conditionKeyword} == "${conditionData}");`;
-        }
-      }
-      // execute the command
-      eval(command);
-      if(workedDataDaily.length == 0) { console.log("WARNING: keyword=data touple does not exist!"); }
-    
-
-
-    // Filter for the specif data the user wants
-    // Get the keywords out of the string
-    for(let keyword of keywordStringResult.split(",")) {
-      // Change the keyword to fit the datamodell
-      let newKeyword = nameAssignment.get(keyword);
-
-      // Iterate over the array on the top level
-      for(let i in workedDataDaily) {
-        if(level.get(keyword) == "level_1") {
-          // build a command to create a new array with specified data only
-          let command = `specifiedWorkedDataDaily.push(workedDataDaily[${i}].${newKeyword});`
-          // execute the command
-          eval(command);
-        }
-
-        else if(level.get(keyword) == "level_2" || level.get(keyword) == "level_3"){
-          for(let n in workedDataDaily[i].reservations) {
-            let tmpKeyword = nameAssignment.get("chairUserId");
-            let command = `workedDataDaily[${i}].reservations[${n}].${tmpKeyword}`
-            if(eval(command)){
-              if(level.get(keyword) == "level_2") { 
-                command = `specifiedWorkedDataDaily.push(workedDataDaily[${i}].reservations[${n}].${newKeyword});` 
-              }
-              if(level.get(keyword) == "level_3") { 
-                command = `specifiedWorkedDataDaily.push(workedDataDaily[${i}].reservations[${n}].chair.${newKeyword});` 
-              }
-            }
-            // execute the command
-            eval(command);
-          }
-        }
-      }
-    }
-    //console.log(workedDataDaily);
-    //console.log(workedDataDaily);
-    console.log(specifiedWorkedDataDaily);
-    return specifiedWorkedDataDaily;
-  }
-    
-    
-    
-    // Iterate over the array on the top level
-      for(let i in workedDataDaily) {
-        if(level.get(keyword) == "level_1") {
-          // build a command to create a new array with specified data only
-          let command = `specifiedWorkedDataDaily.push(workedDataDaily[${i}].${newKeyword});`
-          // execute the command
-          eval(command);
-        }
-
-        else if(level.get(keyword) == "level_2" || level.get(keyword) == "level_3"){
-          for(let n in workedDataDaily[i].reservations) {
-            let tmpKeyword = nameAssignment.get("chairUserId");
-            let command = `workedDataDaily[${i}].reservations[${n}].${tmpKeyword}`
-            if(eval(command)){
-              if(level.get(keyword) == "level_2") { 
-                command = `specifiedWorkedDataDaily.push(workedDataDaily[${i}].reservations[${n}].${newKeyword});` 
-              }
-              if(level.get(keyword) == "level_3") { 
-                command = `specifiedWorkedDataDaily.push(workedDataDaily[${i}].reservations[${n}].chair.${newKeyword});` 
-              }
-            }
-            // execute the command
-            eval(command);
-          }
-        }
-      }
-    
-    //console.log(workedDataDaily);
-    //console.log(workedDataDaily);
-    console.log(specifiedWorkedDataDaily);
-    return specifiedWorkedDataDaily;
-  }*/
+  }  
 
   // After Website finish loading
   useEffect(() => {
     let query = searchParams.get("restime")!=null? searchParams.get("restime") : 15;
     document.getElementById(query+"min").checked = true;
-    getReservedSeats(query);
     const date = new Date();
     document.getElementById("696969").value = date.getFullYear()+'-'+('0' + (date.getMonth()+1)).slice(-2)+'-'+('0' + date.getDate()).slice(-2);
-    // Click function to all chairs
-    document.getElementById("sitzplan")?.querySelectorAll(`g[data-name="chair"]`).forEach((element)=>{
-      element.addEventListener("click", clickChair);
-    });
+    //Initial Values
+    //setCurrentDuration(0);
+    //setCurrentTimeslot(0);
     // Silas: ---------------------------------------------------
     // Load the data from the day picked in the Calendar
     currentDailyData(document.getElementById("696969").value); 
@@ -382,36 +346,56 @@ const ReservationPage = () => {
   
   // Render chairs
   useEffect(()=>{
+    //Create Timeslot objects
+    function generatedtserator(minutes) {
+      let ts = new Object(), st = new Date(0,0,0,11,0,0), et = new Date(0,0,0,11,minutes,0);
+      let id = 0;
+      for (let index = 0; index < 12/(minutes/15); index++) {
+        let inner = new Object();
+        inner.slot = st.getHours()+":"+(st.getMinutes() < 10 ? '0' : '') + st.getMinutes()+" - "+et.getHours()+":"+(et.getMinutes() < 10 ? '0' : '') + et.getMinutes();
+        inner.id = id;
+        ts[index] = inner;
+        st = et;
+        et = new Date(et.getTime() + minutes*60000);
+        id+=currentduration;
+      }
+      setGeneratedTs(ts);
+    }
     // Clear Reservations
     document.getElementById("sitzplan")?.querySelectorAll(`g`).forEach((element)=>{
       element?.getAttribute('class');
       element?.removeAttribute('class');
     });
-    let ts = specifiedData(`bookingTimeslot=${currentts}`, "chairUserId,reservationId,chairId");
-    try {
-      for (const key in ts[2]) {
-        if (ts[0][key]===userid) {
-          document.getElementById(ts[2][key]).setAttribute('class', 'reserved_me');
-        } else {
-          document.getElementById(ts[2][key]).setAttribute('class', 'reserved_reserved');
+    let ts = specifiedData(`bookingTimeslot=${currentts}`, "chairUserId,reservationId,chairId", dailydata);
+    let chairs = getReservedSeatsInTimeslots(currentts, currentduration);
+    generatedtserator(currentduration*15);
+    //console.log(getDataInTimeslots(currentts, currentduration));
+    if (currentts!==(-1)) {
+      try {
+        for (const key in chairs) {
+          if (ts[0][key]===userid) {
+            document.getElementById(chairs[key]).setAttribute('class', 'reserved_me');
+          } else {
+            document.getElementById(chairs[key]).setAttribute('class', 'reserved_reserved');
+          }
         }
+      } catch (error) {
+        console.log(error);
       }
-    } catch (error) {
-      console.log(error);
     }
-  }, [currentts, dailydata]);
+  }, [currentts, dailydata, currentduration]);
 
 
   //change minutes from slot
   const changeTime = (e) => {
-    console.log(timeslotGenerator(e.target.value));
-    getReservedSeats(e.target.value);
+    if (currentts!==(-1)) {
+      setCurrentDuration((e.target.value/15));
+    }
   };
   // UserInfo
-  let userinfo = JSON.parse(sessionStorage.getItem('kc_user'));
-  const shortname = userinfo.given_name.substring(0, 1)+''+userinfo.family_name.substring(0, 1);
-  const longname = userinfo.name;
-  const userid = userinfo.sub;
+  const shortname = user.given_name.substring(0, 1)+''+user.family_name.substring(0, 1);
+  const longname = user.name;
+  const userid = user.sub;
 
   // Graphic 
   return (
@@ -426,7 +410,7 @@ const ReservationPage = () => {
           <h4 title={longname}>{shortname}</h4>
         </div>
         <div className='mb-3 d-flex justify-content-between'>
-          <div ref={timeslotref}>
+          <div>
             <input type="radio" className="btn-check" name="reservation_time" id="15min" value="15" onChange={changeTime}/>
             <label className="btn border px-4 recommended_time_slot me-3" htmlFor="15min">15</label>
             <input type="radio" className="btn-check" name="reservation_time" id="30min" value="30" onChange={changeTime}/>
@@ -450,10 +434,10 @@ const ReservationPage = () => {
         </div>
         <div className="row">
           {
-            Object.keys(timeslotdata).map((key, i) => (
+            Object.keys(generatedts).map((key, i) => (
               <div className="col-12 col-sm-6 col-md-3 mb-2" key={key}>
-                <input type="radio" className="btn-check" name="time_slot" id={key} value={key+1}  onChange={(e)=>{setCurrentTimeslot(parseInt(e.target.id))}}/>
-                <label className={`btn recommended_time_slot w-100${timeslotdata[i].data!==undefined ? ' reservation_status'+(timeslotdata[i].capacity===1.0 ? "10" : timeslotdata[i].capacity*10) : ''} border`} htmlFor={key}>{timeslotdata[i].slot}</label>
+                <input type="radio" className="btn-check" name="time_slot" id={generatedts[i].id} value={i} onChange={(e)=>{setCurrentTimeslot(parseInt(e.target.id))}} defaultChecked={ key==0 ? true : false}/>
+                <label className={`btn recommended_time_slot w-100${generatedts[i].data!==undefined ? ' reservation_status'+(generatedts[i].capacity===1.0 ? "10" : generatedts[i].capacity*10) : ''} border`} htmlFor={generatedts[i].id}>{generatedts[i].slot}</label>
               </div>
             ))
           }
@@ -624,4 +608,4 @@ const ReservationPage = () => {
   );
 };
 
-export default ReservationPage;
+export default SuggestedReservation;

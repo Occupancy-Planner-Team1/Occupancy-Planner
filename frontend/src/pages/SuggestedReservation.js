@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import logo from '../assets/Logo-IT-Designers.svg';
 import AuthContext from "../components/shared/AuthContext";
 
-const ReservationPage = () => {
+const SuggestedReservation = () => {
   const { token, user } = useContext(AuthContext);
   let [reservation_time, setReservationTime] = useState(15);
   const navigate = useNavigate();
@@ -224,4 +224,4 @@ const ReservationPage = () => {
   );
 };
 
-export default ReservationPage;
+export default SuggestedReservation;

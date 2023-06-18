@@ -5,13 +5,13 @@ import axios from 'axios';
 //Assets
 import logo from '../assets/Logo-IT-Designers.svg';
 
-const SuggestedReservation = () => {
+const ReservationPage = () => {
   // variables & functions
   const [searchParams, setSearchParams] = useSearchParams();
   const [generatedts, setGeneratedTs] = useState({}); // Generated Timeslots: 11:00-11:15, 11:15-11:30, ...
-  const [currentts, setCurrentTimeslot] = useState(-1); // Selected Timeslot 0-11
+  const [currentts, setCurrentTimeslot] = useState(0); // Selected Timeslot 0-11
   const [dailydata, setDailyData] = useState([]); // The daily raw Data which is updated every 2 seconds
-  const [currentduration, setCurrentDuration] = useState(1); //
+  const [currentduration, setCurrentDuration] = useState(1); // Available Times to book 1-4
   const { token, user } = useContext(AuthContext); 
   let keywords =[]; // 
   let requestedData = new Object();
@@ -325,9 +325,6 @@ const SuggestedReservation = () => {
     document.getElementById(query+"min").checked = true;
     const date = new Date();
     document.getElementById("696969").value = date.getFullYear()+'-'+('0' + (date.getMonth()+1)).slice(-2)+'-'+('0' + date.getDate()).slice(-2);
-    //Initial Values
-    //setCurrentDuration(0);
-    //setCurrentTimeslot(0);
     // Silas: ---------------------------------------------------
     // Load the data from the day picked in the Calendar
     currentDailyData(document.getElementById("696969").value); 
@@ -370,14 +367,13 @@ const SuggestedReservation = () => {
     let ts = specifiedData(`bookingTimeslot=${currentts}`, "chairUserId,reservationId,chairId", dailydata);
     let chairs = getReservedSeatsInTimeslots(currentts, currentduration);
     generatedtserator(currentduration*15);
-    //console.log(getDataInTimeslots(currentts, currentduration));
     if (currentts!==(-1)) {
       try {
         for (const key in chairs) {
-          if (ts[0][key]===userid) {
-            document.getElementById(chairs[key]).setAttribute('class', 'reserved_me');
-          } else {
+          if (ts[0][key]!==userid) {
             document.getElementById(chairs[key]).setAttribute('class', 'reserved_reserved');
+          } else {
+            document.getElementById(chairs[key]).setAttribute('class', 'reserved_me');
           }
         }
       } catch (error) {
@@ -609,4 +605,4 @@ const SuggestedReservation = () => {
   );
 };
 
-export default SuggestedReservation;
+export default ReservationPage;

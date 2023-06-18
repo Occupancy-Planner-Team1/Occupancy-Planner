@@ -131,7 +131,7 @@ const SuggestedReservation = () => {
       command = `workedDataDaily = data.filter(workedDataDaily => workedDataDaily.${conditionKeyword} == "${conditionData}");`;
       eval(command);
 
-      if(workedDataDaily.length == 0) console.log("WARNING: keyword=data touple does not exist!");
+      if(workedDataDaily.length == 0) console.debug("WARNING: keyword=data touple does not exist!");
       return workedDataDaily;
   }
 
@@ -285,17 +285,7 @@ const SuggestedReservation = () => {
 
   //Click function on Chair
   async function clickChair(e) {
-    console.log(currentts);
     if (currentts!==(-1)) {
-      let data = {
-        "id": 0,
-        "datum": document.getElementById("696969").value,
-        "timeslot": currentts,
-        "bucher": userid,
-        "reservations": [
-          createReservation(userid, Number(e.target.parentElement.id.split("_")[1]), `chair_${Number(e.target.parentElement.id.split("_")[1])}`)
-        ]
-      };
       if (!e.target.parentElement.classList.contains("reserved_reserved")) {
           document.getElementById("body")?.classList.add("disabled_map");
           // Get Id of clicked chair
@@ -305,8 +295,19 @@ const SuggestedReservation = () => {
           //});
           
           //Res Put changed chairs
+          for (let index = 0; index < currentduration; index++) {
+            let data = {
+              "id": 0,
+              "datum": document.getElementById("696969").value,
+              "timeslot": currentts+index,
+              "bucher": userid,
+              "reservations": [
+                createReservation(userid, Number(e.target.parentElement.id.split("_")[1]), `chair_${Number(e.target.parentElement.id.split("_")[1])}`)
+              ]
+            };
+            await axios({ method: 'put', url: '/api/auth/res/', data: data, headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + sessionStorage.getItem('kc_token') } });
+          }
           
-          await axios({ method: 'put', url: '/api/auth/res/', data: data, headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + sessionStorage.getItem('kc_token') } });
       }
       if (!e.target.parentElement.classList.contains("reserved_reserved") && e.target.parentElement.classList.contains("reserved_me")) {
         // only delete Reservation

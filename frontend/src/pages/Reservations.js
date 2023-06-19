@@ -4,17 +4,26 @@ import AuthContext from "../components/shared/AuthContext";
 import axios from 'axios';
 //Assets
 import logo from '../assets/Logo-IT-Designers.svg';
+import dayjs from "dayjs";
 
 const ReservationPage = () => {
   // variables & functions
+  const date = new Date();
   const [searchParams, setSearchParams] = useSearchParams();
   const [generatedts, setGeneratedTs] = useState({}); // Generated Timeslots: 11:00-11:15, 11:15-11:30, ...
   const [currentts, setCurrentTimeslot] = useState(0); // Selected Timeslot 0-11
+  const [currentdate, setCurrentDate] = useState(date.getFullYear()+'-'+('0' + (date.getMonth()+1)).slice(-2)+'-'+('0' + date.getDate()).slice(-2)); // Selected Timeslot 0-11
   const [dailydata, setDailyData] = useState([]); // The daily raw Data which is updated every 2 seconds
   const [currentduration, setCurrentDuration] = useState(1); // Available Times to book 1-4
-  const { token, user } = useContext(AuthContext); 
+  const [guestnumber, setGuestNumber] = useState(0); // Available Guests
+  const { token, user, role } = useContext(AuthContext);
   let keywords =[]; // 
   let requestedData = new Object();
+  
+  // UserInfo
+  const shortname = user.given_name.substring(0, 1)+''+user.family_name.substring(0, 1);
+  const longname = user.name;
+  const userid = user.sub;
 
 
   async function currentDailyData(date){
@@ -285,9 +294,11 @@ const ReservationPage = () => {
 
   //Click function on Chair
   async function clickChair(e) {
+    console.log("123");
     if (currentts!==(-1)) {
-      if (!e.target.parentElement.classList.contains("reserved_reserved")) {
+      if (!e.target.parentElement.classList.contains("reserved_reserved") && !e.target.parentElement.classList.contains("reserved_me")) {
           document.getElementById("body")?.classList.add("disabled_map");
+          console.log("insert new booking");
           // Get Id of clicked chair
           //Array own BookingId`s 1-4 Entries (ts, date, userid)
           //axios.delete('/api/auth/res/del-booking/{bookingid}', { headers: { Authorization: 'Bearer ' + sessionStorage.getItem('kc_token') } }).then((result) => {
@@ -305,15 +316,16 @@ const ReservationPage = () => {
                 createReservation(userid, Number(e.target.parentElement.id.split("_")[1]), `chair_${Number(e.target.parentElement.id.split("_")[1])}`)
               ]
             };
-            await axios({ method: 'put', url: '/api/auth/res/', data: data, headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + sessionStorage.getItem('kc_token') } });
+            await axios({ method: 'put', url: '/api/auth/res/', data: data, headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + token } });
           }
           
       }
       if (!e.target.parentElement.classList.contains("reserved_reserved") && e.target.parentElement.classList.contains("reserved_me")) {
         // only delete Reservation
-        //axios.delete('/api/auth/res/del-booking/{bookingid}', { headers: { Authorization: 'Bearer ' + sessionStorage.getItem('kc_token') } }).then((result) => {
-        //  console.log(result.status);
-        //});
+        let delete_reservations = specifiedData(`bookingTimeslot=${currentts},bookerId=${userid}`, "bookingId,reservationId,chairId");
+        delete_reservations[0].forEach((res_id, key)=>{          
+          axios.delete(`/api/auth/res/del-booking/${res_id}`, { headers: { Authorization: 'Bearer ' + token } });
+        })
         // delete Reservation with mulitple reservations -> clear seat in json
       }
     }
@@ -321,13 +333,10 @@ const ReservationPage = () => {
 
   // After Website finish loading
   useEffect(() => {
-    let query = searchParams.get("restime")!=null? searchParams.get("restime") : 15;
-    document.getElementById(query+"min").checked = true;
-    const date = new Date();
-    document.getElementById("696969").value = date.getFullYear()+'-'+('0' + (date.getMonth()+1)).slice(-2)+'-'+('0' + date.getDate()).slice(-2);
+    document.getElementById(searchParams.get("restime")!=null? searchParams.get("restime")+"min" : "15min").checked = true;
     // Silas: ---------------------------------------------------
     // Load the data from the day picked in the Calendar
-    currentDailyData(document.getElementById("696969").value); 
+    currentDailyData(currentdate); 
     let lastChange = 0;
     // Check every 2 secons if the data has changed
     const interval = setInterval(() => {
@@ -340,7 +349,7 @@ const ReservationPage = () => {
         lastChange = result.data;
       });
     }, 2000);
-  }, []);
+  }, [currentdate]);
   
   // Render chairs
   useEffect(()=>{
@@ -385,26 +394,33 @@ const ReservationPage = () => {
 
   //change minutes from slot
   const changeTime = (e) => {
-    if (currentts!==(-1)) {
-      setCurrentDuration((e.target.value/15));
+    if (currentts !== (-1)) {
+      setCurrentDuration((e.target.value / 15));
     }
   };
-  // UserInfo
-  const shortname = user.given_name.substring(0, 1)+''+user.family_name.substring(0, 1);
-  const longname = user.name;
-  const userid = user.sub;
+
+  //Refresh Page if not authenticated
+  axios.interceptors.response.use(response => {
+    return response;
+ }, error => {
+   if (error.response.status === 401) {
+    //place your reentry code
+    window.location.reload();
+   }
+   return error;
+  });
 
   // Graphic 
   return (
     <div className="App">
       <header className="container reservation-form d-flex justify-content-between">
-        <h2>Reservierung</h2>
+        <h2><a href="/planner" className="text-decoration-none text-dark" data-tooltip="Zurück" data-flow="right">❮</a> Reservierung</h2>
         <img src={logo} alt="Logo" />
       </header>
       <div className='container h-fill reservation-form'>
         <div className='d-flex justify-content-between'>
           <h3>Reservierungszeiten in Minuten</h3>
-          <h4 title={longname}>{shortname}</h4>
+          <h4 data-tooltip={longname} data-flow="right">{shortname}</h4>
         </div>
         <div className='mb-3 d-flex justify-content-between'>
           <div>
@@ -417,7 +433,7 @@ const ReservationPage = () => {
             <input type="radio" className="btn-check" name="reservation_time" id="60min" value="60" onChange={changeTime}/>
             <label className="btn border px-4 recommended_time_slot" htmlFor="60min">60</label>
           </div>
-          <input type="date" className="btn border custom-input" id="696969"/>
+          <input type="date" className="btn border custom-input" id="696969" value={currentdate} onChange={(e)=>{setCurrentDate(e.target.value)}}/>
         </div>
         <div className='d-flex justify-content-between'>
           <h3>Freie Reservierungsslots</h3>
@@ -439,21 +455,24 @@ const ReservationPage = () => {
             ))
           }
         </div>
-        <h3>Anzahl Personen</h3>
-        <div>
-          <h3 className="text-muted d-inline-block me-5">{`Gäste`}</h3>
-          <button className="btn border number-icons me-4 d-inline-flex"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></button>
-          <button className="btn border number-icons d-inline-flex"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg></button>
+        <div className="d-flex justify-content-between mt-3">
+          <h3>Anzahl Personen</h3>
+          {//role.projektleiter && <h3>Projektgruppen</h3>
+          }
         </div>
-        {
-          /*<div className="d-inline-block">
-          <button className="btn btn-dark-outline dropdown-toggle px-4 mb-3" type="button" data-bs-toggle="dropdown" aria-expanded="false">Projekt auswählen</button>
-          </div>*/
-        }
+        <div className="d-flex justify-content-between">
+          <div className="d-flex align-items-center">
+            <h3 className="text-muted d-inline-block me-4 mb-0">{`Gäste: ${guestnumber}`}</h3>
+            <button className="btn border number-icons me-2 d-inline-flex" onClick={()=>{setGuestNumber(count => count<32 ? count + 1 : 32);}}><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></button>
+            <button className="btn border number-icons d-inline-flex" onClick={()=>{setGuestNumber(count => count>0 ? count - 1 : 0)}}><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg></button>
+          </div>          
+          {//role.projektleiter && <div><button className="btn btn-dark-outline dropdown-toggle px-4 mb-3" type="button" data-bs-toggle="dropdown" aria-expanded="false">Projekt auswählen</button></div>
+          }
+        </div>
         <div className="w-100 d-flex mt-4 justify-content-center reservation-plan">
           <svg xmlns="http://www.w3.org/2000/svg" id="sitzplan" viewBox="0 0 1116.26 867.67">
             <g id="section">
-              <circle cx="899.07" cy="146.5" r="64" fill="#003a70"/>
+              <circle cx="899.07" cy="146.5" r="64" fill="#003a70" data-tooltip="Max Mustermann" data-flow="top"/>
               <g id="chair_1" data-name="chair" onClick={clickChair}>
                 <path d="M1208.88,113.24l12,12-42.42,42.43-12-12c-10.93-10.93-10.3-29.29,1.42-41S1198,102.31,1208.88,113.24Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M1199.73,105.42a.93.93,0,0,1-1,.19c-10.55-4.62-23.78-2.23-32.93,6.92s-11.55,22.38-6.92,32.94a1,1,0,0,1-.19,1h0a1,1,0,0,1-1.34,0l-4.28-4.28c-10.93-10.93-10.3-29.3,1.41-41s30.08-12.35,41-1.42l4.28,4.29a.94.94,0,0,1,0,1.33Z" transform="translate(-360.22 -59.5)" fill="#7d9bc1"/>

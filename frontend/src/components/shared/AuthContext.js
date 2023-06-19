@@ -12,9 +12,9 @@ export const AuthContextProvider = ({ children }) => {
     let rawToken = sessionStorage.getItem("kc_token");
     return rawToken || null;
   });
+  const [role, setRole] = useState();
   const [authenticated, setAuthenticated] = useState(false);
 
-  
   useEffect(() => {
     keycloak
       .init({
@@ -27,6 +27,11 @@ export const AuthContextProvider = ({ children }) => {
         if (authenticated) {
           setToken(keycloak.token);
           sessionStorage.setItem("kc_token", keycloak.token);
+          let roles = new Object();
+          roles.mitarbeiter = keycloak.hasRealmRole("app_mitarbeiter");
+          roles.teamleiter = keycloak.hasRealmRole("app_teamleiter");
+          roles.projektleiter = keycloak.hasRealmRole("app_projektleiter");
+          setRole(roles);
 
           keycloak.loadUserInfo().then((profile) => {
             setUser(profile);
@@ -54,7 +59,7 @@ export const AuthContextProvider = ({ children }) => {
 
   return (
     <>
-      <AuthContext.Provider value={{ user, token, authenticated, keycloak }}>
+      <AuthContext.Provider value={{ user, token, role, authenticated, keycloak }}>
         {children}
       </AuthContext.Provider>
     </>

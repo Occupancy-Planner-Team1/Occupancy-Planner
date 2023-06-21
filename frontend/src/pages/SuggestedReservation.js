@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { useNavigate } from "react-router-dom";
-import logo from '../Logo-IT-Designers.svg';
+import logo from '../assets/Logo-IT-Designers.svg';
+import AuthContext from "../components/shared/AuthContext";
 
-const ReservationPage = () => {
+const SuggestedReservation = () => {
+  const { token, user } = useContext(AuthContext);
   let [reservation_time, setReservationTime] = useState(15);
   const navigate = useNavigate();
+  console.log(user);
+
   const changeTime = (e) => {
     setReservationTime(e.target.value);
     console.log(reservation_time);
@@ -16,9 +20,8 @@ const ReservationPage = () => {
     navigate("./all?restime="+reservation_time);
   };
   // UserInfo
-  let userinfo = JSON.parse(localStorage.getItem('kc_user'));
-  const shortname = userinfo.given_name.substring(0, 1)+''+userinfo.family_name.substring(0, 1);
-  const longname = userinfo.name;
+  const shortname = user.given_name.substring(0, 1)+''+user.family_name.substring(0, 1);
+  const longname = user.name;
 
   return (
     <div className="App">
@@ -221,4 +224,4 @@ const ReservationPage = () => {
   );
 };
 
-export default ReservationPage;
+export default SuggestedReservation;

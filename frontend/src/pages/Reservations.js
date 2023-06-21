@@ -292,24 +292,53 @@ const ReservationPage = () => {
     return reservation;
   }
 
+  function setExtraChairs(bookerId, numberOfChairs){
+    let tmpArray = [];
+    let reserverdChairs = [];
+    let extraChairs = [];
+    let meChair;
+    let newChairName;
+    let place;
+
+    tmpArray = specifiedData(`bookerId=${bookerId}`,"chairUserId,chairId");
+    //console.log(tmpArray);
+    for(let i in tmpArray[0]){
+      if(tmpArray[0][i] == bookerId){
+        meChair = tmpArray[1][i];
+        console.log("MeChair: " + meChair);
+      }
+      reserverdChairs.push(tmpArray[1][i]);
+    }
+    
+    let tmp = meChair.split("_");
+    place = parseInt(tmp[1]);
+    for(let n = 1; n <= 31; n++){     //31 muss geändert werden !!!!DYNAMISCH
+      if( (place + ( Math.pow(-1,n) * n)) > 0 && (place + ( Math.pow(-1,n) * n)) <= 32 ){ // 31 Muss geändert werden!!
+        place = place + ( Math.pow(-1,n) * n);
+        newChairName = `chair_${place}`;
+        if(reserverdChairs.find(e => e == newChairName) == null && extraChairs.length < numberOfChairs){
+          extraChairs.push(newChairName);
+        }
+      }
+      else{
+        place = place + ( Math.pow(-1,n) * n);
+      }
+    }
+    //console.log(extraChairs);
+    return extraChairs
+  }
+
   //Click function on Chair
   async function clickChair(e) {
-    console.log("123");
     if (currentts!==(-1)) {
       if (!e.target.parentElement.classList.contains("reserved_reserved") && !e.target.parentElement.classList.contains("reserved_me")) {
           document.getElementById("body")?.classList.add("disabled_map");
-          console.log("insert new booking");
-          // Get Id of clicked chair
-          //Array own BookingId`s 1-4 Entries (ts, date, userid)
-          //axios.delete('/api/auth/res/del-booking/{bookingid}', { headers: { Authorization: 'Bearer ' + sessionStorage.getItem('kc_token') } }).then((result) => {
-          //  console.log(result.status);
-          //});
-          
+          console.log("insert new booking");          
           //Res Put changed chairs
           for (let index = 0; index < currentduration; index++) {
             let data = {
               "id": 0,
-              "datum": document.getElementById("696969").value,
+              "datum": document.getElementById("datepicker").value,
               "timeslot": currentts+index,
               "bucher": userid,
               "reservations": [
@@ -323,6 +352,7 @@ const ReservationPage = () => {
       if (!e.target.parentElement.classList.contains("reserved_reserved") && e.target.parentElement.classList.contains("reserved_me")) {
         // only delete Reservation
         let delete_reservations = specifiedData(`bookingTimeslot=${currentts},bookerId=${userid}`, "bookingId,reservationId,chairId");
+        console.log(delete_reservations);
         delete_reservations[0].forEach((res_id, key)=>{          
           axios.delete(`/api/auth/res/del-booking/${res_id}`, { headers: { Authorization: 'Bearer ' + token } });
         })
@@ -344,7 +374,7 @@ const ReservationPage = () => {
         if(lastChange && result.data != lastChange) { 
           // If the data has changed => reload
           console.log("RELOAD DATA");
-          currentDailyData(document.getElementById("696969").value);
+          currentDailyData(document.getElementById("datepicker").value);
         }
         lastChange = result.data;
       });
@@ -373,24 +403,47 @@ const ReservationPage = () => {
       element?.getAttribute('class');
       element?.removeAttribute('class');
     });
-    let ts = specifiedData(`bookingTimeslot=${currentts}`, "chairUserId,reservationId,chairId", dailydata);
+    let ts = specifiedData(`bookingTimeslot=${currentts}`, "chairUserId,reservationId,chairId");
     let chairs = getReservedSeatsInTimeslots(currentts, currentduration);
+    console.log(ts);
     generatedtserator(currentduration*15);
     if (currentts!==(-1)) {
       try {
         for (const key in chairs) {
-          if (ts[0][key]!==userid) {
-            document.getElementById(chairs[key]).setAttribute('class', 'reserved_reserved');
-          } else {
+          if (ts[0][key]===userid||ts[0][key]===null) {
             document.getElementById(chairs[key]).setAttribute('class', 'reserved_me');
+          } else {
+            document.getElementById(chairs[key]).setAttribute('class', 'reserved_reserved');
           }
         }
       } catch (error) {
         console.log(error);
       }
     }
-  }, [currentts, dailydata, currentduration]);
+  }, [currentts, dailydata, currentduration, guestnumber]);
 
+  //Guest Booking
+  useEffect(()=>{
+    if (guestnumber>0) {
+      let guestseats = setExtraChairs(userid, 1);
+      console.log(guestseats);
+      guestseats.forEach(async (value, key)=>{
+        for (let index = 0; index < currentduration; index++) {
+          let data = {
+            "id": 0,
+            "datum": document.getElementById("datepicker").value,
+            "timeslot": currentts+index,
+            "bucher": userid,
+            "reservations": [
+              createReservation(userid  , Number(value.split("_")[1]), `chair_${Number(value.split("_")[1])}`)
+            ]
+          };
+          await axios({ method: 'put', url: '/api/auth/res/', data: data, headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + token } });
+        }
+      });
+    }
+  }, [guestnumber]);
+  
 
   //change minutes from slot
   const changeTime = (e) => {
@@ -433,7 +486,7 @@ const ReservationPage = () => {
             <input type="radio" className="btn-check" name="reservation_time" id="60min" value="60" onChange={changeTime}/>
             <label className="btn border px-4 recommended_time_slot" htmlFor="60min">60</label>
           </div>
-          <input type="date" className="btn border custom-input" id="696969" value={currentdate} onChange={(e)=>{setCurrentDate(e.target.value)}}/>
+          <input type="date" className="btn border custom-input" id="datepicker" value={currentdate} onChange={(e)=>{setCurrentDate(e.target.value)}}/>
         </div>
         <div className='d-flex justify-content-between'>
           <h3>Freie Reservierungsslots</h3>
@@ -472,7 +525,7 @@ const ReservationPage = () => {
         <div className="w-100 d-flex mt-4 justify-content-center reservation-plan">
           <svg xmlns="http://www.w3.org/2000/svg" id="sitzplan" viewBox="0 0 1116.26 867.67">
             <g id="section">
-              <circle cx="899.07" cy="146.5" r="64" fill="#003a70" data-tooltip="Max Mustermann" data-flow="top"/>
+              <circle cx="899.07" cy="146.5" r="64" fill="#003a70"/>
               <g id="chair_1" data-name="chair" onClick={clickChair}>
                 <path d="M1208.88,113.24l12,12-42.42,42.43-12-12c-10.93-10.93-10.3-29.29,1.42-41S1198,102.31,1208.88,113.24Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M1199.73,105.42a.93.93,0,0,1-1,.19c-10.55-4.62-23.78-2.23-32.93,6.92s-11.55,22.38-6.92,32.94a1,1,0,0,1-.19,1h0a1,1,0,0,1-1.34,0l-4.28-4.28c-10.93-10.93-10.3-29.3,1.41-41s30.08-12.35,41-1.42l4.28,4.29a.94.94,0,0,1,0,1.33Z" transform="translate(-360.22 -59.5)" fill="#7d9bc1"/>

@@ -34,11 +34,59 @@ const ReservationPage = () => {
     });
 
     //specifiedData("bookingTimeslot=1", "reservationId,chairUserId,chairId");
+<<<<<<< HEAD:frontend/src/components/FreeReservationPage.js
+    console.log(rawDataDaily);
+    //getReservedSeatsInTimeslots(3,2);
+    setExtraChairs("a3fd3b28-921b-48a5-97eb-2f53d6d7875f",4);
+    
+
+  }
+
+  function setExtraChairs(bookerId, numberOfChairs){
+    let tmpArray = [];
+    let reserverdChairs = [];
+    let extraChairs = [];
+    let meChair;
+    let newChairName;
+    let place;
+
+    tmpArray = specifiedData(`bookerId=${bookerId}`,"chairUserId,chairId");
+    console.log(tmpArray);
+    for(let i in tmpArray[0]){
+      if(tmpArray[0][i] == bookerId){
+        meChair = tmpArray[1][i];
+        console.log("MeChair: " + meChair);
+      }
+      reserverdChairs.push(tmpArray[1][i]);
+    }
+    
+    let tmp = meChair.split("_");
+    place = parseInt(tmp[1]);
+    place = 29;
+    for(let n = 1; n <= 31; n++){     //31 muss geändert werden !!!!DYNAMISCH
+      if( (place + ( Math.pow(-1,n) * n)) >= 0 && (place + ( Math.pow(-1,n) * n)) <= 31 ){ // 31 Muss geändert werden!!
+        place = place + ( Math.pow(-1,n) * n);
+        newChairName = `chair_${place}`;
+        if(reserverdChairs.find(e => e == newChairName) == null && extraChairs.length <= numberOfChairs){
+          extraChairs.push(newChairName);
+        }
+      }
+      else{
+        place = place + ( Math.pow(-1,n) * n);
+      }
+    }
+    console.log(extraChairs);
+  }
+
+  
+  function getDataInTimeslots(timeslot,duration){
+=======
     //getReservedSeatsInTimeslots(3,2);
 
   }
 
   function getDataInTimeslots(timeslot, duration){
+>>>>>>> f79dab9e5a9e08c72ef698049ff4e59555102cce:frontend/src/pages/Reservations.js
     let dataForTimeslot = [];
     for(let n=1; n <= duration; n++){
       let bookingIdArray = specifiedData(`bookingTimeslot=${timeslot}`,"bookingId");

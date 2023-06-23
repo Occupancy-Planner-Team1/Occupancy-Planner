@@ -10,6 +10,7 @@ const ReservationPage = () => {
 
   useEffect(() => {
     getRecommendedTimeslot();
+    getGroups();
   }, []);
 
   const changeTime = (e) => {
@@ -26,11 +27,28 @@ const ReservationPage = () => {
   let userinfo = JSON.parse(localStorage.getItem('kc_user'));
   const shortname = userinfo.given_name.substring(0, 1) + '' + userinfo.family_name.substring(0, 1);
   const longname = userinfo.name;
+  const userid = userinfo.sub;
 
+  //1. call get Gruppe vom Projektleiter/Teamleiter, 2. call get alle Users in der Gruppe. 
+  //Die calls im webSecurityConfig nur für Leiter erlauben dann ist es ok.
+  async function getGroups() {
+    var group;
+    await axios.get("/api/auth/groups/" + userid, { headers: { Authorization: 'Bearer ' + localStorage.getItem('kc_token') } })
+      .then(response => {
+        group = {
+          name: response.data[0].name,
+          id: response.data[0].id
+        }
+      })
 
+    await axios.get("/api/auth/group/members/" + group.id, { headers: { Authorization: 'Bearer ' + localStorage.getItem('kc_token') } })
+      .then(response => {
+        console.log("here")
+        console.log(response.data);
+      })
+  }
 
   async function getRecommendedTimeslot() {
-    const userid = userinfo.sub;
     var timeslots = [];
     await axios.get("/api/auth/res-all/user/" + userid, { headers: { Authorization: 'Bearer ' + localStorage.getItem('kc_token') } })
       .then(response => {

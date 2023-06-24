@@ -27,13 +27,13 @@ export const AuthContextProvider = ({ children }) => {
         if (authenticated) {
           setToken(keycloak.token);
           sessionStorage.setItem("kc_token", keycloak.token);
-          let roles = new Object();
-          roles.mitarbeiter = keycloak.hasRealmRole("app_mitarbeiter");
-          roles.teamleiter = keycloak.hasRealmRole("app_teamleiter");
-          roles.projektleiter = keycloak.hasRealmRole("app_projektleiter");
-          setRole(roles);
 
-          keycloak.loadUserInfo().then((profile) => {
+          keycloak.loadUserInfo().then((profile) => {            
+            let roles = new Object();
+            roles.mitarbeiter = keycloak.hasRealmRole("app_mitarbeiter");
+            roles.teamleiter = keycloak.hasRealmRole("app_teamleiter");
+            roles.projektleiter = keycloak.hasRealmRole("app_projektleiter");
+            setRole(roles);
             setUser(profile);
             sessionStorage.setItem("kc_user", JSON.stringify(profile));
           });

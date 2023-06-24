@@ -2,9 +2,9 @@ import { useSearchParams } from "react-router-dom";
 import React, { useContext, useEffect, useState } from 'react';
 import AuthContext from "../components/shared/AuthContext";
 import axios from 'axios';
+import dayjs from "dayjs";
 //Assets
 import logo from '../assets/Logo-IT-Designers.svg';
-import dayjs from "dayjs";
 
 const ReservationPage = () => {
   // variables & functions
@@ -25,7 +25,6 @@ const ReservationPage = () => {
   const longname = user.name;
   const userid = user.sub;
 
-
   async function currentDailyData(date){
     await axios.get('/api/auth/res-day/'+ date, { headers: { Authorization: 'Bearer ' + token } }).then((result) => {
         //rawDataDaily = result.data;
@@ -33,15 +32,10 @@ const ReservationPage = () => {
         setDailyData(result.data);
     });
 
-    //specifiedData("bookingTimeslot=1", "reservationId,chairUserId,chairId");
-<<<<<<< HEAD:frontend/src/components/FreeReservationPage.js
-    console.log(rawDataDaily);
-    //getReservedSeatsInTimeslots(3,2);
-    setExtraChairs("a3fd3b28-921b-48a5-97eb-2f53d6d7875f",4);
-    
+    //specifiedData("bookingTimeslot=1", "reservationId,chairUserId,chairId");   
 
   }
-
+  
   function setExtraChairs(bookerId, numberOfChairs){
     let tmpArray = [];
     let reserverdChairs = [];
@@ -51,7 +45,7 @@ const ReservationPage = () => {
     let place;
 
     tmpArray = specifiedData(`bookerId=${bookerId}`,"chairUserId,chairId");
-    console.log(tmpArray);
+    //console.log(tmpArray);
     for(let i in tmpArray[0]){
       if(tmpArray[0][i] == bookerId){
         meChair = tmpArray[1][i];
@@ -62,12 +56,11 @@ const ReservationPage = () => {
     
     let tmp = meChair.split("_");
     place = parseInt(tmp[1]);
-    place = 29;
     for(let n = 1; n <= 31; n++){     //31 muss geändert werden !!!!DYNAMISCH
-      if( (place + ( Math.pow(-1,n) * n)) >= 0 && (place + ( Math.pow(-1,n) * n)) <= 31 ){ // 31 Muss geändert werden!!
+      if( (place + ( Math.pow(-1,n) * n)) > 0 && (place + ( Math.pow(-1,n) * n)) <= 32 ){ // 31 Muss geändert werden!!
         place = place + ( Math.pow(-1,n) * n);
         newChairName = `chair_${place}`;
-        if(reserverdChairs.find(e => e == newChairName) == null && extraChairs.length <= numberOfChairs){
+        if(reserverdChairs.find(e => e == newChairName) == null && extraChairs.length < numberOfChairs){
           extraChairs.push(newChairName);
         }
       }
@@ -75,18 +68,11 @@ const ReservationPage = () => {
         place = place + ( Math.pow(-1,n) * n);
       }
     }
-    console.log(extraChairs);
-  }
-
-  
-  function getDataInTimeslots(timeslot,duration){
-=======
-    //getReservedSeatsInTimeslots(3,2);
-
+    //console.log(extraChairs);
+    return extraChairs
   }
 
   function getDataInTimeslots(timeslot, duration){
->>>>>>> f79dab9e5a9e08c72ef698049ff4e59555102cce:frontend/src/pages/Reservations.js
     let dataForTimeslot = [];
     for(let n=1; n <= duration; n++){
       let bookingIdArray = specifiedData(`bookingTimeslot=${timeslot}`,"bookingId");
@@ -340,45 +326,10 @@ const ReservationPage = () => {
     return reservation;
   }
 
-  function setExtraChairs(bookerId, numberOfChairs){
-    let tmpArray = [];
-    let reserverdChairs = [];
-    let extraChairs = [];
-    let meChair;
-    let newChairName;
-    let place;
-
-    tmpArray = specifiedData(`bookerId=${bookerId}`,"chairUserId,chairId");
-    //console.log(tmpArray);
-    for(let i in tmpArray[0]){
-      if(tmpArray[0][i] == bookerId){
-        meChair = tmpArray[1][i];
-        console.log("MeChair: " + meChair);
-      }
-      reserverdChairs.push(tmpArray[1][i]);
-    }
-    
-    let tmp = meChair.split("_");
-    place = parseInt(tmp[1]);
-    for(let n = 1; n <= 31; n++){     //31 muss geändert werden !!!!DYNAMISCH
-      if( (place + ( Math.pow(-1,n) * n)) > 0 && (place + ( Math.pow(-1,n) * n)) <= 32 ){ // 31 Muss geändert werden!!
-        place = place + ( Math.pow(-1,n) * n);
-        newChairName = `chair_${place}`;
-        if(reserverdChairs.find(e => e == newChairName) == null && extraChairs.length < numberOfChairs){
-          extraChairs.push(newChairName);
-        }
-      }
-      else{
-        place = place + ( Math.pow(-1,n) * n);
-      }
-    }
-    //console.log(extraChairs);
-    return extraChairs
-  }
-
   //Click function on Chair
   async function clickChair(e) {
     if (currentts!==(-1)) {
+      //Check if own booking exist
       if (!e.target.parentElement.classList.contains("reserved_reserved") && !e.target.parentElement.classList.contains("reserved_me")) {
           document.getElementById("body")?.classList.add("disabled_map");
           console.log("insert new booking");          
@@ -407,7 +358,7 @@ const ReservationPage = () => {
         // delete Reservation with mulitple reservations -> clear seat in json
       }
     }
-  }  
+  }
 
   // After Website finish loading
   useEffect(() => {
@@ -470,11 +421,10 @@ const ReservationPage = () => {
     }
   }, [currentts, dailydata, currentduration, guestnumber]);
 
-  //Guest Booking
+  // Guest Booking
   useEffect(()=>{
     if (guestnumber>0) {
       let guestseats = setExtraChairs(userid, 1);
-      console.log(guestseats);
       guestseats.forEach(async (value, key)=>{
         for (let index = 0; index < currentduration; index++) {
           let data = {
@@ -483,15 +433,15 @@ const ReservationPage = () => {
             "timeslot": currentts+index,
             "bucher": userid,
             "reservations": [
-              createReservation(userid  , Number(value.split("_")[1]), `chair_${Number(value.split("_")[1])}`)
+
+              createReservation(process.env.GUEST_ID, Number(value.split("_")[1]), `chair_${Number(value.split("_")[1])}`)
             ]
           };
-          await axios({ method: 'put', url: '/api/auth/res/', data: data, headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + token } });
+          //await axios({ method: 'put', url: '/api/auth/res/', data: data, headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + token } });
         }
       });
     }
-  }, [guestnumber]);
-  
+  }, [guestnumber]);  
 
   //change minutes from slot
   const changeTime = (e) => {
@@ -505,7 +455,6 @@ const ReservationPage = () => {
     return response;
  }, error => {
    if (error.response.status === 401) {
-    //place your reentry code
     window.location.reload();
    }
    return error;

@@ -137,6 +137,59 @@ public class OccuControl {
     public ResponseEntity<List<Booking>> getAllResPerDay(@PathVariable LocalDate d) {
         return ResponseEntity.ok(this.bookingService.getAllPerDay(d));
     }
+    @GetMapping("/groups/{userID}")
+    public ResponseEntity getAllGroupsOfUser(@PathVariable("userID") String id, Principal principal) throws JsonProcessingException, UnirestException {
+
+        KeycloakServiceUser su = new KeycloakServiceUser();
+        String access_token = su.get_access_token();
+
+        try {
+            return ResponseEntity.ok(su.get_user_groups(access_token, id));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid UserID");
+        }
+    }
+
+    @GetMapping("/group/members/{groupID}")
+    public ResponseEntity getAllMembersOfGroup(@PathVariable("groupID") String id, Principal principal) throws JsonProcessingException, UnirestException {
+
+        KeycloakServiceUser su = new KeycloakServiceUser();
+        String access_token = su.get_access_token();
+
+        try {
+            return ResponseEntity.ok(su.get_group_members(access_token, id));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid UserID");
+        }
+    }
+
+    //für erste ReservationPage recommended timeslot/timeframe
+    @GetMapping("/res-all/user/{userid}")
+    public ResponseEntity<List<Booking>> getAllResUser(@PathVariable("userid") UUID id, Principal principal) throws JsonProcessingException, UnirestException{
+        try {
+            return ResponseEntity.status(HttpStatus.OK).body(this.bookingService.getAllFromUser(id));
+        }catch(Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+
+    }
+
+
+    @GetMapping("/res-username/{userid}") //username beim klicken auf Stuhl zurückgeben
+    public ResponseEntity<String> getUserName(@PathVariable("userid") UUID id, Principal principal) throws JsonProcessingException, UnirestException {
+
+        KeycloakServiceUser su = new KeycloakServiceUser();
+
+        String access_token = su.get_access_token();
+        try {
+            String userName=su.get_user_name(access_token, id.toString());
+            return ResponseEntity.ok(userName);
+        }catch(Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid UserID");
+        }
+
+    }
 
 }
 

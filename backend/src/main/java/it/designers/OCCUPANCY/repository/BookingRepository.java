@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, Long> {
@@ -20,6 +21,9 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     // SELECT x.id FROM Booking x WHERE x.datum...
     @Query(value="SELECT * FROM Booking WHERE datum<:date", nativeQuery=true)
     List<Booking> getExpired(LocalDate date);
+
+    @Query(value="SELECT * FROM Booking WHERE bucher=:id", nativeQuery=true)
+    List<Booking> findAllByUserId(UUID id);
 
     
    /* @Query(value="DELETE FROM Booking WHERE datum<:date", nativeQuery=true)

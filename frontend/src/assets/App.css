@@ -68,13 +68,9 @@ body {
 }
 
 .reservation-form button {
-  width: 200px;
   text-align: left;
   position: relative;
 }
-
-.reserved {}
-
 .reservation-form button::after {
   right: 15px;
   position: absolute;

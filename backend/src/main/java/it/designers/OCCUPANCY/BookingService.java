@@ -1,6 +1,7 @@
 package it.designers.OCCUPANCY;
 
 import it.designers.OCCUPANCY.dbtables.Booking;
+import it.designers.OCCUPANCY.dbtables.Reservation;
 import it.designers.OCCUPANCY.repository.BookingRepository;
 import it.designers.OCCUPANCY.repository.ReservationRepository;
 import jakarta.transaction.Transactional;

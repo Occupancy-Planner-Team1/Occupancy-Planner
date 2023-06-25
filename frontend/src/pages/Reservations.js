@@ -1,29 +1,39 @@
 import { useSearchParams } from "react-router-dom";
+import Col from 'react-bootstrap/Col';
+import Modal from 'react-bootstrap/Modal';
+import Button from 'react-bootstrap/Button';
+import Form from 'react-bootstrap/Form';
+import Row from 'react-bootstrap/Row';
+import Alert from 'react-bootstrap/Alert';
 import React, { useContext, useEffect, useState } from 'react';
 import AuthContext from "../components/shared/AuthContext";
 import axios from 'axios';
-import dayjs from "dayjs";
 //Assets
 import logo from '../assets/Logo-IT-Designers.svg';
 
 const ReservationPage = () => {
-  // variables & functions
+  // variables
   const date = new Date();
   const [searchParams, setSearchParams] = useSearchParams();
   const [generatedts, setGeneratedTs] = useState({}); // Generated Timeslots: 11:00-11:15, 11:15-11:30, ...
   const [currentts, setCurrentTimeslot] = useState(0); // Selected Timeslot 0-11
-  const [currentdate, setCurrentDate] = useState(date.getFullYear()+'-'+('0' + (date.getMonth()+1)).slice(-2)+'-'+('0' + date.getDate()).slice(-2)); // Selected Timeslot 0-11
+  const [currentdate, setCurrentDate] = useState(date.getFullYear()+'-'+('0' + (date.getMonth()+1)).slice(-2)+'-'+('0' + date.getDate()).slice(-2)); // Current Date or Specific Date
   const [dailydata, setDailyData] = useState([]); // The daily raw Data which is updated every 2 seconds
   const [currentduration, setCurrentDuration] = useState(1); // Available Times to book 1-4
   const [guestnumber, setGuestNumber] = useState(0); // Available Guests
-  const { token, user, role } = useContext(AuthContext);
-  let keywords =[]; // 
+  const [groups, setGroups] = useState([]); // Available Groups
+  const [groupmembers, setGroupMember] = useState([]); // Available GroupMembers
+  const [show, setShow] = useState(false); // GroupModal
+  const [showAlert, setShowAlert] = useState(false); // GroupModal
+  const [checkedIds, setCheckedIds] = useState([]);
+  const { token, allinfo } = useContext(AuthContext);
+  let keywords =[];
   let requestedData = new Object();
-  
   // UserInfo
-  const shortname = user.given_name.substring(0, 1)+''+user.family_name.substring(0, 1);
-  const longname = user.name;
-  const userid = user.sub;
+  const shortname = allinfo && allinfo.user ? allinfo.user.given_name.substring(0, 1) + allinfo.user.family_name.substring(0, 1) : '';
+  const longname = allinfo && allinfo.user ? allinfo.user.name : '';
+  const userid = allinfo && allinfo.user ? allinfo.user.sub : '';
+  const role = allinfo ? allinfo.roles : {};
 
   async function currentDailyData(date){
     await axios.get('/api/auth/res-day/'+ date, { headers: { Authorization: 'Bearer ' + token } }).then((result) => {
@@ -211,128 +221,35 @@ const ReservationPage = () => {
     return specifiedWorkedDataDaily;
   }
 
-  /*
-        let command; // build a command to execute with the changing keyword=data touple 
-
-        if(level.get(tempArray[0]) == "level_1"){
-          command = `workedDataDaily = workedDataDaily.filter(workedDataDaily => workedDataDaily.${conditionKeyword} == "${conditionData}");`;
-        }
-
-        if(level.get(tempArray[0]) == "level_2") {
-          //console.log(workedDataDaily[1].reservations);   
-          for(let i in rawDataDaily) {
-            workedDataDaily = rawDataDaily[i].reservations;
-            command = `workedDataDaily = workedDataDaily.filter(workedDataDaily => workedDataDaily.${conditionKeyword} == "${conditionData}");`;
-            console.log(workedDataDaily);
-          }
-          
-          
-          
-          /*tmpArray = workedDataDaily[1].reservations;
-          command = `tmpArray = tmpArray.filter(tmpArray => tmpArray.${conditionKeyword} == "${conditionData}");`;
-
-          /*for(let i in workedDataDaily) {
-            console.log("start");
-            //console.log(workedDataDaily[i].reservations);
-            tmpArray = workedDataDaily[i].reservations;
-            //console.log(tmpArray = tmpArray.filter(tmpArray => tmpArray.id == 453));
-            command = `tmpArray = tmpArray.filter(tmpArray => tmpArray.${conditionKeyword} == "${conditionData}");`;
-            //command = `workedDataDaily = workedDataDaily.filter(workedDataDaily => workedDataDaily[${i}].reservations.${conditionKeyword} == "${conditionData}");`;
-          }
-        }
-        // execute the command
-        eval(command);
-        if(workedDataDaily.length == 0) { console.log("WARNING: keyword=data touple does not exist!"); }
-      
-
-
-      // Filter for the specif data the user wants
-      // Get the keywords out of the string
-      for(let keyword of keywordStringResult.split(",")) {
-        // Change the keyword to fit the datamodell
-        let newKeyword = nameAssignment.get(keyword);
-
-        // Iterate over the array on the top level
-        for(let i in workedDataDaily) {
-          if(level.get(keyword) == "level_1") {
-            // build a command to create a new array with specified data only
-            let command = `specifiedWorkedDataDaily.push(workedDataDaily[${i}].${newKeyword});`
-            // execute the command
-            eval(command);
-          }
-
-          else if(level.get(keyword) == "level_2" || level.get(keyword) == "level_3"){
-            for(let n in workedDataDaily[i].reservations) {
-              let tmpKeyword = nameAssignment.get("chairUserId");
-              let command = `workedDataDaily[${i}].reservations[${n}].${tmpKeyword}`
-              if(eval(command)){
-                if(level.get(keyword) == "level_2") { 
-                  command = `specifiedWorkedDataDaily.push(workedDataDaily[${i}].reservations[${n}].${newKeyword});` 
-                }
-                if(level.get(keyword) == "level_3") { 
-                  command = `specifiedWorkedDataDaily.push(workedDataDaily[${i}].reservations[${n}].chair.${newKeyword});` 
-                }
-              }
-              // execute the command
-              eval(command);
-            }
-          }
-        }
-      }
-      //console.log(workedDataDaily);
-      //console.log(workedDataDaily);
-      console.log(specifiedWorkedDataDaily);
-      return specifiedWorkedDataDaily;
-    }
-      
-      
-      
-      // Iterate over the array on the top level
-        for(let i in workedDataDaily) {
-          if(level.get(keyword) == "level_1") {
-            // build a command to create a new array with specified data only
-            let command = `specifiedWorkedDataDaily.push(workedDataDaily[${i}].${newKeyword});`
-            // execute the command
-            eval(command);
-          }
-
-          else if(level.get(keyword) == "level_2" || level.get(keyword) == "level_3"){
-            for(let n in workedDataDaily[i].reservations) {
-              let tmpKeyword = nameAssignment.get("chairUserId");
-              let command = `workedDataDaily[${i}].reservations[${n}].${tmpKeyword}`
-              if(eval(command)){
-                if(level.get(keyword) == "level_2") { 
-                  command = `specifiedWorkedDataDaily.push(workedDataDaily[${i}].reservations[${n}].${newKeyword});` 
-                }
-                if(level.get(keyword) == "level_3") { 
-                  command = `specifiedWorkedDataDaily.push(workedDataDaily[${i}].reservations[${n}].chair.${newKeyword});` 
-                }
-              }
-              // execute the command
-              eval(command);
-            }
-          }
-        }
-      
-      //console.log(workedDataDaily);
-      //console.log(workedDataDaily);
-      console.log(specifiedWorkedDataDaily);
-      return specifiedWorkedDataDaily;
-    }*/
-
   // Create JSON Reservation
   function createReservation(sid, cid, cname) {
     let reservation = {"id": null, "stuhlsitzer": sid, "chair": {"id": cid, "chairName" : cname, "tisch": null, "posx": null,"posy": null}};
     return reservation;
   }
 
-  //Click function on Chair
+  // Click function on Chair
   async function clickChair(e) {
     if (currentts!==(-1)) {
       //Check if own booking exist
-      if (!e.target.parentElement.classList.contains("reserved_reserved") && !e.target.parentElement.classList.contains("reserved_me")) {
+      if (!e.target.parentElement.classList.contains("reserved_reserved") && !e.target.parentElement.classList.contains("reserved_me") && specifiedData(`bookerId=${userid}`,"chairUserId")[0].length===0) {
           document.getElementById("body")?.classList.add("disabled_map");
-          console.log("insert new booking");          
+          console.log("Insert New Booking!");
+          // Calculate Employee Chairs
+          let extraChairs = [];
+          let tmp = e.target.parentElement.id.split("_");
+          let place = parseInt(tmp[1]);
+          for(let n = 1; n <= 31; n++){ //31 muss geändert werden !!!!DYNAMISCH
+            if( (place + ( Math.pow(-1,n) * n)) > 0 && (place + ( Math.pow(-1,n) * n)) <= 32 ){ // 31 Muss geändert werden!!
+              place = place + ( Math.pow(-1,n) * n);
+              if(extraChairs.length < checkedIds.length){
+                extraChairs.push(createReservation(checkedIds[n-1].id, Number(place), `chair_${place}`));
+              }
+            }
+            else{
+              place = place + ( Math.pow(-1,n) * n);
+            }
+          }
+          extraChairs.push(createReservation(userid, Number(e.target.parentElement.id.split("_")[1]), `chair_${Number(e.target.parentElement.id.split("_")[1])}`));
           //Res Put changed chairs
           for (let index = 0; index < currentduration; index++) {
             let data = {
@@ -340,25 +257,68 @@ const ReservationPage = () => {
               "datum": document.getElementById("datepicker").value,
               "timeslot": currentts+index,
               "bucher": userid,
-              "reservations": [
-                createReservation(userid, Number(e.target.parentElement.id.split("_")[1]), `chair_${Number(e.target.parentElement.id.split("_")[1])}`)
-              ]
+              "reservations": extraChairs
             };
             await axios({ method: 'put', url: '/api/auth/res/', data: data, headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + token } });
           }
-          
-      }
-      if (!e.target.parentElement.classList.contains("reserved_reserved") && e.target.parentElement.classList.contains("reserved_me")) {
+          setShowAlert(false);          
+      }else if (!e.target.parentElement.classList.contains("reserved_reserved") && e.target.parentElement.classList.contains("reserved_me")) {
         // only delete Reservation
         let delete_reservations = specifiedData(`bookingTimeslot=${currentts},bookerId=${userid}`, "bookingId,reservationId,chairId");
-        console.log(delete_reservations);
-        delete_reservations[0].forEach((res_id, key)=>{          
-          axios.delete(`/api/auth/res/del-booking/${res_id}`, { headers: { Authorization: 'Bearer ' + token } });
-        })
-        // delete Reservation with mulitple reservations -> clear seat in json
+        delete_reservations[1].forEach(async (res_id, i)=>{          
+          await axios.delete(`/api/auth/res/del-res/${res_id}`, { headers: { Authorization: 'Bearer ' + token } });
+          if (i===delete_reservations[1].length-1) {
+            delete_reservations[0].forEach(async (booking_id)=>{          
+              await axios.delete(`/api/auth/res/del-booking/${booking_id}`, { headers: { Authorization: 'Bearer ' + token } });
+            });
+          }
+        });
       }
     }
   }
+
+  // Get All Groups from User
+  async function getGroups() {
+    if (allinfo && allinfo.user) {
+      await axios.get("/api/auth/groups/" + userid, { headers: { Authorization: 'Bearer ' + token } }).then(response => {setGroups(response.data);})
+    }
+  }
+
+  // Get All Members from a specific Group
+  async function getGroupMember(groupId) {
+    if (allinfo && allinfo.user) {
+      await axios.get("/api/auth/group/members/" + groupId, { headers: { Authorization: 'Bearer ' + token } }).then(response => {
+        let member = response.data.filter(function(data) {if (userid === data.id) {return false;} return true;}).map(function(data){ 
+          return {
+            id: data.id,
+            firstName: data.firstName,
+            lastName: data.lastName
+          }
+        }); // Skip Own User
+        setGroupMember(member);
+        setCheckedIds(member);
+      })
+    }
+  }
+  
+  // Group Modal Functions
+  const handleClose = () => {
+    console.log(checkedIds);
+    setShow(false);
+    setShowAlert(true);
+  };
+  const handleShow = (groupId) => {
+    setShow(true);
+    getGroupMember(groupId);
+  };
+  const addCheckedMembers = (event) => {
+    const { value, checked } = event.target;
+    if (checked) {
+      setCheckedIds((prevIds) => [...prevIds, value]);
+    } else {
+      setCheckedIds((prevIds) => prevIds.filter((id) => id !== value));
+    }
+  };
 
   // After Website finish loading
   useEffect(() => {
@@ -366,6 +326,7 @@ const ReservationPage = () => {
     // Silas: ---------------------------------------------------
     // Load the data from the day picked in the Calendar
     currentDailyData(currentdate); 
+    getGroups();
     let lastChange = 0;
     // Check every 2 secons if the data has changed
     const interval = setInterval(() => {
@@ -378,7 +339,7 @@ const ReservationPage = () => {
         lastChange = result.data;
       });
     }, 2000);
-  }, [currentdate]);
+  }, [currentdate, allinfo]);
   
   // Render chairs
   useEffect(()=>{
@@ -404,7 +365,6 @@ const ReservationPage = () => {
     });
     let ts = specifiedData(`bookingTimeslot=${currentts}`, "chairUserId,reservationId,chairId");
     let chairs = getReservedSeatsInTimeslots(currentts, currentduration);
-    console.log(ts);
     generatedtserator(currentduration*15);
     if (currentts!==(-1)) {
       try {
@@ -507,18 +467,54 @@ const ReservationPage = () => {
         </div>
         <div className="d-flex justify-content-between mt-3">
           <h3>Anzahl Personen</h3>
-          {//role.projektleiter && <h3>Projektgruppen</h3>
-          }
+          {role.projektleiter && <h3>Projektgruppen</h3>}
         </div>
         <div className="d-flex justify-content-between">
           <div className="d-flex align-items-center">
             <h3 className="text-muted d-inline-block me-4 mb-0">{`Gäste: ${guestnumber}`}</h3>
             <button className="btn border number-icons me-2 d-inline-flex" onClick={()=>{setGuestNumber(count => count<32 ? count + 1 : 32);}}><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></button>
             <button className="btn border number-icons d-inline-flex" onClick={()=>{setGuestNumber(count => count>0 ? count - 1 : 0)}}><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg></button>
-          </div>          
-          {//role.projektleiter && <div><button className="btn btn-dark-outline dropdown-toggle px-4 mb-3" type="button" data-bs-toggle="dropdown" aria-expanded="false">Projekt auswählen</button></div>
-          }
+          </div>
+          <div className="d-flex align-items-center">
+            {role.projektleiter && allinfo && allinfo.user && <>
+              <Form.Select className="px-5" variant="dark-outline" aria-label="Projekt auswählen" onChange={(e)=>{handleShow(e.target.value)}}>
+                <option defaultChecked hidden>Projekt auswählen</option>
+                {groups.map((value, index) => {
+                  return <option value={value.id} key={index}>{value.name}</option>
+                })}
+              </Form.Select>
+            </>}
+          </div>
+          <Modal show={show} onHide={() => {setShow(false); setCheckedIds([])}} centered size="lg">
+            <Modal.Header className="border-0" closeButton>
+              <Modal.Title>Auswahl der Projekt-/Teammitglieder</Modal.Title>
+            </Modal.Header>
+            <Modal.Body className="pb-0">
+              <Form>
+                <Form.Group as={Row}>
+                  {groupmembers.map((value, index) => {
+                    return <div key={index} className="mx-5">
+                      <Col sm="12" className="d-flex align-items-center">
+                        <Form.Check.Input type="checkbox" className="me-3 mt-0" id={`cb-${index}`} defaultChecked value={value.id} onChange={addCheckedMembers}/>
+                        <Form.Check.Label htmlFor={`cb-${index}`} className="fs-5 fw-light">{`${value.firstName} ${value.lastName}`}</Form.Check.Label>
+                      </Col>
+                    </div>
+                  })}
+                </Form.Group>
+              </Form>
+            </Modal.Body>
+            <Modal.Footer className="border-0">
+              <Button variant="outline-dark" className="rounded-0" onClick={() => {setShow(false); setCheckedIds([])}}>Schließen</Button>
+              <Button variant="primary" className="rounded-0" onClick={handleClose}>Buchung abschließen</Button>
+            </Modal.Footer>
+          </Modal>
         </div>
+        <Alert variant="info" className="mt-3" show={showAlert} dismissible onClose={() => setShowAlert(false)}>
+          Wählen Sie den Platz für Ihr Team aus!
+          <div className="d-flex justify-content-start mt-3">
+            <Button onClick={() => window.location.reload()} variant="outline-danger">Buchung Abbrechen</Button>
+          </div>
+        </Alert>
         <div className="w-100 d-flex mt-4 justify-content-center reservation-plan">
           <svg xmlns="http://www.w3.org/2000/svg" id="sitzplan" viewBox="0 0 1116.26 867.67">
             <g id="section">

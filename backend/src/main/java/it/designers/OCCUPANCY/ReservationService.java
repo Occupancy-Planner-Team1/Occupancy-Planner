@@ -41,4 +41,9 @@ public class ReservationService {
     public void delete(Reservation reservation){
         this.reservationRepository.delete(reservation); //hier kann ein Fehler entstehen -> Controller abfangen Try Catch
     }
+
+    public void deleteById(Long id){
+        Reservation byId = this.reservationRepository.findById(id).get();
+        this.reservationRepository.delete(byId);
+    }
 }

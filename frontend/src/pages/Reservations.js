@@ -316,7 +316,7 @@ const ReservationPage = () => {
     if (checked) {
       setCheckedIds((prevIds) => [...prevIds, value]);
     } else {
-      setCheckedIds((prevIds) => prevIds.filter((id) => id !== value));
+      setCheckedIds((prevIds) => prevIds.filter((member) => member.id !== value));
     }
   };
 
@@ -371,6 +371,8 @@ const ReservationPage = () => {
         for (const key in chairs) {
           if (ts[0][key]===userid||ts[0][key]===null) {
             document.getElementById(chairs[key]).setAttribute('class', 'reserved_me');
+          } else if(ts[0][key]==="") {
+            document.getElementById(chairs[key]).setAttribute('class', 'reserved_guest');
           } else {
             document.getElementById(chairs[key]).setAttribute('class', 'reserved_reserved');
           }

@@ -320,9 +320,15 @@ const ReservationPage = () => {
     }
   };
 
+  useEffect(()=>{
+    document.getElementById(searchParams.get("restime")!=null ? searchParams.get("restime")+"min" : "15min").checked = true;
+    setCurrentDuration(searchParams.get("restime")!=null ? searchParams.get("restime")/15 : 1);
+    setCurrentDate(searchParams.get("date")!=null ? searchParams.get("date") : date.getFullYear()+'-'+('0' + (date.getMonth()+1)).slice(-2)+'-'+('0' + date.getDate()).slice(-2));
+    setCurrentTimeslot(searchParams.get("ts")!=null ? searchParams.get("ts") : 0);
+  },[]);
+
   // After Website finish loading
   useEffect(() => {
-    document.getElementById(searchParams.get("restime")!=null? searchParams.get("restime")+"min" : "15min").checked = true;
     // Silas: ---------------------------------------------------
     // Load the data from the day picked in the Calendar
     currentDailyData(currentdate); 
@@ -468,7 +474,7 @@ const ReservationPage = () => {
           {
             Object.keys(generatedts).map((key, i) => (
               <div className="col-12 col-sm-6 col-md-3 mb-2" key={key}>
-                <input type="radio" className="btn-check" name="time_slot" id={generatedts[i].id} value={i} onChange={(e)=>{setCurrentTimeslot(parseInt(e.target.id))}} defaultChecked={ key==0 ? true : false}/>
+                <input type="radio" className="btn-check" name="time_slot" id={generatedts[i].id} value={i} onChange={(e)=>{setCurrentTimeslot(parseInt(e.target.id))}} defaultChecked={ (searchParams.get("ts")===null ? key==0 : key==searchParams.get("ts")) ? true : false}/>
                 <label className={`btn recommended_time_slot w-100${generatedts[i].data!==undefined ? ' reservation_status'+(generatedts[i].capacity===1.0 ? "10" : generatedts[i].capacity*10) : ''} border`} htmlFor={generatedts[i].id}>{generatedts[i].slot}</label>
               </div>
             ))

@@ -60,7 +60,7 @@ public class OccuControl {
         }
         catch(Exception e) {
             //Not Found warscheinlich nicht ganz passend.
-            return ResponseEntity.status(HttpStatus.OK).body(0);
+            return ResponseEntity.status(HttpStatus.OK).body(null);
         }
     }
 

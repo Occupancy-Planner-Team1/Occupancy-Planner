@@ -45,7 +45,6 @@ const ReservationPage = () => {
     let place;
 
     tmpArray = specifiedData(`bookerId=${bookerId}`,"chairUserId,chairId");
-    //console.log(tmpArray);
     for(let i in tmpArray[0]){
       if(tmpArray[0][i] == bookerId){
         meChair = tmpArray[1][i];
@@ -53,11 +52,10 @@ const ReservationPage = () => {
       }
       reserverdChairs.push(tmpArray[1][i]);
     }
-    
     let tmp = meChair.split("_");
     place = parseInt(tmp[1]);
     for(let n = 1; n <= 31; n++){     //31 muss geändert werden !!!!DYNAMISCH
-      if( (place + ( Math.pow(-1,n) * n)) > 0 && (place + ( Math.pow(-1,n) * n)) <= 32 ){ // 31 Muss geändert werden!!
+      if( (place + ( Math.pow(-1,n) * n)) > 0 && (place + ( Math.pow(-1,n) * n)) <= 32 ){ // 32 Muss geändert werden!!
         place = place + ( Math.pow(-1,n) * n);
         newChairName = `chair_${place}`;
         if(reserverdChairs.find(e => e == newChairName) == null && extraChairs.length < numberOfChairs){
@@ -68,21 +66,7 @@ const ReservationPage = () => {
         place = place + ( Math.pow(-1,n) * n);
       }
     }
-    //console.log(extraChairs);
-    return extraChairs
-  }
-
-  function getDataInTimeslots(timeslot, duration){
-    let dataForTimeslot = [];
-    for(let n=1; n <= duration; n++){
-      let bookingIdArray = specifiedData(`bookingTimeslot=${timeslot}`,"bookingId");
-      for (let i in bookingIdArray[0]){
-        //dataForTimeslot.push(bookingIdArray[0][i]);
-        dataForTimeslot.push(specifiedData(`bookingId=${bookingIdArray[0][i]}`,"reservationId,chairUserId,chairId"));
-      }
-      timeslot = timeslot + 1;
-    }
-    return dataForTimeslot;
+    return extraChairs;
   }
 
   // timeslot: 0-12; 0 is the first timeslot and 12 the last one
@@ -211,121 +195,6 @@ const ReservationPage = () => {
     return specifiedWorkedDataDaily;
   }
 
-  /*
-        let command; // build a command to execute with the changing keyword=data touple 
-
-        if(level.get(tempArray[0]) == "level_1"){
-          command = `workedDataDaily = workedDataDaily.filter(workedDataDaily => workedDataDaily.${conditionKeyword} == "${conditionData}");`;
-        }
-
-        if(level.get(tempArray[0]) == "level_2") {
-          //console.log(workedDataDaily[1].reservations);   
-          for(let i in rawDataDaily) {
-            workedDataDaily = rawDataDaily[i].reservations;
-            command = `workedDataDaily = workedDataDaily.filter(workedDataDaily => workedDataDaily.${conditionKeyword} == "${conditionData}");`;
-            console.log(workedDataDaily);
-          }
-          
-          
-          
-          /*tmpArray = workedDataDaily[1].reservations;
-          command = `tmpArray = tmpArray.filter(tmpArray => tmpArray.${conditionKeyword} == "${conditionData}");`;
-
-          /*for(let i in workedDataDaily) {
-            console.log("start");
-            //console.log(workedDataDaily[i].reservations);
-            tmpArray = workedDataDaily[i].reservations;
-            //console.log(tmpArray = tmpArray.filter(tmpArray => tmpArray.id == 453));
-            command = `tmpArray = tmpArray.filter(tmpArray => tmpArray.${conditionKeyword} == "${conditionData}");`;
-            //command = `workedDataDaily = workedDataDaily.filter(workedDataDaily => workedDataDaily[${i}].reservations.${conditionKeyword} == "${conditionData}");`;
-          }
-        }
-        // execute the command
-        eval(command);
-        if(workedDataDaily.length == 0) { console.log("WARNING: keyword=data touple does not exist!"); }
-      
-
-
-      // Filter for the specif data the user wants
-      // Get the keywords out of the string
-      for(let keyword of keywordStringResult.split(",")) {
-        // Change the keyword to fit the datamodell
-        let newKeyword = nameAssignment.get(keyword);
-
-        // Iterate over the array on the top level
-        for(let i in workedDataDaily) {
-          if(level.get(keyword) == "level_1") {
-            // build a command to create a new array with specified data only
-            let command = `specifiedWorkedDataDaily.push(workedDataDaily[${i}].${newKeyword});`
-            // execute the command
-            eval(command);
-          }
-
-          else if(level.get(keyword) == "level_2" || level.get(keyword) == "level_3"){
-            for(let n in workedDataDaily[i].reservations) {
-              let tmpKeyword = nameAssignment.get("chairUserId");
-              let command = `workedDataDaily[${i}].reservations[${n}].${tmpKeyword}`
-              if(eval(command)){
-                if(level.get(keyword) == "level_2") { 
-                  command = `specifiedWorkedDataDaily.push(workedDataDaily[${i}].reservations[${n}].${newKeyword});` 
-                }
-                if(level.get(keyword) == "level_3") { 
-                  command = `specifiedWorkedDataDaily.push(workedDataDaily[${i}].reservations[${n}].chair.${newKeyword});` 
-                }
-              }
-              // execute the command
-              eval(command);
-            }
-          }
-        }
-      }
-      //console.log(workedDataDaily);
-      //console.log(workedDataDaily);
-      console.log(specifiedWorkedDataDaily);
-      return specifiedWorkedDataDaily;
-    }
-      
-      
-      
-      // Iterate over the array on the top level
-        for(let i in workedDataDaily) {
-          if(level.get(keyword) == "level_1") {
-            // build a command to create a new array with specified data only
-            let command = `specifiedWorkedDataDaily.push(workedDataDaily[${i}].${newKeyword});`
-            // execute the command
-            eval(command);
-          }
-
-          else if(level.get(keyword) == "level_2" || level.get(keyword) == "level_3"){
-            for(let n in workedDataDaily[i].reservations) {
-              let tmpKeyword = nameAssignment.get("chairUserId");
-              let command = `workedDataDaily[${i}].reservations[${n}].${tmpKeyword}`
-              if(eval(command)){
-                if(level.get(keyword) == "level_2") { 
-                  command = `specifiedWorkedDataDaily.push(workedDataDaily[${i}].reservations[${n}].${newKeyword});` 
-                }
-                if(level.get(keyword) == "level_3") { 
-                  command = `specifiedWorkedDataDaily.push(workedDataDaily[${i}].reservations[${n}].chair.${newKeyword});` 
-                }
-              }
-              // execute the command
-              eval(command);
-            }
-          }
-        }
-      
-      //console.log(workedDataDaily);
-      //console.log(workedDataDaily);
-      console.log(specifiedWorkedDataDaily);
-      return specifiedWorkedDataDaily;
-    }*/
-
-  // Create JSON Reservation
-  function createReservation(sid, cid, cname) {
-    let reservation = {"id": null, "stuhlsitzer": sid, "chair": {"id": cid, "chairName" : cname, "tisch": null, "posx": null,"posy": null}};
-    return reservation;
-  }
-
   //Click function on Chair
   async function clickChair(e) {
     if (currentts!==(-1)) {
@@ -424,24 +293,90 @@ const ReservationPage = () => {
   // Guest Booking
   useEffect(()=>{
     if (guestnumber>0) {
-      let guestseats = setExtraChairs(userid, 1);
-      guestseats.forEach(async (value, key)=>{
-        for (let index = 0; index < currentduration; index++) {
-          let data = {
-            "id": 0,
-            "datum": document.getElementById("datepicker").value,
-            "timeslot": currentts+index,
-            "bucher": userid,
-            "reservations": [
+      // Check if booker Id exist wenn nicht fehler meldung
+      // wenn existiert dann buchung mit bookerId löschen
+      // für bookerId gleichen Timeslot, chair nochmal buchen
+      // der neuen buchung dann die angegebene anzahl an gästen hinzufügen, timeslot bleibt gleich, guest ID als Stzhlsitzer und stuhl berechnen
 
-              createReservation(process.env.GUEST_ID, Number(value.split("_")[1]), `chair_${Number(value.split("_")[1])}`)
-            ]
-          };
-          //await axios({ method: 'put', url: '/api/auth/res/', data: data, headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + token } });
+      // Check if the booker Id exists. If exists delete
+      let originalChair = specifiedData(`bookerId=${userid}`,"chairId");
+      console.log("original Chairs");
+      console.log(originalChair[0][0]);
+
+      if(originalChair.length == 0){
+        console.log("WARNING: Dont try to book guests without booking yout own chair first");
+      }
+      else{
+        //only delete Reservation
+        let delete_reservations = specifiedData(`bookingTimeslot=${currentts},bookerId=${userid}`, "bookingId,reservationId,chairId");
+        delete_reservations[1].forEach(async (res_id, i)=>{          
+          await axios.delete(`/api/auth/res/del-res/${res_id}`, { headers: { Authorization: 'Bearer ' + token } });
+          if (i===delete_reservations[1].length-1) {
+            delete_reservations[0].forEach(async (booking_id)=>{          
+              await axios.delete(`/api/auth/res/del-booking/${booking_id}`, { headers: { Authorization: 'Bearer ' + token } });
+            });
+          }
+        });
+      }
+      // Calculate the gust chair names
+      let guestseats = setExtraChairs(userid, guestnumber);
+      
+      // Build the reservation array with all the reserved chairs
+      let reservation = []; 
+      // Create the original reservation again
+      reservation.push(createReservation(userid, Number(originalChair[0][0].split("_")[1]), `chair_${Number(originalChair[0][0].split("_")[1])}`));
+      // Create all the guest reservations
+      for(let i in guestseats) {
+        reservation.push(createReservation("82b34614-4c8a-406d-94e4-9e054df204f2", Number(guestseats[i].split("_")[1] + 1 + i), `chair_${Number(guestseats[i].split("_")[1])}`));
+      }
+
+      // Delete all old guests // FUNKTIONIERT ES AUCH FÜR MEHRERE GÄSTE??
+      let delete_reservations = specifiedData(`bookingTimeslot=${currentts},bookerId=${userid}`, "bookingId,reservationId,chairId");
+      delete_reservations[1].forEach(async (res_id, i)=>{          
+        await axios.delete(`/api/auth/res/del-res/${res_id}`, { headers: { Authorization: 'Bearer ' + token } });
+        if (i===delete_reservations[1].length-1) {
+          delete_reservations[0].forEach(async (booking_id)=>{          
+            await axios.delete(`/api/auth/res/del-booking/${booking_id}`, { headers: { Authorization: 'Bearer ' + token } });
+          });
+        }
+      });
+
+      // Create and send the booking
+      for (let index = 0; index < currentduration; index++) {
+        let data = {
+          "id": 0,
+          "datum": document.getElementById("datepicker").value,
+          "timeslot": currentts+index,
+          "bucher": userid,
+          "reservations": reservation
+        };
+        console.log(data);
+        axios({ method: 'put', url: '/api/auth/res/', data: data, headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + token } });
+      }
+    }
+
+    if (guestnumber==0){
+      //only delete Reservation
+      let delete_reservations = specifiedData(`bookingTimeslot=${currentts},bookerId=${userid}`, "bookingId,reservationId,chairId");
+      delete_reservations[1].forEach(async (res_id, i)=>{          
+        await axios.delete(`/api/auth/res/del-res/${res_id}`, { headers: { Authorization: 'Bearer ' + token } });
+        if (i===delete_reservations[1].length-1) {
+          delete_reservations[0].forEach(async (booking_id)=>{          
+            await axios.delete(`/api/auth/res/del-booking/${booking_id}`, { headers: { Authorization: 'Bearer ' + token } });
+          });
         }
       });
     }
+
   }, [guestnumber]);  
+
+
+    // Create JSON Reservation
+    function createReservation(sid, cid, cname) {
+      let reservation = {"id": null, "stuhlsitzer": sid, "chair": {"id": cid, "chairName" : cname, "tisch": null, "posx": null,"posy": null}};
+      return reservation;
+  }
+    
 
   //change minutes from slot
   const changeTime = (e) => {

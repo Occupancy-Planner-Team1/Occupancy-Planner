@@ -1,0 +1,14 @@
+{
+  "files": {
+    "main.css": "/static/css/main.e6dde445.css",
+    "main.js": "/static/js/main.c02d6d66.js",
+    "static/media/Logo-IT-Designers.svg": "/static/media/Logo-IT-Designers.de54b85f355efa8887d1347e176dfa5a.svg",
+    "index.html": "/index.html",
+    "main.e6dde445.css.map": "/static/css/main.e6dde445.css.map",
+    "main.c02d6d66.js.map": "/static/js/main.c02d6d66.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.e6dde445.css",
+    "static/js/main.c02d6d66.js"
+  ]
+}

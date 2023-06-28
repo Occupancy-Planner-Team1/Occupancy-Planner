@@ -7,6 +7,7 @@ function KeycloakLogin() {
   const navigate = useNavigate();
 
   const handleLogin = async () => {
+    sessionStorage.removeItem("kc_token");
     navigate("/");
   };
 

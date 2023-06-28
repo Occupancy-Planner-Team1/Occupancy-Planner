@@ -68,20 +68,7 @@ const ReservationPage = () => {
     }
     let tmp = meChair.split("_");
     place = parseInt(tmp[1]);
- 
-    /*for(let n = 1; n <= 31; n++){     //31 muss geändert werden !!!!DYNAMISCH
-      if( (place + ( Math.pow(-1,n) * n)) > 0 && (place + ( Math.pow(-1,n) * n)) <= 32 ){ // 32 Muss geändert werden!!
-        place = place + ( Math.pow(-1,n) * n);
-        newChairName = `chair_${place}`;
-        if(reserverdChairs.find(e => e == newChairName) == null && extraChairs.length < numberOfChairs){
-          extraChairs.push(newChairName);
-        }
-      }
-      else{
-        place = place + ( Math.pow(-1,n) * n);
-      }
-    }
-    return extraChairs;*/
+
     return specialChairs(place, numberOfChairs);
   }
 
@@ -162,6 +149,10 @@ const ReservationPage = () => {
 
       return uniqueReservedSeats;
   }  
+
+  function capacity(){
+
+  }
 
   // Give a keyword=data touple as a condition and a keyword to specify the result.
   // The keywords have to be one of the following strings: "bookingId", "bookingTimeslot"(0-11), "bookerId", "reservationId", "reservationUserId", "chairUserId", "chairId", "chair_table", "positionX", "positionY"
@@ -441,6 +432,8 @@ const ReservationPage = () => {
         let inner = new Object();
         inner.slot = st.getHours()+":"+(st.getMinutes() < 10 ? '0' : '') + st.getMinutes()+" - "+et.getHours()+":"+(et.getMinutes() < 10 ? '0' : '') + et.getMinutes();
         inner.id = id;
+        inner.capacity = parseFloat(getReservedSeatsInTimeslots(id,currentduration).length/32).toFixed(1);
+        inner.myTimeslot = specifiedData(`bookingTimeslot=${currentts},bookerId=${userid}`, "chairId")[0].length >= 0 ? true : false;
         ts[index] = inner;
         st = et;
         et = new Date(et.getTime() + minutes*60000);
@@ -535,48 +528,14 @@ const ReservationPage = () => {
         }
       })
     }
-  }, [guestnumber]);  
-
-  /*useEffect(() => {
-    console.log("guestChair Calculation");
-      // Empty array
-      while(guestChairIds.length > 0) {
-        guestChairIds.pop();
-      }
-      // Fill array with the calculatet values if a chair is already clicked!
-      let check = specifiedData(`bookerId=${userid}`,"chairId");
-      console.log(check[0]);
-      if(check[0].length > 0){
-        for(let index = 1; index <= 32; index++){   // 32 NICHT DYNMISCH, ÄNDERN!!
-            guestChairIds[index] = setExtraChairs(userid, index);
-        }
-      }
-      console.log("Guest ChairIds: ");
-      console.log(guestChairIds);
-  }, [dailydata]);*/
-
+  }, [guestnumber]);
 
     // Create JSON Reservation
     function createReservation(sid, cid, cname) {
       let reservation = {"id": null, "stuhlsitzer": sid, "chair": {"id": cid, "chairName" : cname, "tisch": null, "posx": null,"posy": null}};
       return reservation;
     }
-
-    function guestChairId(){
-      console.log("guestChair Calculation");
-      // Empty array
-      while(guestChairIds.length > 0) {
-        guestChairIds.pop();
-      }
-      // Fill array with the calculatet values
-      for(let index = 1; index <= 32; index++){   // 32 NICHT DYNMISCH, ÄNDERN!!
-        guestChairIds[index] = setExtraChairs(userid, index);
-      }
-      console.log("Guest ChairIds: ");
-      console.log(guestChairIds);
-    }
-    
-
+  
   //change minutes from slot
   const changeTime = (e) => {
     if (currentts !== (-1)) {
@@ -638,6 +597,7 @@ const ReservationPage = () => {
               </div>
             ))
           }
+
         </div>
         <div className="d-flex justify-content-between mt-3">
           <h3>Anzahl Personen</h3>

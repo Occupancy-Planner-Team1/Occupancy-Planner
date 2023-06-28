@@ -40,13 +40,9 @@ const ReservationPage = () => {
 
   async function currentDailyData(date){
     await axios.get('/api/auth/res-day/'+ date, { headers: { Authorization: 'Bearer ' + token } }).then((result) => {
-        //rawDataDaily = result.data;
         document.getElementById("body")?.classList.remove("disabled_map");
         setDailyData(result.data);
     });
-
-    //specifiedData("bookingTimeslot=1", "reservationId,chairUserId,chairId");   
-
   }
 
   function setExtraChairs(bookerId, numberOfChairs){
@@ -58,12 +54,10 @@ const ReservationPage = () => {
     let place;
     
     tmpArray = specifiedData(`bookerId=${bookerId}`,"chairUserId,chairId");
-    console.log(tmpArray);
     
     for(let i in tmpArray[0]){
       if(tmpArray[0][i] == bookerId){
         meChair = tmpArray[1][i];
-        console.log("MeChair: " + meChair);
       }
       reserverdChairs.push(tmpArray[1][i]);
     }
@@ -138,9 +132,9 @@ const ReservationPage = () => {
       // sum up all chairs to one array
       for(let a in tmpArray){
           for(let b in tmpArray[a]){
-          for(let c in tmpArray[a][b]){
+            for(let c in tmpArray[a][b]){
               reservedSeats.push(tmpArray[a][b][c]);
-          }
+            }
           }
       }
       // delete the duplicates
@@ -151,54 +145,53 @@ const ReservationPage = () => {
       return uniqueReservedSeats;
   }
 
-  // Give a keyword=data touple as a condition and a keyword to specify the result.
-  // The keywords have to be one of the following strings: "bookingId", "bookingTimeslot"(0-11), "bookerId", "reservationId", "reservationUserId", "chairUserId", "chairId", "chair_table", "positionX", "positionY"
-  // For multiple conditions put the keyword=data condition touple in a string  separated by commas.
-  // For multiple results put the keywords in a string seperated by a commas.
-  // For example: dataInTimeslot("bookingTimeslot=1,bookerId=...", "bookingid,reservationId,chairId");
-  // Important! Please use right now only level 1 keywords for the filter and level 2 and 3 keywords to specify the result data
   function specifiedData(keywordStringcondition, keywordStringResult) {
-      let conditionKeyword; // holds the keyword to filter the raw data
-      let conditionData;  // holds the data to be filtered after
-      let resultKeyword;  // holds the keyword to specify the result set
-      let levelString;
+    // Give a keyword=data touple as a condition and a keyword to specify the result.
+    // The keywords have to be one of the following strings: "bookingId", "bookingTimeslot"(0-11), "bookerId", "reservationId", "reservationUserId", "chairUserId", "chairId", "chair_table", "positionX", "positionY"
+    // For multiple conditions put the keyword=data condition touple in a string  separated by commas.
+    // For multiple results put the keywords in a string seperated by a commas.
+    // For example: dataInTimeslot("bookingTimeslot=1,bookerId=...", "bookingid,reservationId,chairId");
+    // Important! Please use right now only level 1 keywords for the filter and level 2 and 3 keywords to specify the result data
+    
+    let conditionKeyword; // holds the keyword to filter the raw data
+    let conditionData;  // holds the data to be filtered after
+    let resultKeyword;  // holds the keyword to specify the result set
+    let levelString;
 
-      let workedDataDaily = dailydata;
-      let specifiedWorkedDataDaily = [];
-
-
-      // If a name changed in the datamodell, this map has to be changed to !!
-      // The map maps the keywords on to the names used in the datamodell
-      const nameAssignment = new Map([ ["bookingId", "id"], ["bookingTimeslot", "timeslot"], ["bookerId", "bucher"], ["reservationId", "id"], ["chairUserId", "stuhlsitzer"], ["chairId", "chairName"], ["chair_table", "tisch"], ["positionX", "posx"], ["positionY", "posy"]  ]);
-
-      // To find the data in the mutlidimesnional Datastructure, we establish three drifferent level where the data could be:
-      // 1. In the booking array; 2. In the reservation array in the booking array; 3. In the chair object in the reservation array 
-      const level = new Map([ ["bookingId", "level_1"], ["bookingTimeslot", "level_1"], ["bookerId", "level_1"], ["reservationId", "level_2"], ["chairUserId", "level_2"], ["chairId", "level_3"], ["chair_table", "level_3"], ["positionX", "level_3"], ["positionY", "level_3"] ]);
+    let workedDataDaily = dailydata;
+    let specifiedWorkedDataDaily = [];
 
 
-      // get the keyword=data touple out of the string
-      for(let condition of keywordStringcondition.split(",")) {
-          let tempArray = condition.split("=");
-          // Change the keyword to fit the datamodell
-          conditionKeyword = nameAssignment.get(tempArray[0]);
-          conditionData = tempArray[1];
-          levelString = level.get(tempArray[0]);
-          
-          // call the filter function
-          workedDataDaily = filterData(workedDataDaily,conditionKeyword, conditionData,levelString);
-      }
-      //console.log(workedDataDaily);
+    // If a name changed in the datamodell, this map has to be changed to !!
+    // The map maps the keywords on to the names used in the datamodell
+    const nameAssignment = new Map([ ["bookingId", "id"], ["bookingTimeslot", "timeslot"], ["bookerId", "bucher"], ["reservationId", "id"], ["chairUserId", "stuhlsitzer"], ["chairId", "chairName"], ["chair_table", "tisch"], ["positionX", "posx"], ["positionY", "posy"]  ]);
 
-      // Get the keywords for specifing the result out of the string
-      for(let keyword of keywordStringResult.split(",")) {
-          // Change the keyword to fit the datamodell
-          resultKeyword = nameAssignment.get(keyword);
-          levelString = level.get(keyword);
-          // call the function to specify the data
-          specifiedWorkedDataDaily.push(specifyData(workedDataDaily,resultKeyword,levelString,nameAssignment)); 
-      }
-      //console.log(specifiedWorkedDataDaily);
-      return specifiedWorkedDataDaily;
+    // To find the data in the mutlidimesnional Datastructure, we establish three drifferent level where the data could be:
+    // 1. In the booking array; 2. In the reservation array in the booking array; 3. In the chair object in the reservation array 
+    const level = new Map([ ["bookingId", "level_1"], ["bookingTimeslot", "level_1"], ["bookerId", "level_1"], ["reservationId", "level_2"], ["chairUserId", "level_2"], ["chairId", "level_3"], ["chair_table", "level_3"], ["positionX", "level_3"], ["positionY", "level_3"] ]);
+
+
+    // get the keyword=data touple out of the string
+    for(let condition of keywordStringcondition.split(",")) {
+        let tempArray = condition.split("=");
+        // Change the keyword to fit the datamodell
+        conditionKeyword = nameAssignment.get(tempArray[0]);
+        conditionData = tempArray[1];
+        levelString = level.get(tempArray[0]);
+        
+        // call the filter function
+        workedDataDaily = filterData(workedDataDaily,conditionKeyword, conditionData,levelString);
+    }
+
+    // Get the keywords for specifing the result out of the string
+    for(let keyword of keywordStringResult.split(",")) {
+        // Change the keyword to fit the datamodell
+        resultKeyword = nameAssignment.get(keyword);
+        levelString = level.get(keyword);
+        // call the function to specify the data
+        specifiedWorkedDataDaily.push(specifyData(workedDataDaily,resultKeyword,levelString,nameAssignment)); 
+    }
+    return specifiedWorkedDataDaily;
   }
 
   function filterData(data, conditionKeyword,conditionData, levelString) {
@@ -208,7 +201,7 @@ const ReservationPage = () => {
       command = `workedDataDaily = data.filter(workedDataDaily => workedDataDaily.${conditionKeyword} == "${conditionData}");`;
       eval(command);
 
-      if(workedDataDaily.length == 0) console.debug("WARNING: keyword=data touple does not exist!");
+      //if(workedDataDaily.length == 0) console.debug("WARNING: keyword=data touple does not exist!");
       return workedDataDaily;
   }
 
@@ -225,20 +218,20 @@ const ReservationPage = () => {
           eval(command);
           }
           else if(levelString == "level_2" || levelString == "level_3"){
-          for(let n in workedDataDaily[i].reservations) {
-              let command = `workedDataDaily[${i}].reservations[${n}].${nameAssignment.get("chairUserId")}`
-              if(eval(command)){
-                if(levelString == "level_2") { 
-                    command = `specifiedWorkedDataDaily.push(workedDataDaily[${i}].reservations[${n}].${resultKeyword});` 
+            for(let n in workedDataDaily[i].reservations) {
+                let command = `workedDataDaily[${i}].reservations[${n}].${nameAssignment.get("chairUserId")}`
+                if(eval(command)){
+                  if(levelString == "level_2") { 
+                      command = `specifiedWorkedDataDaily.push(workedDataDaily[${i}].reservations[${n}].${resultKeyword});` 
+                  }
+                  if(levelString == "level_3") { 
+                      command = `specifiedWorkedDataDaily.push(workedDataDaily[${i}].reservations[${n}].chair.${resultKeyword});` 
+                      //console.log(specifiedWorkedDataDaily.push(workedDataDaily[i].reservations[n].chair.chairName));
+                  }
                 }
-                if(levelString == "level_3") { 
-                    command = `specifiedWorkedDataDaily.push(workedDataDaily[${i}].reservations[${n}].chair.${resultKeyword});` 
-                    //console.log(specifiedWorkedDataDaily.push(workedDataDaily[i].reservations[n].chair.chairName));
-                }
+                // execute the command
+                eval(command);
               }
-              // execute the command
-              eval(command);
-            }
         } 
     }
 
@@ -362,20 +355,6 @@ const ReservationPage = () => {
   }
   
   async function deleteBooking() {
-    /*let delete_reservations = specifiedData(`bookingTimeslot=${currentts},bookerId=${userid}`, "bookingId,reservationId,chairId");
-          delete_reservations[1].forEach(async (res_id, i)=>{    
-            await axios.delete(`/api/auth/res/del-res/${res_id}`, { headers: { Authorization: 'Bearer ' + token } }).then((r)=>{
-              console.log(r.data);
-            });
-            
-            if (i===delete_reservations[1].length-1) {
-              delete_reservations[0].forEach(async (booking_id)=>{     
-                await axios.delete(`/api/auth/res/del-booking/${booking_id}`, { headers: { Authorization: 'Bearer ' + token } });
-              });
-            }
-          });
-          return true;*/
-
     let delete_reservations = specifiedData(`bookingTimeslot=${currentts},bookerId=${userid}`, "bookingId,reservationId,chairId");
 
     // Create an array of promises for deleting reservations
@@ -415,7 +394,6 @@ const ReservationPage = () => {
 
   // After Website finish loading
   useEffect(() => {
-    // Silas: ---------------------------------------------------
     // Load the data from the day picked in the Calendar
     currentDailyData(currentdate); 
     getGroups();
@@ -498,30 +476,29 @@ const ReservationPage = () => {
       
       //only delete Reservation
       deleteBooking().then(() => {
-            // Calculate the guest chair names
-            let tmp = Number(originalChair[0][0].split("_")[1]);
-            let guestseats = specialChairs(tmp, guestnumber);
-            // Build the reservation array with all the reserved chairs
-            let reservation = []; 
-            // Create the original reservation again
-            reservation.push(createReservation(userid, Number(originalChair[0][0].split("_")[1]), `chair_${Number(originalChair[0][0].split("_")[1])}`));
-            // Create all the guest reservations
-            for(let i in guestseats) {
-              reservation.push(createReservation(GUEST_ID, Number(guestseats[i].split("_")[1] + 1 + i), `chair_${Number(guestseats[i].split("_")[1])}`));
-            }
-      
-            // Create and send the booking
-            for (let index = 0; index < currentduration; index++) {
-              let data = {
-                "id": 0,
-                "datum": document.getElementById("datepicker").value,
-                "timeslot": currentts+index,
-                "bucher": userid,
-                "reservations": reservation
-              };
-              axios({ method: 'put', url: '/api/auth/res/', data: data, headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + token } });
-            }
-       
+        // Calculate the guest chair names
+        let tmp = Number(originalChair[0][0].split("_")[1]);
+        let guestseats = specialChairs(tmp, guestnumber);
+        // Build the reservation array with all the reserved chairs
+        let reservation = []; 
+        // Create the original reservation again
+        reservation.push(createReservation(userid, Number(originalChair[0][0].split("_")[1]), `chair_${Number(originalChair[0][0].split("_")[1])}`));
+        // Create all the guest reservations
+        for(let i in guestseats) {
+          reservation.push(createReservation(GUEST_ID, Number(guestseats[i].split("_")[1] + 1 + i), `chair_${Number(guestseats[i].split("_")[1])}`));
+        }
+  
+        // Create and send the booking
+        for (let index = 0; index < currentduration; index++) {
+          let data = {
+            "id": 0,
+            "datum": document.getElementById("datepicker").value,
+            "timeslot": currentts+index,
+            "bucher": userid,
+            "reservations": reservation
+          };
+          axios({ method: 'put', url: '/api/auth/res/', data: data, headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + token } });
+        }
       })
     }
 
@@ -541,12 +518,6 @@ const ReservationPage = () => {
       })
     }
   }, [guestnumber]);
-
-    // Create JSON Reservation
-    function createReservation(sid, cid, cname) {
-      let reservation = {"id": null, "stuhlsitzer": sid, "chair": {"id": cid, "chairName" : cname, "tisch": null, "posx": null,"posy": null}};
-      return reservation;
-    }
   
   //change minutes from slot
   const changeTime = (e) => {

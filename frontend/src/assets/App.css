@@ -1,0 +1,291 @@
+body {
+  font-family: 'Roboto', sans-serif;
+}
+
+:root {
+  --bs-dark: #f0ff0f;
+  --blue: #003A70;
+  --grey: #646568;
+}
+
+.App {
+  background-color: #F9F9F9;
+  min-height: 100vh;
+}
+
+.h-fill {
+  height: 100vh;
+}
+
+.image_link {
+  color: var(--grey);
+  position: absolute;
+  left: 40px;
+  bottom: 0;
+}
+
+.image_link a {
+  color: var(--grey);
+}
+
+.logo-sm {
+  position: absolute;
+  bottom: 23px;
+  right: 23px;
+}
+
+.login-backgound {
+  background-image: url('https://images.unsplash.com/photo-1507133750040-4a8f57021571?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1887&q=80');
+  background-size: cover;
+  background-position: center;
+  backdrop-filter: blur(10px);
+}
+
+.reservation-form img {
+  padding: 12px;
+  height: 80px;
+}
+
+.reservation-form {
+  background-color: #fff;
+  padding-left: 100px;
+  padding-right: 100px;
+  padding-top: 24px;
+  max-width: 1000px;
+}
+
+.reservation-form h2 {
+  color: var(--grey);
+  font-size: 25pt;
+  margin-bottom: 20px;
+}
+
+.reservation-form h3 {
+  font-weight: 400;
+  color: var(--blue);
+  font-size: 16pt;
+  margin-bottom: 12px;
+}
+
+.reservation-form button {
+  width: 200px;
+  text-align: left;
+  position: relative;
+}
+
+.reservation-form button::after {
+  right: 15px;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.reservation-plan {
+  max-height: 50%;
+}
+
+.btn-check:checked+.recommended_time_slot {
+  outline: #7a9ac1 solid 5px;
+  border: none;
+}
+
+.number-icons {
+  width: 36px !important;
+  text-align: center;
+}
+
+.bg-status::after {
+  content: "";
+  position: absolute;
+  right: 5%;
+  bottom: 10px;
+  width: 90%;
+  height: 20%;
+  background: linear-gradient(90deg, rgba(255, 0, 0, 0.0), rgba(255, 0, 0, 0.7));
+}
+
+.reservation_status0,
+.reservation_status1 {
+  background-color: rgba(255, 0, 0, 0.0)!important;
+}
+
+.reservation_status2 {
+  background-color: rgba(255, 0, 0, 0.025)!important;
+}
+
+.reservation_status3 {
+  background-color: rgba(255, 0, 0, 0.05)!important;
+}
+
+.reservation_status4 {
+  background-color: rgba(255, 0, 0, 0.1)!important;
+}
+
+.reservation_status5 {
+  background-color: rgba(255, 0, 0, 0.2)!important;
+}
+
+.reservation_status6 {
+  background-color: rgba(255, 0, 0, 0.3)!important;
+}
+
+.reservation_status7 {
+  background-color: rgba(255, 0, 0, 0.4)!important;
+}
+
+.reservation_status8 {
+  background-color: rgba(255, 0, 0, 0.5)!important;
+}
+
+.reservation_status9 {
+  background-color: rgba(255, 0, 0, 0.6)!important;
+}
+
+.reservation_status10 {
+  background-color: rgba(255, 0, 0, 0.7)!important;
+}
+
+.mySlot{
+  outline-style: solid;
+  outline-color: #00ff0a!important;
+  outline-width: 2px;
+}
+
+.reserved_me>path:nth-child(1) {
+  fill: rgb(0, 255, 10);
+}
+
+.reserved_me>path:nth-child(2) {
+  fill: rgba(0, 255, 10, 0.7);
+}
+
+.reserved_guests>path:nth-child(1) {
+  fill: rgb(0, 255, 200);
+}
+
+.reserved_guests path:nth-child(2) {
+  fill: rgba(0, 255, 200, 0.7);
+}
+
+.reserved_employees>path:nth-child(1) {
+  fill: rgb(186, 169, 61);
+}
+
+.reserved_employees path:nth-child(2) {
+  fill: rgba(186, 169, 61, 0.7);
+}
+
+#sitzplan>g>g:not(.reserved_reserved){
+  cursor: pointer;
+}
+
+.reserved_reserved path,
+.reserved_reserved circle {
+  fill: rgba(255, 0, 0, 0.7);
+  cursor: not-allowed;
+}
+
+.reserved_reserved path:nth-child(2) {
+  fill: rgba(255, 0, 0, 0.5);
+}
+
+[data-tooltip] {
+  position: relative;
+  cursor: pointer;
+}
+[data-tooltip]:before,
+[data-tooltip]:after {
+  line-height: 1;
+  font-size: 20px!important;
+  pointer-events: none;
+  position: absolute;
+  box-sizing: border-box;
+  display: none;
+  opacity: 0;
+  transition: .2s opacity;
+}
+[data-tooltip]:before {
+  content: "";
+  border: 5px solid transparent;
+  z-index: 100;
+}
+[data-tooltip]:after {
+  content: attr(data-tooltip);
+  text-align: center;
+  min-width: 3em;
+  max-width: 21em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 10px 10px;
+  border-radius: 10px;
+  background: #000000;
+  color: #FFFFFF;
+  z-index: 99;
+}
+[data-tooltip]:hover:before,
+[data-tooltip]:hover:after {
+  display: block;
+  opacity: 1;
+}
+[data-tooltip]:not([data-flow])::before,
+[data-tooltip][data-flow="top"]::before {
+  bottom: 100%;
+  border-bottom-width: 0;
+  border-top-color: #000000;
+}
+[data-tooltip]:not([data-flow])::after,
+[data-tooltip][data-flow="top"]::after {
+  bottom: calc(100% + 5px);
+}
+[data-tooltip]:not([data-flow])::before, [tooltip]:not([data-flow])::after,
+[data-tooltip][data-flow="top"]::before,
+[data-tooltip][data-flow="top"]::after {
+  left: 50%;
+  -webkit-transform: translate(-50%, -4px);
+          transform: translate(-50%, -4px);
+}
+[data-tooltip][data-flow="bottom"]::before {
+  top: 100%;
+  border-top-width: 0;
+  border-bottom-color: #000000;
+}
+[data-tooltip][data-flow="bottom"]::after {
+  top: calc(100% + 5px);
+}
+[data-tooltip][data-flow="bottom"]::before, [data-tooltip][data-flow="bottom"]::after {
+  left: 50%;
+  -webkit-transform: translate(-50%, 8px);
+          transform: translate(-50%, 8px);
+}
+[data-tooltip][data-flow="left"]::before {
+  top: 50%;
+  border-right-width: 0;
+  border-left-color: #000000;
+  left: calc(0em - 5px);
+  -webkit-transform: translate(-8px, -50%);
+          transform: translate(-8px, -50%);
+}
+[data-tooltip][data-flow="left"]::after {
+  top: 50%;
+  right: calc(100% + 5px);
+  -webkit-transform: translate(-8px, -50%);
+          transform: translate(-8px, -50%);
+}
+[data-tooltip][data-flow="right"]::before {
+  top: 50%;
+  border-left-width: 0;
+  border-right-color: #000000;
+  right: calc(0em - 5px);
+  -webkit-transform: translate(8px, -50%);
+          transform: translate(8px, -50%);
+}
+[data-tooltip][data-flow="right"]::after {
+  top: 50%;
+  left: calc(100% + 5px);
+  -webkit-transform: translate(8px, -50%);
+          transform: translate(8px, -50%);
+}
+[data-tooltip=""]::after, [data-tooltip=""]::before {
+  display: none !important;
+}

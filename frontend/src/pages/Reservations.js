@@ -35,6 +35,7 @@ const ReservationPage = () => {
   const longname = allinfo && allinfo.user ? allinfo.user.name : '';
   const userid = allinfo && allinfo.user ? allinfo.user.sub : '';
   const role = allinfo ? allinfo.roles : {};
+  const GUEST_ID = "82b34614-4c8a-406d-94e4-9e054df204f2";
 
   async function currentDailyData(date){
     await axios.get('/api/auth/res-day/'+ date, { headers: { Authorization: 'Bearer ' + token } }).then((result) => {
@@ -128,8 +129,6 @@ const ReservationPage = () => {
           }
         }
     }
-
-    console.log(extraChairs);
     return extraChairs;
   }
 
@@ -161,8 +160,7 @@ const ReservationPage = () => {
           return reservedSeats.indexOf(c) === index;
       });
 
-      //console.log(uniqueReservedSeats);
-      return reservedSeats;
+      return uniqueReservedSeats;
   }  
 
   // Give a keyword=data touple as a condition and a keyword to specify the result.
@@ -276,7 +274,7 @@ const ReservationPage = () => {
           const chairs = specialChairs(e.target.parentElement.id.split("_")[1], checkedIds.length);
           let extraChairs = [];
           chairs.map((chair, i)=>{
-            extraChairs.push(createReservation(checkedIds[i-1].id, Number(chair.split("_")[1]), `chair_${chair}`));
+            extraChairs.push(createReservation(checkedIds[i].id, Number(chair.split("_")[1]), `${chair}`));
           });
           extraChairs.push(createReservation(userid, Number(e.target.parentElement.id.split("_")[1]), `chair_${Number(e.target.parentElement.id.split("_")[1])}`));
           //Res Put changed chairs
@@ -288,7 +286,7 @@ const ReservationPage = () => {
               "bucher": userid,
               "reservations": extraChairs
             };
-            await axios({ method: 'put', url: '/api/auth/res/', data: data, headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + token } });
+            await axios({ method: 'put', url: '/api/auth/res/', data: data, headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + token } }).then(currentDailyData(currentdate));
           }
           setShowAlert(false);
       }else if (!e.target.parentElement.classList.contains("reserved_reserved") && e.target.parentElement.classList.contains("reserved_me")) {
@@ -298,7 +296,7 @@ const ReservationPage = () => {
           await axios.delete(`/api/auth/res/del-res/${res_id}`, { headers: { Authorization: 'Bearer ' + token } });
           if (i===delete_reservations[1].length-1) {
             delete_reservations[0].forEach(async (booking_id)=>{          
-              await axios.delete(`/api/auth/res/del-booking/${booking_id}`, { headers: { Authorization: 'Bearer ' + token } });
+              await axios.delete(`/api/auth/res/del-booking/${booking_id}`, { headers: { Authorization: 'Bearer ' + token } }).then(currentDailyData(currentdate));
             });
           }
         });
@@ -354,7 +352,7 @@ const ReservationPage = () => {
       }
     }
     //setRecommendedDuration(mostCommonElement);
-    setCurrentTimeslot(mostCommonElement);
+    //setCurrentTimeslot(mostCommonElement);
   }
   
   async function deleteBooking() {
@@ -393,7 +391,6 @@ const ReservationPage = () => {
 
   // Group Modal Functions
   const handleClose = () => {
-    console.log(checkedIds);
     setShow(false);
     setShowAlert(true);
   };
@@ -411,10 +408,6 @@ const ReservationPage = () => {
   };
 
   useEffect(()=>{
-    document.getElementById(searchParams.get("restime")!=null ? searchParams.get("restime")+"min" : "15min").checked = true;
-    setCurrentDuration(searchParams.get("restime")!=null ? searchParams.get("restime")/15 : 1);
-    setCurrentDate(searchParams.get("date")!=null ? searchParams.get("date") : date.getFullYear()+'-'+('0' + (date.getMonth()+1)).slice(-2)+'-'+('0' + date.getDate()).slice(-2));
-    setCurrentTimeslot(searchParams.get("ts")!=null ? searchParams.get("ts") : 0);
     getRecommendedTimeslot();
   },[]);
 
@@ -473,7 +466,7 @@ const ReservationPage = () => {
             for (const key1 in ownbookings[0]) {
               if (ownbookings[0][key1]===userid) {
                 document.getElementById(ownbookings[1][key1]).setAttribute('class', 'reserved_me');
-              } else if(ownbookings[0][key1]===process.env.REACT_APP_GUEST_ID) {
+              } else if(ownbookings[0][key1]===GUEST_ID) {
                 document.getElementById(ownbookings[1][key1]).setAttribute('class', 'reserved_guests');
               } else {
                 document.getElementById(ownbookings[1][key1]).setAttribute('class', 'reserved_employees');
@@ -499,23 +492,17 @@ const ReservationPage = () => {
       }
       
       //only delete Reservation
-      deleteBooking().then((r) => {
-        
-          console.log("r: ");
-          console.log(r);        
-          console.log("Data after delete");
-          console.log(specifiedData(`bookingTimeslot=${currentts},bookerId=${userid}`, "chairId"));
+      deleteBooking().then(() => {
             // Calculate the guest chair names
             let tmp = Number(originalChair[0][0].split("_")[1]);
             let guestseats = specialChairs(tmp, guestnumber);
-            console.log(guestseats);
             // Build the reservation array with all the reserved chairs
             let reservation = []; 
             // Create the original reservation again
             reservation.push(createReservation(userid, Number(originalChair[0][0].split("_")[1]), `chair_${Number(originalChair[0][0].split("_")[1])}`));
             // Create all the guest reservations
             for(let i in guestseats) {
-              reservation.push(createReservation("82b34614-4c8a-406d-94e4-9e054df204f2", Number(guestseats[i].split("_")[1] + 1 + i), `chair_${Number(guestseats[i].split("_")[1])}`));
+              reservation.push(createReservation(GUEST_ID, Number(guestseats[i].split("_")[1] + 1 + i), `chair_${Number(guestseats[i].split("_")[1])}`));
             }
       
             // Create and send the booking
@@ -527,7 +514,6 @@ const ReservationPage = () => {
                 "bucher": userid,
                 "reservations": reservation
               };
-              console.log(data);
               axios({ method: 'put', url: '/api/auth/res/', data: data, headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + token } });
             }
        
@@ -535,7 +521,7 @@ const ReservationPage = () => {
     }
 
     if (guestnumber==0 && originalChair[0].length > 0){
-      deleteBooking().then(() => {
+      deleteBooking().then(async () => {
         for (let index = 0; index < currentduration; index++) {
           let data = {
             "id": 0,
@@ -545,7 +531,7 @@ const ReservationPage = () => {
             "reservations": [createReservation(userid, Number(originalChair[0][0].split("_")[1]), `chair_${Number(originalChair[0][0].split("_")[1])}`)]
           };
           console.log(data);
-          axios({ method: 'put', url: '/api/auth/res/', data: data, headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + token } });
+          await axios({ method: 'put', url: '/api/auth/res/', data: data, headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + token } }).then(currentDailyData(currentdate));
         }
       })
     }
@@ -622,7 +608,7 @@ const ReservationPage = () => {
         </div>
         <div className='mb-3 d-flex justify-content-between'>
           <div>
-            <input type="radio" className="btn-check" name="reservation_time" id="15min" value="15" onChange={changeTime}/>
+            <input type="radio" className="btn-check" name="reservation_time" id="15min" value="15" onChange={changeTime} defaultChecked/>
             <label className="btn border px-4 recommended_time_slot me-3" htmlFor="15min">15</label>
             <input type="radio" className="btn-check" name="reservation_time" id="30min" value="30" onChange={changeTime}/>
             <label className="btn border px-4 recommended_time_slot me-3" htmlFor="30min">30</label>

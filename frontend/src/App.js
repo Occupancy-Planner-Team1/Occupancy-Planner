@@ -18,8 +18,7 @@ function App() {
       <AuthContextProvider>
         <Routes>
           <Route path="/login" element={<ProtectedRoute accessBy="non-authenticated"><KeycloakLogin /></ProtectedRoute>} />
-          <Route path="/planner" element={<ProtectedRoute accessBy="authenticated"><SuggestedReservation /></ProtectedRoute>} />
-          <Route path="/planner/all" element={<ProtectedRoute accessBy="authenticated"><Reservations /></ProtectedRoute>} />
+          <Route path="/planner" element={<ProtectedRoute accessBy="authenticated"><Reservations /></ProtectedRoute>} />
           <Route path='*' element={<Navigate to='/planner' />} />
         </Routes>
       </AuthContextProvider>

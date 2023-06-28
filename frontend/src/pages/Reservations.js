@@ -300,6 +300,33 @@ const ReservationPage = () => {
       })
     }
   }
+
+  // 
+  async function getRecommendedTimeslot() {
+    var timeslots = [];
+    await axios.get("/api/auth/res-all/user/" + userid, { headers: { Authorization: 'Bearer ' + token } }).then(response => {/*timeslots = response.data.map(obj => obj.timeslot);*/ console.log(response.data);});
+    const frequency = {}; // Object to store element frequencies
+    // Count the frequency of each element in the array
+    timeslots.forEach(element => {
+      if (element in frequency) {
+        frequency[element] += 1;
+      } else {
+        frequency[element] = 1;
+      }
+    });
+
+    // Find the element with the maximum frequency
+    let mostCommonElement = null;
+    let maxFrequency = 0;
+    for (const [element, count] of Object.entries(frequency)) {
+      if (count > maxFrequency) {
+        mostCommonElement = element;
+        maxFrequency = count;
+      }
+    }
+    //setRecommendedDuration(mostCommonElement);
+    setCurrentTimeslot(mostCommonElement);
+  }
   
   // Group Modal Functions
   const handleClose = () => {
@@ -325,6 +352,7 @@ const ReservationPage = () => {
     setCurrentDuration(searchParams.get("restime")!=null ? searchParams.get("restime")/15 : 1);
     setCurrentDate(searchParams.get("date")!=null ? searchParams.get("date") : date.getFullYear()+'-'+('0' + (date.getMonth()+1)).slice(-2)+'-'+('0' + date.getDate()).slice(-2));
     setCurrentTimeslot(searchParams.get("ts")!=null ? searchParams.get("ts") : 0);
+    getRecommendedTimeslot();
   },[]);
 
   // After Website finish loading
@@ -439,7 +467,7 @@ const ReservationPage = () => {
   return (
     <div className="App">
       <header className="container reservation-form d-flex justify-content-between">
-        <h2><a href="/planner" className="text-decoration-none text-dark" data-tooltip="Zurück" data-flow="right">❮</a> Reservierung</h2>
+        <h2>Reservierung</h2>
         <img src={logo} alt="Logo" />
       </header>
       <div className='container h-fill reservation-form'>
@@ -532,7 +560,7 @@ const ReservationPage = () => {
         </Alert>
         <div className="w-100 d-flex mt-4 justify-content-center reservation-plan">
           <svg xmlns="http://www.w3.org/2000/svg" id="sitzplan" viewBox="0 0 1116.26 867.67">
-            <g id="section">
+            <g id="section-1" data-name="section">
               <circle cx="899.07" cy="146.5" r="64" fill="#003a70"/>
               <g id="chair_4" data-name="chair" onClick={clickChair}>
                 <path d="M1208.88,113.24l12,12-42.42,42.43-12-12c-10.93-10.93-10.3-29.29,1.42-41S1198,102.31,1208.88,113.24Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
@@ -608,7 +636,7 @@ const ReservationPage = () => {
                 <path d="M574.86,257a1,1,0,0,1-.19-1c4.63-10.56,2.24-23.78-6.92-32.94s-22.38-11.54-32.93-6.92a.93.93,0,0,1-1.05-.19h0a1,1,0,0,1,0-1.34l4.28-4.28c10.94-10.93,29.3-10.3,41,1.42s12.34,30.08,1.41,41L576.2,257a1,1,0,0,1-1.34,0Z" transform="translate(-360.22 -59.5)" fill=" #7d9bc1"/>
               </g>
             </g>
-            <g id="big_section">
+            <g id="section-5" data-name="section">
               <g id="chair_17" data-name="chair" onClick={clickChair}>
                 <path d="M986.89,567.67v17h-60v-17c0-15.46,13.43-28,30-28S986.89,552.21,986.89,567.67Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M985.94,555.67a1,1,0,0,1-.87-.61c-4.19-10.73-15.23-18.39-28.18-18.39s-24,7.66-28.18,18.39a1,1,0,0,1-.88.61h0a1,1,0,0,1-.94-.95v-6.05c0-15.46,13.43-28,30-28s30,12.54,30,28v6.05a1,1,0,0,1-.95.95Z" transform="translate(-360.22 -59.5)" fill=" #7d9bc1"/>
@@ -643,7 +671,7 @@ const ReservationPage = () => {
               </g>
               <path d="M1006.72,846H910.34c-13-75-14.54-152.89,0-234h96.38C1020.59,689.66,1020.4,767.71,1006.72,846Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
             </g>
-            <g id="big_section-2" data-name="big_section">
+            <g id="section-6" data-name="section">
               <g id="chair_25" data-name="chair" onClick={clickChair}>
                 <path d="M1356.75,567.42v17h-60v-17c0-15.46,13.43-28,30-28S1356.75,552,1356.75,567.42Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M1355.81,555.42a1,1,0,0,1-.88-.61c-4.19-10.73-15.23-18.39-28.18-18.39s-24,7.66-28.18,18.39a1,1,0,0,1-.88.61h0a1,1,0,0,1-.94-.95v-6.05c0-15.46,13.43-28,30-28s30,12.54,30,28v6.05a1,1,0,0,1-.94.95Z" transform="translate(-360.22 -59.5)" fill="#7d9bc1"/>

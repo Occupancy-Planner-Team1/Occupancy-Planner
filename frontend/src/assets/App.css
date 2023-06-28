@@ -73,8 +73,6 @@ body {
   position: relative;
 }
 
-.reserved {}
-
 .reservation-form button::after {
   right: 15px;
   position: absolute;
@@ -87,7 +85,7 @@ body {
 }
 
 .btn-check:checked+.recommended_time_slot {
-  outline: #7a9ac1 solid 5px !important;
+  outline: #7a9ac1 solid 5px;
   border: none;
 }
 
@@ -108,43 +106,49 @@ body {
 
 .reservation_status0,
 .reservation_status1 {
-  background-color: rgba(255, 0, 0, 0.0);
+  background-color: rgba(255, 0, 0, 0.0)!important;
 }
 
 .reservation_status2 {
-  background-color: rgba(255, 0, 0, 0.025);
+  background-color: rgba(255, 0, 0, 0.025)!important;
 }
 
 .reservation_status3 {
-  background-color: rgba(255, 0, 0, 0.05);
+  background-color: rgba(255, 0, 0, 0.05)!important;
 }
 
 .reservation_status4 {
-  background-color: rgba(255, 0, 0, 0.1);
+  background-color: rgba(255, 0, 0, 0.1)!important;
 }
 
 .reservation_status5 {
-  background-color: rgba(255, 0, 0, 0.2);
+  background-color: rgba(255, 0, 0, 0.2)!important;
 }
 
 .reservation_status6 {
-  background-color: rgba(255, 0, 0, 0.3);
+  background-color: rgba(255, 0, 0, 0.3)!important;
 }
 
 .reservation_status7 {
-  background-color: rgba(255, 0, 0, 0.4);
+  background-color: rgba(255, 0, 0, 0.4)!important;
 }
 
 .reservation_status8 {
-  background-color: rgba(255, 0, 0, 0.5);
+  background-color: rgba(255, 0, 0, 0.5)!important;
 }
 
 .reservation_status9 {
-  background-color: rgba(255, 0, 0, 0.6);
+  background-color: rgba(255, 0, 0, 0.6)!important;
 }
 
 .reservation_status10 {
-  background-color: rgba(255, 0, 0, 0.7);
+  background-color: rgba(255, 0, 0, 0.7)!important;
+}
+
+.mySlot{
+  outline-style: solid;
+  outline-color: #00ff0a!important;
+  outline-width: 2px;
 }
 
 .reserved_me>path:nth-child(1) {

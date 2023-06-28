@@ -27,6 +27,7 @@ const ReservationPage = () => {
   const [show, setShow] = useState(false); // GroupModal
   const [showAlert, setShowAlert] = useState(false); // GroupModal
   const [checkedIds, setCheckedIds] = useState([]);
+  const [pageloadedonce, setPageLoadedOnce] = useState(0);
   const { token, allinfo } = useContext(AuthContext);
   let keywords =[];
   let requestedData = new Object();
@@ -148,10 +149,6 @@ const ReservationPage = () => {
       });
 
       return uniqueReservedSeats;
-  }  
-
-  function capacity(){
-
   }
 
   // Give a keyword=data touple as a condition and a keyword to specify the result.
@@ -322,28 +319,46 @@ const ReservationPage = () => {
   // 
   async function getRecommendedTimeslot() {
     var timeslots = [];
-    await axios.get("/api/auth/res-all/user/" + userid, { headers: { Authorization: 'Bearer ' + token } }).then(response => {/*timeslots = response.data.map(obj => obj.timeslot);*/ console.log(response.data);});
-    const frequency = {}; // Object to store element frequencies
-    // Count the frequency of each element in the array
-    timeslots.forEach(element => {
-      if (element in frequency) {
-        frequency[element] += 1;
-      } else {
-        frequency[element] = 1;
-      }
-    });
-
-    // Find the element with the maximum frequency
-    let mostCommonElement = null;
-    let maxFrequency = 0;
-    for (const [element, count] of Object.entries(frequency)) {
-      if (count > maxFrequency) {
-        mostCommonElement = element;
-        maxFrequency = count;
-      }
+    if (allinfo && allinfo.user) {
+      await axios.get(`/api/auth/res-all/user/${userid}`, { headers: { Authorization: 'Bearer ' + token } }).then(response => {timeslots = response.data.map(obj => ({timeslot: obj.timeslot, date: obj.datum}))});
+      let result = timeslots.reduce((acc, {timeslot, date}) => {
+        acc[date] = acc[date] || [];
+        acc[date].push(timeslot);
+        return acc;
+      }, {});    
+      // Convert back to the array format
+      let mergedData = Object.keys(result).map(date => ({
+        date,
+        timeslots: result[date]
+      }));
+      let timeslotArrayCounts = mergedData.reduce((acc, {timeslots}) => {
+        // Convert the array to a string to compare
+        let key = timeslots.toString();
+        acc[key] = (acc[key] || 0) + 1;
+        return acc;
+      }, {});
+      let lastIndex = 0;
+      Object.keys(timeslotArrayCounts).forEach((key, val)=>{
+        if (val>=lastIndex) {
+          lastIndex=val;
+        }
+      });
+      let mostSelected = Object.entries(timeslotArrayCounts).filter((key, value) => key[1]===lastIndex);
+      let latestDate = "1970-01-01", latestTimeslot = 0;
+      mostSelected.forEach((key, val)=>{
+        mergedData.forEach((k,v)=>{
+          if (k.timeslots.toString()===key[0] && k.date > latestDate) {
+            latestDate=k.date
+            latestTimeslot=k.timeslots
+          }
+        })
+      });
+      document.getElementById(latestTimeslot.length*15+"min").checked = true;
+      document.getElementById(latestTimeslot[0]).checked = true;
+      setCurrentTimeslot(latestTimeslot[0]);
+      setCurrentDuration(latestTimeslot.length);
+      setPageLoadedOnce(1);
     }
-    //setRecommendedDuration(mostCommonElement);
-    //setCurrentTimeslot(mostCommonElement);
   }
   
   async function deleteBooking() {
@@ -398,10 +413,6 @@ const ReservationPage = () => {
     }
   };
 
-  useEffect(()=>{
-    getRecommendedTimeslot();
-  },[]);
-
   // After Website finish loading
   useEffect(() => {
     // Silas: ---------------------------------------------------
@@ -433,7 +444,7 @@ const ReservationPage = () => {
         inner.slot = st.getHours()+":"+(st.getMinutes() < 10 ? '0' : '') + st.getMinutes()+" - "+et.getHours()+":"+(et.getMinutes() < 10 ? '0' : '') + et.getMinutes();
         inner.id = id;
         inner.capacity = parseFloat(getReservedSeatsInTimeslots(id,currentduration).length/32).toFixed(1);
-        inner.myTimeslot = specifiedData(`bookingTimeslot=${currentts},bookerId=${userid}`, "chairId")[0].length >= 0 ? true : false;
+        inner.myTimeslot = specifiedData(`bookingTimeslot=${id},bookerId=${userid}`, "chairId")[0].length > 0 ? true : false;
         ts[index] = inner;
         st = et;
         et = new Date(et.getTime() + minutes*60000);
@@ -448,6 +459,7 @@ const ReservationPage = () => {
     });
     const ownbookings = specifiedData(`bookingTimeslot=${currentts},bookerId=${userid}`, "chairUserId,chairId");
     const chairs = getReservedSeatsInTimeslots(currentts, currentduration);
+    if(pageloadedonce===0) getRecommendedTimeslot();
     generatedtserator(currentduration*15);
     if (currentts!==(-1)) {
       try {
@@ -592,8 +604,8 @@ const ReservationPage = () => {
           {
             Object.keys(generatedts).map((key, i) => (
               <div className="col-12 col-sm-6 col-md-3 mb-2" key={key}>
-                <input type="radio" className="btn-check" name="time_slot" id={generatedts[i].id} value={i} onChange={(e)=>{setCurrentTimeslot(parseInt(e.target.id))}} defaultChecked={ (searchParams.get("ts")===null ? key==0 : key==searchParams.get("ts")) ? true : false}/>
-                <label className={`btn recommended_time_slot w-100${generatedts[i].data!==undefined ? ' reservation_status'+(generatedts[i].capacity===1.0 ? "10" : generatedts[i].capacity*10) : ''} border`} htmlFor={generatedts[i].id}>{generatedts[i].slot}</label>
+                <input type="radio" className="btn-check" name="time_slot" id={generatedts[i].id} value={generatedts[i].id} onChange={(e)=>{setCurrentTimeslot(parseInt(e.target.id))}} defaultChecked={ key==0 ? true : false}/>
+                <label className={`btn recommended_time_slot border w-100${generatedts[i].capacity===1.0 ? " reservation_status10" : ` reservation_status${generatedts[i].capacity*10}`}${generatedts[i].myTimeslot==true ? " mySlot" : ``}`} htmlFor={generatedts[i].id}>{generatedts[i].slot}</label>
               </div>
             ))
           }

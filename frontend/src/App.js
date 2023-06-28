@@ -5,7 +5,6 @@ import ProtectedRoute from "./components/shared/ProtectedRoute";
 
 //Pages
 import Reservations from './pages/Reservations';
-import SuggestedReservation from './pages/SuggestedReservation';
 import KeycloakLogin from "./pages/KeycloakLogin";
 
 // Style

@@ -86,10 +86,21 @@ public class OccuControl {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Sorry you can only Delete your own Bookings. " + tokenOwner + " " +this.bookingService.get(bookingid).getBucher() );
     }
 
-//noch ein delete für reservierungen wenn bucher != stuhlnutzerid und stuhlnutzerid = token.uuid sollte der reservation service machen
+    //noch ein delete für reservierungen wenn bucher != stuhlnutzerid und stuhlnutzerid = token.uuid sollte der reservation service machen
+    @DeleteMapping("res/del-res/{reservationid}") // kommentar: delete sollte keinen string zurückgeben! void oder <Booking> und exception: abfangen, dass eintrag nicht vorhanden
+    public ResponseEntity deleteResbyId(@PathVariable long reservationid,Principal principal){
+        JwtAuthenticationToken token = (JwtAuthenticationToken) principal;
+        UUID tokenOwner = UUID.fromString((String) token.getTokenAttributes().get("sub"));
 
-
-
+        try {
+            this.resService.deleteById(reservationid);
+            return ResponseEntity.status(HttpStatus.OK).body(reservationid);
+        }
+        catch(Exception e) {
+            //Not Found warscheinlich nicht ganz passend.
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e);
+        }
+    }
 
     // TESTING only
     @GetMapping("/anonymous")

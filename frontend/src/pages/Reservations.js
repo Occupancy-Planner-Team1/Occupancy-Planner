@@ -273,20 +273,11 @@ const ReservationPage = () => {
           document.getElementById("body")?.classList.add("disabled_map");
           console.log("Insert New Booking!");
           // Calculate Employee Chairs
+          const chairs = specialChairs(e.target.parentElement.id.split("_")[1], checkedIds.length);
           let extraChairs = [];
-          let tmp = e.target.parentElement.id.split("_");
-          let place = parseInt(tmp[1]);
-          for(let n = 1; n <= 31; n++){ //31 muss geändert werden !!!!DYNAMISCH
-            if( (place + ( Math.pow(-1,n) * n)) > 0 && (place + ( Math.pow(-1,n) * n)) <= 32 ){ // 31 Muss geändert werden!!
-              place = place + ( Math.pow(-1,n) * n);
-              if(extraChairs.length < checkedIds.length){
-                extraChairs.push(createReservation(checkedIds[n-1].id, Number(place), `chair_${place}`));
-              }
-            }
-            else{
-              place = place + ( Math.pow(-1,n) * n);
-            }
-          }
+          chairs.map((chair, i)=>{
+            extraChairs.push(createReservation(checkedIds[i-1].id, Number(chair.split("_")[1]), `chair_${chair}`));
+          });
           extraChairs.push(createReservation(userid, Number(e.target.parentElement.id.split("_")[1]), `chair_${Number(e.target.parentElement.id.split("_")[1])}`));
           //Res Put changed chairs
           for (let index = 0; index < currentduration; index++) {
@@ -366,39 +357,39 @@ const ReservationPage = () => {
     setCurrentTimeslot(mostCommonElement);
   }
   
- async function deleteBooking(){
-  /*let delete_reservations = specifiedData(`bookingTimeslot=${currentts},bookerId=${userid}`, "bookingId,reservationId,chairId");
-        delete_reservations[1].forEach(async (res_id, i)=>{    
-          await axios.delete(`/api/auth/res/del-res/${res_id}`, { headers: { Authorization: 'Bearer ' + token } }).then((r)=>{
-            console.log(r.data);
+  async function deleteBooking() {
+    /*let delete_reservations = specifiedData(`bookingTimeslot=${currentts},bookerId=${userid}`, "bookingId,reservationId,chairId");
+          delete_reservations[1].forEach(async (res_id, i)=>{    
+            await axios.delete(`/api/auth/res/del-res/${res_id}`, { headers: { Authorization: 'Bearer ' + token } }).then((r)=>{
+              console.log(r.data);
+            });
+            
+            if (i===delete_reservations[1].length-1) {
+              delete_reservations[0].forEach(async (booking_id)=>{     
+                await axios.delete(`/api/auth/res/del-booking/${booking_id}`, { headers: { Authorization: 'Bearer ' + token } });
+              });
+            }
           });
-          
-          if (i===delete_reservations[1].length-1) {
-            delete_reservations[0].forEach(async (booking_id)=>{     
-              await axios.delete(`/api/auth/res/del-booking/${booking_id}`, { headers: { Authorization: 'Bearer ' + token } });
-            });
-          }
-        });
-        return true;*/
-        
-        let delete_reservations = specifiedData(`bookingTimeslot=${currentts},bookerId=${userid}`, "bookingId,reservationId,chairId");
+          return true;*/
 
-        // Create an array of promises for deleting reservations
-        let deleteResPromises = delete_reservations[1].map(res_id => {
-            return axios.delete(`/api/auth/res/del-res/${res_id}`, { headers: { Authorization: 'Bearer ' + token } });
-        });
-        
-        // Wait for all delete reservation promises to resolve
-        return Promise.all(deleteResPromises).then(() => {
-            // Once all reservations are deleted, delete the bookings
-            let deleteBookingPromises = delete_reservations[0].map(booking_id => {
-                return axios.delete(`/api/auth/res/del-booking/${booking_id}`, { headers: { Authorization: 'Bearer ' + token } });
-            });
-        
-            // Optionally, wait for all delete booking promises to resolve
-            return Promise.all(deleteBookingPromises);
-        })
-} 
+    let delete_reservations = specifiedData(`bookingTimeslot=${currentts},bookerId=${userid}`, "bookingId,reservationId,chairId");
+
+    // Create an array of promises for deleting reservations
+    let deleteResPromises = delete_reservations[1].map(res_id => {
+      return axios.delete(`/api/auth/res/del-res/${res_id}`, { headers: { Authorization: 'Bearer ' + token } });
+    });
+
+    // Wait for all delete reservation promises to resolve
+    return Promise.all(deleteResPromises).then(() => {
+      // Once all reservations are deleted, delete the bookings
+      let deleteBookingPromises = delete_reservations[0].map(booking_id => {
+        return axios.delete(`/api/auth/res/del-booking/${booking_id}`, { headers: { Authorization: 'Bearer ' + token } });
+      });
+
+      // Optionally, wait for all delete booking promises to resolve
+      return Promise.all(deleteBookingPromises);
+    })
+  }
 
   // Group Modal Functions
   const handleClose = () => {

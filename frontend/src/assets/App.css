@@ -156,11 +156,11 @@ body {
 }
 
 .reserved_guests>path:nth-child(1) {
-  fill: dimgray;
+  fill: rgb(0, 255, 200);
 }
 
 .reserved_guests path:nth-child(2) {
-  fill: rgba(105, 105, 105, 0.7);
+  fill: rgba(0, 255, 200, 0.7);
 }
 
 .reserved_employees>path:nth-child(1) {

@@ -27,7 +27,7 @@ public class OccupancyApplication implements CommandLineRunner {
 		//List<Reservation> all = service1.getAll();
 
 		
-
+		/*
 		Chair chair0 = new Chair();
 		chair0.setChairName("chair_1");
 		Chair chair1 = new Chair();
@@ -203,7 +203,7 @@ public class OccupancyApplication implements CommandLineRunner {
 		neuesBooking.getReservations().add(neuesReservation29);
 		neuesBooking.getReservations().add(neuesReservation30);
 		neuesBooking.getReservations().add(neuesReservation31);
-		/*
+
 		service1.save(neuesBooking);
 		*/
 

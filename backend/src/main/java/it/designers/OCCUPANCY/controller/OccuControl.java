@@ -52,6 +52,7 @@ public class OccuControl {
     	}
   }
 
+
     @GetMapping("/last-change") // nice tut aber den try catch von emir nehmen ;)
     public ResponseEntity lastChange(){
         try {
@@ -60,7 +61,7 @@ public class OccuControl {
         }
         catch(Exception e) {
             //Not Found warscheinlich nicht ganz passend.
-            return ResponseEntity.status(HttpStatus.OK).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e);
         }
     }
 
@@ -68,7 +69,9 @@ public class OccuControl {
     @DeleteMapping("res/del-booking/{bookingid}") // kommentar: delete sollte keinen string zurückgeben! void oder <Booking> und exception: abfangen, dass eintrag nicht vorhanden
     public ResponseEntity deletebyId(@PathVariable long bookingid,Principal principal){
         JwtAuthenticationToken token = (JwtAuthenticationToken) principal;
+        //ist sub richtig als uuid vom token?
         UUID tokenOwner = UUID.fromString((String) token.getTokenAttributes().get("sub"));
+        //tokenOwner = UUID.fromString("eb98da0e-a15d-416f-a4ba-fd42c6697e33");
 
         if(tokenOwner.equals(this.bookingService.get(bookingid).getBucher())){
             try {
@@ -83,20 +86,21 @@ public class OccuControl {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Sorry you can only Delete your own Bookings. " + tokenOwner + " " +this.bookingService.get(bookingid).getBucher() );
     }
 
-    //noch ein delete für reservierungen wenn bucher != stuhlnutzerid und stuhlnutzerid = token.uuid sollte der reservation service machen
-    @DeleteMapping("res/del-res/{reservationid}") // kommentar: delete sollte keinen string zurückgeben! void oder <Booking> und exception: abfangen, dass eintrag nicht vorhanden
-    public ResponseEntity deleteResbyId(@PathVariable long reservationid,Principal principal){
-        JwtAuthenticationToken token = (JwtAuthenticationToken) principal;
-        UUID tokenOwner = UUID.fromString((String) token.getTokenAttributes().get("sub"));
+//noch ein delete für reservierungen wenn bucher != stuhlnutzerid und stuhlnutzerid = token.uuid sollte der reservation service machen
 
-        try {
-            this.resService.deleteById(reservationid);
-            return ResponseEntity.status(HttpStatus.OK).body(reservationid);
-        }
-        catch(Exception e) {
-            //Not Found warscheinlich nicht ganz passend.
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e);
-        }
+
+
+
+    // TESTING only
+    @GetMapping("/anonymous")
+    public ResponseEntity<String> getAnonymous() {
+        return ResponseEntity.ok("Hello Anonymous");
+    }
+
+    // TESTING only
+    @GetMapping("/anonymous/{bla}")
+    public ResponseEntity<String> getAnonymous1(@PathVariable("bla") int bla) {
+        return ResponseEntity.ok(String.format("Hello Anonymous %s",bla));
     }
 
     @GetMapping("/verify") // zum testen: liest token daten aus und service user wird getestet
@@ -170,6 +174,7 @@ public class OccuControl {
         }
 
     }
+
 
     @GetMapping("/res-username/{userid}") //username beim klicken auf Stuhl zurückgeben
     public ResponseEntity<String> getUserName(@PathVariable("userid") UUID id, Principal principal) throws JsonProcessingException, UnirestException {

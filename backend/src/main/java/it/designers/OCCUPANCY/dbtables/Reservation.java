@@ -29,7 +29,7 @@ public class Reservation {
     private UUID stuhlsitzer;
 
     @JoinColumn(referencedColumnName = "id")
-    @OneToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
+    @OneToOne(cascade = CascadeType.ALL)
     private Chair chair;
 
 //    @JoinColumn(referencedColumnName = "id")

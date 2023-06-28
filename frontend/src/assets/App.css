@@ -14,7 +14,7 @@ body {
 }
 
 .h-fill {
-  height: calc(100vh - 104px);
+  height: 100vh;
 }
 
 .image_link {
@@ -68,9 +68,13 @@ body {
 }
 
 .reservation-form button {
+  width: 200px;
   text-align: left;
   position: relative;
 }
+
+.reserved {}
+
 .reservation-form button::after {
   right: 15px;
   position: absolute;
@@ -152,11 +156,11 @@ body {
 }
 
 .reserved_guests>path:nth-child(1) {
-  fill: rgb(0, 255, 200);
+  fill: dimgray;
 }
 
 .reserved_guests path:nth-child(2) {
-  fill: rgba(0, 255, 200, 0.7);
+  fill: rgba(105, 105, 105, 0.7);
 }
 
 .reserved_employees>path:nth-child(1) {

@@ -21,6 +21,7 @@ const ReservationPage = () => {
   const [dailydata, setDailyData] = useState([]); // The daily raw Data which is updated every 2 seconds
   const [currentduration, setCurrentDuration] = useState(1); // Available Times to book 1-4
   const [guestnumber, setGuestNumber] = useState(0); // Available Guests
+  const [guestChairIds, setGuestChairIds] = useState([]); // Guest ChairIds
   const [groups, setGroups] = useState([]); // Available Groups
   const [groupmembers, setGroupMember] = useState([]); // Available GroupMembers
   const [show, setShow] = useState(false); // GroupModal
@@ -45,7 +46,7 @@ const ReservationPage = () => {
     //specifiedData("bookingTimeslot=1", "reservationId,chairUserId,chairId");   
 
   }
-  
+
   function setExtraChairs(bookerId, numberOfChairs){
     let tmpArray = [];
     let reserverdChairs = [];
@@ -53,9 +54,10 @@ const ReservationPage = () => {
     let meChair;
     let newChairName;
     let place;
-
+    
     tmpArray = specifiedData(`bookerId=${bookerId}`,"chairUserId,chairId");
-    //console.log(tmpArray);
+    console.log(tmpArray);
+    
     for(let i in tmpArray[0]){
       if(tmpArray[0][i] == bookerId){
         meChair = tmpArray[1][i];
@@ -63,11 +65,11 @@ const ReservationPage = () => {
       }
       reserverdChairs.push(tmpArray[1][i]);
     }
-    
     let tmp = meChair.split("_");
     place = parseInt(tmp[1]);
-    for(let n = 1; n <= 31; n++){     //31 muss geändert werden !!!!DYNAMISCH
-      if( (place + ( Math.pow(-1,n) * n)) > 0 && (place + ( Math.pow(-1,n) * n)) <= 32 ){ // 31 Muss geändert werden!!
+ 
+    /*for(let n = 1; n <= 31; n++){     //31 muss geändert werden !!!!DYNAMISCH
+      if( (place + ( Math.pow(-1,n) * n)) > 0 && (place + ( Math.pow(-1,n) * n)) <= 32 ){ // 32 Muss geändert werden!!
         place = place + ( Math.pow(-1,n) * n);
         newChairName = `chair_${place}`;
         if(reserverdChairs.find(e => e == newChairName) == null && extraChairs.length < numberOfChairs){
@@ -78,21 +80,57 @@ const ReservationPage = () => {
         place = place + ( Math.pow(-1,n) * n);
       }
     }
-    //console.log(extraChairs);
-    return extraChairs
+    return extraChairs;*/
+    return specialChairs(place, numberOfChairs);
   }
 
-  function getDataInTimeslots(timeslot, duration){
-    let dataForTimeslot = [];
-    for(let n=1; n <= duration; n++){
-      let bookingIdArray = specifiedData(`bookingTimeslot=${timeslot}`,"bookingId");
-      for (let i in bookingIdArray[0]){
-        //dataForTimeslot.push(bookingIdArray[0][i]);
-        dataForTimeslot.push(specifiedData(`bookingId=${bookingIdArray[0][i]}`,"reservationId,chairUserId,chairId"));
+  function specialChairs(place,numberOfChairs){
+    let extraChairs = [];
+    let meChair = `chair_${place}`;
+    let meTable = document.getElementById(meChair).parentElement;
+    let tableId = Number(meTable.id.split("-")[1]);
+    
+    const checkChairs = function(){
+      let chairsOnTable = meTable.childNodes;
+      for(let i in chairsOnTable){
+        if(chairsOnTable[i].id){
+          if(specifiedData(`bookingTimeslot=${currentts},chairId=${chairsOnTable[i].id},`, "chairId")[0].length == 0 && chairsOnTable[i].id != meChair){
+            if(extraChairs.length == numberOfChairs) break;
+            extraChairs.push(chairsOnTable[i].id);
+          }
+        }
       }
-      timeslot = timeslot + 1;
     }
-    return dataForTimeslot;
+    checkChairs();
+
+    if(extraChairs.length != numberOfChairs && (numberOfChairs -  extraChairs.length) % 4 == 0){
+      tableId = tableId + 1;
+      if(tableId > 6) tableId = 1;
+      if(tableId < 1) tableId = 6;
+
+      meTable =  document.getElementById(`section-${tableId}`);
+      
+      checkChairs();
+    }
+    else{
+      for(let n = 1; n <= 31; n++){     //31 muss geändert werden !!!!DYNAMISCH
+          if( (place + ( Math.pow(-1,n) * n)) > 0 && (place + ( Math.pow(-1,n) * n)) <= 32 ){ // 32 Muss geändert werden!!
+            place = place + ( Math.pow(-1,n) * n);
+            let newChairName = `chair_${place}`;
+            if(extraChairs.length < numberOfChairs && extraChairs.find(e => e == newChairName) == null){
+              if(specifiedData(`bookingTimeslot=${currentts},chairId=${newChairName},`, "chairId")[0].length == 0){
+                extraChairs.push(newChairName);
+              }
+            }
+          }
+          else{
+            place = place + ( Math.pow(-1,n) * n);
+          }
+        }
+    }
+
+    console.log(extraChairs);
+    return extraChairs;
   }
 
   // timeslot: 0-12; 0 is the first timeslot and 12 the last one
@@ -261,7 +299,7 @@ const ReservationPage = () => {
             };
             await axios({ method: 'put', url: '/api/auth/res/', data: data, headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + token } });
           }
-          setShowAlert(false);          
+          setShowAlert(false);
       }else if (!e.target.parentElement.classList.contains("reserved_reserved") && e.target.parentElement.classList.contains("reserved_me")) {
         // only delete Reservation
         let delete_reservations = specifiedData(`bookingTimeslot=${currentts},bookerId=${userid}`, "bookingId,reservationId,chairId");
@@ -328,6 +366,40 @@ const ReservationPage = () => {
     setCurrentTimeslot(mostCommonElement);
   }
   
+ async function deleteBooking(){
+  /*let delete_reservations = specifiedData(`bookingTimeslot=${currentts},bookerId=${userid}`, "bookingId,reservationId,chairId");
+        delete_reservations[1].forEach(async (res_id, i)=>{    
+          await axios.delete(`/api/auth/res/del-res/${res_id}`, { headers: { Authorization: 'Bearer ' + token } }).then((r)=>{
+            console.log(r.data);
+          });
+          
+          if (i===delete_reservations[1].length-1) {
+            delete_reservations[0].forEach(async (booking_id)=>{     
+              await axios.delete(`/api/auth/res/del-booking/${booking_id}`, { headers: { Authorization: 'Bearer ' + token } });
+            });
+          }
+        });
+        return true;*/
+        
+        let delete_reservations = specifiedData(`bookingTimeslot=${currentts},bookerId=${userid}`, "bookingId,reservationId,chairId");
+
+        // Create an array of promises for deleting reservations
+        let deleteResPromises = delete_reservations[1].map(res_id => {
+            return axios.delete(`/api/auth/res/del-res/${res_id}`, { headers: { Authorization: 'Bearer ' + token } });
+        });
+        
+        // Wait for all delete reservation promises to resolve
+        return Promise.all(deleteResPromises).then(() => {
+            // Once all reservations are deleted, delete the bookings
+            let deleteBookingPromises = delete_reservations[0].map(booking_id => {
+                return axios.delete(`/api/auth/res/del-booking/${booking_id}`, { headers: { Authorization: 'Bearer ' + token } });
+            });
+        
+            // Optionally, wait for all delete booking promises to resolve
+            return Promise.all(deleteBookingPromises);
+        })
+} 
+
   // Group Modal Functions
   const handleClose = () => {
     console.log(checkedIds);
@@ -426,25 +498,107 @@ const ReservationPage = () => {
 
   // Guest Booking
   useEffect(()=>{
+    let originalChair = specifiedData(`bookerId=${userid}`,"chairId");
+
     if (guestnumber>0) {
-      let guestseats = setExtraChairs(userid, 1);
-      guestseats.forEach(async (value, key)=>{
+      // Check if the booker Id exists. If exists delete
+      if(originalChair.length == 0){
+        console.log("WARNING: Dont try to book guests without booking yout own chair first");
+        return;
+      }
+      
+      //only delete Reservation
+      deleteBooking().then((r) => {
+        
+          console.log("r: ");
+          console.log(r);        
+          console.log("Data after delete");
+          console.log(specifiedData(`bookingTimeslot=${currentts},bookerId=${userid}`, "chairId"));
+            // Calculate the guest chair names
+            let tmp = Number(originalChair[0][0].split("_")[1]);
+            let guestseats = specialChairs(tmp, guestnumber);
+            console.log(guestseats);
+            // Build the reservation array with all the reserved chairs
+            let reservation = []; 
+            // Create the original reservation again
+            reservation.push(createReservation(userid, Number(originalChair[0][0].split("_")[1]), `chair_${Number(originalChair[0][0].split("_")[1])}`));
+            // Create all the guest reservations
+            for(let i in guestseats) {
+              reservation.push(createReservation("82b34614-4c8a-406d-94e4-9e054df204f2", Number(guestseats[i].split("_")[1] + 1 + i), `chair_${Number(guestseats[i].split("_")[1])}`));
+            }
+      
+            // Create and send the booking
+            for (let index = 0; index < currentduration; index++) {
+              let data = {
+                "id": 0,
+                "datum": document.getElementById("datepicker").value,
+                "timeslot": currentts+index,
+                "bucher": userid,
+                "reservations": reservation
+              };
+              console.log(data);
+              axios({ method: 'put', url: '/api/auth/res/', data: data, headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + token } });
+            }
+       
+      })
+    }
+
+    if (guestnumber==0 && originalChair[0].length > 0){
+      deleteBooking().then(() => {
         for (let index = 0; index < currentduration; index++) {
           let data = {
             "id": 0,
             "datum": document.getElementById("datepicker").value,
             "timeslot": currentts+index,
             "bucher": userid,
-            "reservations": [
-
-              createReservation(process.env.GUEST_ID, Number(value.split("_")[1]), `chair_${Number(value.split("_")[1])}`)
-            ]
+            "reservations": [createReservation(userid, Number(originalChair[0][0].split("_")[1]), `chair_${Number(originalChair[0][0].split("_")[1])}`)]
           };
-          //await axios({ method: 'put', url: '/api/auth/res/', data: data, headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + token } });
+          console.log(data);
+          axios({ method: 'put', url: '/api/auth/res/', data: data, headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + token } });
         }
-      });
+      })
     }
   }, [guestnumber]);  
+
+  /*useEffect(() => {
+    console.log("guestChair Calculation");
+      // Empty array
+      while(guestChairIds.length > 0) {
+        guestChairIds.pop();
+      }
+      // Fill array with the calculatet values if a chair is already clicked!
+      let check = specifiedData(`bookerId=${userid}`,"chairId");
+      console.log(check[0]);
+      if(check[0].length > 0){
+        for(let index = 1; index <= 32; index++){   // 32 NICHT DYNMISCH, ÄNDERN!!
+            guestChairIds[index] = setExtraChairs(userid, index);
+        }
+      }
+      console.log("Guest ChairIds: ");
+      console.log(guestChairIds);
+  }, [dailydata]);*/
+
+
+    // Create JSON Reservation
+    function createReservation(sid, cid, cname) {
+      let reservation = {"id": null, "stuhlsitzer": sid, "chair": {"id": cid, "chairName" : cname, "tisch": null, "posx": null,"posy": null}};
+      return reservation;
+    }
+
+    function guestChairId(){
+      console.log("guestChair Calculation");
+      // Empty array
+      while(guestChairIds.length > 0) {
+        guestChairIds.pop();
+      }
+      // Fill array with the calculatet values
+      for(let index = 1; index <= 32; index++){   // 32 NICHT DYNMISCH, ÄNDERN!!
+        guestChairIds[index] = setExtraChairs(userid, index);
+      }
+      console.log("Guest ChairIds: ");
+      console.log(guestChairIds);
+    }
+    
 
   //change minutes from slot
   const changeTime = (e) => {
@@ -560,7 +714,7 @@ const ReservationPage = () => {
         </Alert>
         <div className="w-100 d-flex mt-4 justify-content-center reservation-plan">
           <svg xmlns="http://www.w3.org/2000/svg" id="sitzplan" viewBox="0 0 1116.26 867.67">
-            <g id="section-1" data-name="section">
+            <g id="section-1">
               <circle cx="899.07" cy="146.5" r="64" fill="#003a70"/>
               <g id="chair_4" data-name="chair" onClick={clickChair}>
                 <path d="M1208.88,113.24l12,12-42.42,42.43-12-12c-10.93-10.93-10.3-29.29,1.42-41S1198,102.31,1208.88,113.24Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
@@ -636,7 +790,7 @@ const ReservationPage = () => {
                 <path d="M574.86,257a1,1,0,0,1-.19-1c4.63-10.56,2.24-23.78-6.92-32.94s-22.38-11.54-32.93-6.92a.93.93,0,0,1-1.05-.19h0a1,1,0,0,1,0-1.34l4.28-4.28c10.94-10.93,29.3-10.3,41,1.42s12.34,30.08,1.41,41L576.2,257a1,1,0,0,1-1.34,0Z" transform="translate(-360.22 -59.5)" fill=" #7d9bc1"/>
               </g>
             </g>
-            <g id="section-5" data-name="section">
+            <g id="section-5">
               <g id="chair_17" data-name="chair" onClick={clickChair}>
                 <path d="M986.89,567.67v17h-60v-17c0-15.46,13.43-28,30-28S986.89,552.21,986.89,567.67Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M985.94,555.67a1,1,0,0,1-.87-.61c-4.19-10.73-15.23-18.39-28.18-18.39s-24,7.66-28.18,18.39a1,1,0,0,1-.88.61h0a1,1,0,0,1-.94-.95v-6.05c0-15.46,13.43-28,30-28s30,12.54,30,28v6.05a1,1,0,0,1-.95.95Z" transform="translate(-360.22 -59.5)" fill=" #7d9bc1"/>
@@ -671,7 +825,7 @@ const ReservationPage = () => {
               </g>
               <path d="M1006.72,846H910.34c-13-75-14.54-152.89,0-234h96.38C1020.59,689.66,1020.4,767.71,1006.72,846Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
             </g>
-            <g id="section-6" data-name="section">
+            <g id="section-6" data-name="big_section">
               <g id="chair_25" data-name="chair" onClick={clickChair}>
                 <path d="M1356.75,567.42v17h-60v-17c0-15.46,13.43-28,30-28S1356.75,552,1356.75,567.42Z" transform="translate(-360.22 -59.5)" fill="#003a70"/>
                 <path d="M1355.81,555.42a1,1,0,0,1-.88-.61c-4.19-10.73-15.23-18.39-28.18-18.39s-24,7.66-28.18,18.39a1,1,0,0,1-.88.61h0a1,1,0,0,1-.94-.95v-6.05c0-15.46,13.43-28,30-28s30,12.54,30,28v6.05a1,1,0,0,1-.94.95Z" transform="translate(-360.22 -59.5)" fill="#7d9bc1"/>

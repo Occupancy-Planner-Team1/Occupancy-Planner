@@ -1,0 +1,53 @@
+version: "1"
+services:
+  postgres:
+    image: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: 123
+    ports:
+      - 5432:5432
+  keycloak:
+    image: quay.io/keycloak/keycloak:21.1.1
+    environment:
+      DB_VENDOR: POSTGRES
+      DB_ADDR: postgres
+      DB_DATABASE: keycloak
+      DB_USER: keycloak
+      DB_SCHEMA: public
+      DB_PASSWORD: password
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: 123
+      KEYCLOAK_LOGLEVEL: INFO
+      ROOT_LOGLEVEL: INFO
+    ports:
+      - 8069:8080
+    command:
+      - start-dev
+    depends_on:
+      - postgres
+      
+
+  spring:
+    image: david0123/occu_backend:1.0
+
+    depends_on:
+      - keycloak
+    ports:
+      - 18069:18069
+
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - 6969:80
+    volumes:
+      - ./nginx_data:/usr/share/nginx/html
+      - ./default.conf:/etc/nginx/conf.d/default.conf
+
+volumes:
+  postgres_data:
+  nginx_data:
